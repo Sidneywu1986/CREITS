@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
       documentUrl: document.url,
       fileName: file.name,
       contentLength: textContent.length,
+      documentText: textContent, // ✅ 返回提取的文本内容
       blocksAdded,
       message: blocksAdded > 0 
         ? `文档创建成功，已添加 ${blocksAdded} 个内容块`

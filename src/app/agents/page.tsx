@@ -80,8 +80,10 @@ export default function AgentsPage() {
       if (data.success) {
         setDocumentUrl('https://feishu.cn/doc/' + data.documentId);
         setDocumentId(data.documentId);
+        setDocumentText(data.documentText || ''); // ✅ 保存提取的文本内容
         addLog('文件上传成功');
         addLog('文档ID: ' + data.documentId);
+        addLog('内容长度: ' + data.contentLength + ' 字符');
         setUploadError(null);
       } else {
         addLog('文件上传失败: ' + data.error);
@@ -136,6 +138,7 @@ export default function AgentsPage() {
         body: JSON.stringify({
           documentId: documentId,
           agentId: selectedAgent,
+          documentText: documentText, // ✅ 传递文档文本内容
           writeBack,
         }),
       });

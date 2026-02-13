@@ -5,7 +5,7 @@ import { AGENTS } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const { documentId, agentId, writeBack = false } = await request.json();
+    const { documentId, agentId, documentText: providedText, writeBack = false } = await request.json();
 
     if (!documentId) {
       return NextResponse.json(
@@ -30,12 +30,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. 读取飞书文档内容
-    const documentText = await getDocumentText(documentId);
+    // 1. 获取文档内容（优先使用提供的文本，否则从飞书文档读取）
+    let documentText = providedText;
+    
+    if (!documentText) {
+      try {
+        documentText = await getDocumentText(documentId);
+      } catch (readError) {
+        console.error('从飞书文档读取内容失败:', readError);
+        return NextResponse.json(
+          { error: '无法获取文档内容，请确保文档已上传并包含内容' },
+          { status: 400 }
+        );
+      }
+    }
 
     if (!documentText || documentText.length === 0) {
       return NextResponse.json(
-        { error: '文档内容为空' },
+        { error: '文档内容为空，请检查上传的文件' },
         { status: 400 }
       );
     }
@@ -113,6 +125,7 @@ ${documentText}
       agentId,
       agentName: agent.name,
       documentTextLength: documentText.length,
+      documentText: documentText, // 返回文档内容供后续使用
       analysisResult,
       writeBack,
       analysisBlockId,
