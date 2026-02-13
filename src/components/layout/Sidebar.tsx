@@ -14,6 +14,7 @@ import {
   Briefcase,
   Gamepad2,
   Zap,
+  CheckCircle,
 } from 'lucide-react';
 
 const navigation = [
@@ -26,6 +27,7 @@ const navigation = [
   { name: '已发行ABS项目', href: '/issued-abs', icon: Briefcase },
   { name: '休闲小游戏', href: '/games', icon: Gamepad2 },
   { name: '集成指南', href: '/integration', icon: Zap },
+  { name: '飞书集成', href: '/feishu', icon: CheckCircle },
 ];
 
 export default function Sidebar() {
