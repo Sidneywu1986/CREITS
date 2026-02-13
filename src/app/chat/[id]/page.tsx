@@ -29,14 +29,22 @@ export default function ChatPage() {
   const [currentAssistantMessage, setCurrentAssistantMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      });
+    }
   };
 
+  // 只在消息列表真正变化时滚动，避免流式输出时的抖动
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, currentAssistantMessage]);
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages]);
 
   // Initialize with welcome message
   useEffect(() => {
