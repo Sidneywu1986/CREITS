@@ -10,6 +10,8 @@ import {
   TrendingUp,
   FolderKanban,
   Settings,
+  Building,
+  Briefcase,
 } from 'lucide-react';
 
 const navigation = [
@@ -18,6 +20,8 @@ const navigation = [
   { name: '项目管理', href: '/projects', icon: FolderKanban },
   { name: '市场行情', href: '/market', icon: TrendingUp },
   { name: '资产证券化新闻', href: '/news', icon: FileText },
+  { name: '已发行REITs项目', href: '/issued-reits', icon: Building },
+  { name: '已发行ABS项目', href: '/issued-abs', icon: Briefcase },
 ];
 
 export default function Sidebar() {
