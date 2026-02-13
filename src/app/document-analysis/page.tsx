@@ -1,14 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { AGENTS } from '@/types';
-import { FileText, Bot, CheckCircle, AlertCircle, Play, Copy, ExternalLink, Loader2, Upload, File, X } from 'lucide-react';
+import { 
+  FileText, 
+  Bot, 
+  CheckCircle, 
+  AlertCircle, 
+  Play, 
+  Copy, 
+  ExternalLink, 
+  Loader2, 
+  Upload, 
+  File, 
+  X,
+  Send,
+  User,
+} from 'lucide-react';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
 
 export default function DocumentAnalysisPage() {
   const [documentUrl, setDocumentUrl] = useState('');
@@ -20,14 +41,27 @@ export default function DocumentAnalysisPage() {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [documentId, setDocumentId] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  
+  // 对话相关状态
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [documentText, setDocumentText] = useState('');
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const addLog = (log: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs(prev => [`[${timestamp}] ${log}`, ...prev].slice(0, 20));
   };
 
+  useEffect(() => {
+    // 自动滚动到底部
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const extractDocumentId = (url: string): string => {
-    // 从飞书文档URL中提取documentId
     const match = url.match(/doc\/([a-zA-Z0-9_-]+)/);
     return match ? match[1] : url;
   };
@@ -55,6 +89,7 @@ export default function DocumentAnalysisPage() {
         addLog(`✓ 文件上传成功`);
         addLog(`📄 创建的飞书文档ID: ${data.documentId}`);
         addLog(`🔗 文档链接: ${documentUrl}`);
+        addLog(`📊 文档内容长度: ${data.contentLength} 字符`);
       } else {
         addLog(`✗ 文件上传失败: ${data.error}`);
         setUploadedFile(null);
@@ -88,10 +123,10 @@ export default function DocumentAnalysisPage() {
 
     setLoading(true);
     setAnalysisResult(null);
+    setMessages([]); // 清空之前的对话
     addLog('开始文档分析流程...');
 
     try {
-      // 获取选中的Agent信息
       const agent = AGENTS.find(a => a.id === selectedAgent);
       addLog(`🤖 使用Agent: ${agent?.name}`);
 
@@ -116,6 +151,18 @@ export default function DocumentAnalysisPage() {
         addLog(`✓ 分析完成！`);
 
         setAnalysisResult(data);
+        
+        // 保存文档文本用于对话
+        setDocumentText(data.documentText || '');
+
+        // 添加初始对话消息
+        setMessages([
+          {
+            role: 'assistant',
+            content: `文档分析已完成！\n\n${data.analysisResult.substring(0, 500)}...\n\n您可以问我任何关于这份文档的问题，我会基于分析结果为您解答。`,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
 
         if (data.writeBack) {
           addLog('✓ 分析结果已写回文档');
@@ -128,6 +175,82 @@ export default function DocumentAnalysisPage() {
       addLog(`✗ 请求失败: ${error}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 发送消息
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || chatLoading) {
+      return;
+    }
+
+    const userMessage = inputMessage.trim();
+    setInputMessage('');
+    setChatLoading(true);
+
+    // 添加用户消息
+    const newMessages = [
+      ...messages,
+      {
+        role: 'user' as const,
+        content: userMessage,
+        timestamp: new Date().toISOString(),
+      },
+    ];
+    setMessages(newMessages);
+
+    try {
+      const response = await fetch('/api/feishu/document/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentId,
+          documentText,
+          analysisResult: analysisResult?.analysisResult || '',
+          agentId: selectedAgent,
+          message: userMessage,
+          conversationHistory: messages.map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessages([
+          ...newMessages,
+          {
+            role: 'assistant',
+            content: data.data.message,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+      } else {
+        setMessages([
+          ...newMessages,
+          {
+            role: 'assistant',
+            content: '抱歉，我暂时无法回答您的问题，请稍后再试。',
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('发送消息失败:', error);
+      setMessages([
+        ...newMessages,
+        {
+          role: 'assistant',
+          content: '抱歉，发生了错误，请稍后再试。',
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setChatLoading(false);
     }
   };
 
@@ -152,7 +275,7 @@ export default function DocumentAnalysisPage() {
             文档智能分析
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
-            将飞书文档或本地文件发送给Agent进行分析，获取专业反馈
+            将飞书文档或本地文件发送给Agent进行分析，获取专业反馈并智能对话
           </p>
         </div>
 
@@ -330,8 +453,9 @@ export default function DocumentAnalysisPage() {
             )}
           </div>
 
-          {/* 右侧：分析结果 */}
-          <div className="lg:col-span-2">
+          {/* 右侧：分析结果和对话 */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* 分析结果 */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -434,6 +558,111 @@ export default function DocumentAnalysisPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* 对话区域 */}
+            {analysisResult && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bot className="w-5 h-5 text-purple-600" />
+                    智能对话
+                  </CardTitle>
+                  <CardDescription>
+                    与Agent进行深入交流，了解更多分析细节
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* 消息列表 */}
+                  <ScrollArea className="h-80 pr-4" ref={scrollAreaRef}>
+                    <div className="space-y-4">
+                      {messages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`flex gap-3 ${
+                            message.role === 'user' ? 'justify-end' : 'justify-start'
+                          }`}
+                        >
+                          {message.role === 'assistant' && (
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+                              <Bot className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                          <div
+                            className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                              message.role === 'user'
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                : 'bg-slate-100 dark:bg-slate-800'
+                            }`}
+                          >
+                            <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                            <div className="text-xs mt-1 opacity-70">
+                              {new Date(message.timestamp).toLocaleTimeString()}
+                            </div>
+                          </div>
+                          {message.role === 'user' && (
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                              <User className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {chatLoading && (
+                        <div className="flex gap-3 justify-start">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+                            <Bot className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl px-4 py-3">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+
+                  {/* 输入框 */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="向Agent提问..."
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSendMessage();
+                        }
+                      }}
+                      disabled={chatLoading}
+                    />
+                    <Button
+                      onClick={handleSendMessage}
+                      disabled={chatLoading || !inputMessage.trim()}
+                      className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* 快捷提问 */}
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      '请解释分析结果',
+                      '有哪些潜在风险？',
+                      '投资建议是什么？',
+                      '关键数据指标有哪些？',
+                    ].map((question, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInputMessage(question)}
+                        disabled={chatLoading}
+                      >
+                        {question}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
 
@@ -462,6 +691,10 @@ export default function DocumentAnalysisPage() {
               <div className="flex items-start gap-2">
                 <Badge className="mt-0.5">4</Badge>
                 <span>点击"开始分析"，Agent将读取文档并提供专业反馈</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Badge className="mt-0.5">5</Badge>
+                <span>分析完成后，可以通过对话与Agent深入交流</span>
               </div>
             </div>
             <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
