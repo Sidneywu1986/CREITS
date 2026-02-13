@@ -17,6 +17,7 @@ const navigation = [
   { name: 'Agent 选择', href: '/agents', icon: Bot },
   { name: '项目管理', href: '/projects', icon: FolderKanban },
   { name: '市场行情', href: '/market', icon: TrendingUp },
+  { name: '资产证券化新闻', href: '/news', icon: FileText },
 ];
 
 export default function Sidebar() {
