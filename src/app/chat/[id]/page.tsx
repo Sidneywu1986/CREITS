@@ -200,9 +200,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
       {/* Header */}
-      <header className="h-16 border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 dark:bg-gray-900/80">
+      <header className="h-16 border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 dark:bg-gray-900/80 flex-shrink-0">
         <div className="container mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
@@ -228,124 +228,122 @@ export default function ChatPage() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6 flex h-[calc(100vh-4rem)]">
-        <div className="w-full flex flex-col">
-          {/* Messages Area */}
-          <ScrollArea className="flex-1 mb-4">
-            <div className="space-y-4 pr-4">
-              {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <Card className={`max-w-[80%] ${message.role === 'user' ? 'bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white' : 'bg-white dark:bg-gray-800'}`}>
-                    <div className="flex items-start space-x-3 p-4">
-                      <div className="flex-shrink-0">
-                        {message.role === 'assistant' ? (
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: `${agent.color}20` }}>
-                            {agent.icon}
-                          </div>
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center">
-                            <User className="w-4 h-4 text-white" />
-                          </div>
-                        )}
+      <div className="flex-1 container mx-auto px-4 flex flex-col overflow-hidden">
+        {/* Messages Area */}
+        <ScrollArea className="flex-1 overflow-y-auto">
+          <div className="space-y-4 px-4 py-6">
+            {messages.map((message) => (
+              <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <Card className={`max-w-[80%] ${message.role === 'user' ? 'bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white' : 'bg-white dark:bg-gray-800'}`}>
+                  <div className="flex items-start space-x-3 p-4">
+                    <div className="flex-shrink-0">
+                      {message.role === 'assistant' ? (
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: `${agent.color}20` }}>
+                          {agent.icon}
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm ${message.role === 'user' ? 'text-white/90' : 'text-muted-foreground'} mb-1`}>
+                        {message.role === 'assistant' ? agent.name : '你'}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className={`text-sm ${message.role === 'user' ? 'text-white/90' : 'text-muted-foreground'} mb-1`}>
-                          {message.role === 'assistant' ? agent.name : '你'}
+                      <div className={`text-sm ${message.role === 'user' ? 'text-white' : 'text-foreground'} whitespace-pre-wrap break-words`}>
+                        {message.content}
+                      </div>
+                      {message.role === 'assistant' && (
+                        <div className="flex items-center space-x-2 mt-3">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleCopy(message.content)}>
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <ThumbsUp className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <ThumbsDown className="h-3 w-3" />
+                          </Button>
                         </div>
-                        <div className={`text-sm ${message.role === 'user' ? 'text-white' : 'text-foreground'} whitespace-pre-wrap break-words`}>
-                          {message.content}
-                        </div>
-                        {message.role === 'assistant' && (
-                          <div className="flex items-center space-x-2 mt-3">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleCopy(message.content)}>
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <ThumbsUp className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <ThumbsDown className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            ))}
+            {isLoading && currentAssistantMessage && (
+              <div className="flex justify-start">
+                <Card className="max-w-[80%] bg-white dark:bg-gray-800">
+                  <div className="flex items-start space-x-3 p-4">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: `${agent.color}20` }}>
+                      {agent.icon}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-muted-foreground mb-1">{agent.name}</div>
+                      <div className="text-sm text-foreground whitespace-pre-wrap">
+                        {currentAssistantMessage}
                       </div>
                     </div>
-                  </Card>
-                </div>
-              ))}
-              {isLoading && currentAssistantMessage && (
-                <div className="flex justify-start">
-                  <Card className="max-w-[80%] bg-white dark:bg-gray-800">
-                    <div className="flex items-start space-x-3 p-4">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: `${agent.color}20` }}>
-                        {agent.icon}
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm text-muted-foreground mb-1">{agent.name}</div>
-                        <div className="text-sm text-foreground whitespace-pre-wrap">
-                          {currentAssistantMessage}
-                        </div>
+                  </div>
+                </Card>
+              </div>
+            )}
+            {isLoading && !currentAssistantMessage && (
+              <div className="flex justify-start">
+                <Card className="max-w-[80%] bg-white dark:bg-gray-800">
+                  <div className="flex items-start space-x-3 p-4">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: `${agent.color}20` }}>
+                      {agent.icon}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-muted-foreground mb-1">{agent.name}</div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                       </div>
                     </div>
-                  </Card>
-                </div>
-              )}
-              {isLoading && !currentAssistantMessage && (
-                <div className="flex justify-start">
-                  <Card className="max-w-[80%] bg-white dark:bg-gray-800">
-                    <div className="flex items-start space-x-3 p-4">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: `${agent.color}20` }}>
-                        {agent.icon}
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm text-muted-foreground mb-1">{agent.name}</div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
+                  </div>
+                </Card>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
 
-          {/* Input Area */}
-          <div className="border-t bg-white dark:bg-gray-900 p-4">
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="icon" className="flex-shrink-0">
-                <Paperclip className="h-5 w-5" />
-              </Button>
-              <Input
-                placeholder="输入您的问题..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={isLoading}
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSend}
-                disabled={isLoading || !input.trim()}
-                className="flex-shrink-0 bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
-              >
-                <Send className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setInput('请解读最新的REITs政策')} className="text-xs">
-                请解读最新的REITs政策
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setInput('REITs发行需要哪些条件？')} className="text-xs">
-                REITs发行需要哪些条件？
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setInput('如何进行尽职调查？')} className="text-xs">
-                如何进行尽职调查？
-              </Button>
-            </div>
+        {/* Fixed Input Area at Bottom */}
+        <div className="border-t bg-white dark:bg-gray-900 p-4 flex-shrink-0">
+          <div className="flex items-center space-x-3">
+            <Button variant="ghost" size="icon" className="flex-shrink-0">
+              <Paperclip className="h-5 w-5" />
+            </Button>
+            <Input
+              placeholder="输入您的问题..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={isLoading || !input.trim()}
+              className="flex-shrink-0 bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setInput('请解读最新的REITs政策')} className="text-xs">
+              请解读最新的REITs政策
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setInput('REITs发行需要哪些条件？')} className="text-xs">
+              REITs发行需要哪些条件？
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setInput('如何进行尽职调查？')} className="text-xs">
+              如何进行尽职调查？
+            </Button>
           </div>
         </div>
       </div>
