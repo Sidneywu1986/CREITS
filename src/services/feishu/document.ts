@@ -61,16 +61,21 @@ export async function addTextBlock(
         block_id: documentId,
       },
       data: {
-        block_type: 1,
-        paragraph: {
-          elements: [
-            {
-              text_run: {
-                content: content,
-              },
+        children: [
+          {
+            block_type: 1,
+            paragraph: {
+              elements: [
+                {
+                  text_run: {
+                    content: content,
+                  },
+                },
+              ],
             },
-          ],
-        },
+          },
+        ],
+        index: -1, // 添加到末尾
       },
     });
 
