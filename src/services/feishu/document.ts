@@ -54,26 +54,18 @@ export async function addTextBlock(
   const client = createFeishuClient();
 
   try {
-    const response = await (client.docx as any).block.children.create({
+    // 使用documentBlock.create而不是documentBlockChildren.create
+    const response = await (client.docx as any).documentBlock.create({
       path: {
         document_id: documentId,
-        block_id: documentId, // 使用document_id作为父block_id，表示添加到根节点
       },
       data: {
-        block_type: 1, // 1表示paragraph类型
+        block_type: 1,
         paragraph: {
           elements: [
             {
               text_run: {
                 content: content,
-                style: {
-                  paragraph_format: {
-                    align: 1, // 1表示左对齐
-                  },
-                  text_style: {
-                    ...getStyleByType(options?.paragraphType),
-                  },
-                },
               },
             },
           ],
@@ -82,15 +74,22 @@ export async function addTextBlock(
     });
 
     const block = response.data as any;
-    const blockId = block?.block_id || block?.block?.block_id;
+    const blockId = block?.block_id || block?.data?.block_id || block?.block?.block_id;
 
     if (!blockId) {
+      console.log('API Response:', JSON.stringify(response.data, null, 2));
       throw new Error('添加文本块失败：未返回块ID');
     }
 
     return blockId;
-  } catch (error) {
+  } catch (error: any) {
     console.error('添加文本块失败:', error);
+    
+    // 如果是400错误，打印详细的错误信息
+    if (error.response?.data) {
+      console.log('Error details:', JSON.stringify(error.response.data, null, 2));
+    }
+    
     throw new Error(`添加文本块失败: ${error instanceof Error ? error.message : '未知错误'}`);
   }
 }
@@ -100,7 +99,7 @@ export async function getDocumentBlocks(documentId: string): Promise<FeishuDocum
   const client = createFeishuClient();
 
   try {
-    const response = await (client.docx as any).block.children.list({
+    const response = await (client.docx as any).documentBlockChildren.list({
       path: {
         document_id: documentId,
         block_id: documentId,
