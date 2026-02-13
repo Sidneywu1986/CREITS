@@ -87,6 +87,10 @@ export default function AgentsPage() {
         addLog('文件上传失败: ' + data.error);
         setUploadedFile(null);
         setUploadError(data.error);
+        // 如果是权限错误，也打印到控制台便于调试
+        if (data.error.includes('99991672') || data.error.includes('权限')) {
+          console.error('飞书应用权限不足，错误代码: 99991672');
+        }
       }
     } catch (error) {
       addLog('上传失败: ' + error);
@@ -461,6 +465,44 @@ export default function AgentsPage() {
                           FEISHU_APP_SECRET=你的应用密钥
                         </div>
                         <p className="text-xs">配置完成后重启服务即可使用文档分析功能。</p>
+                      </div>
+                    </div>
+                  )}
+                  {uploadError && uploadError.includes('99991672') && (
+                    <div className="bg-red-50 dark:bg-red-950 p-4 rounded-lg border border-red-200 dark:border-red-800 mb-3">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2 text-red-800 dark:text-red-200">
+                        需要配置飞书应用权限
+                      </h4>
+                      <div className="text-sm text-red-700 dark:text-red-300 space-y-2">
+                        <p>飞书应用缺少创建文档的权限。请按照以下步骤申请权限：</p>
+                        <ol className="list-decimal list-inside space-y-2">
+                          <li>登录飞书开放平台：<a href="https://open.feishu.cn/app" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://open.feishu.cn/app</a></li>
+                          <li>找到应用：<code className="bg-slate-200 dark:bg-slate-800 px-1 rounded">{process.env.NEXT_PUBLIC_FEISHU_APP_ID || 'cli_a905db090c38dbb3'}</code></li>
+                          <li>点击左侧"权限管理" → "权限申请"</li>
+                          <li>搜索并申请以下权限：
+                            <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                              <li><strong>docx:document:create</strong> - 创建文档（必需）</li>
+                              <li><strong>docx:block:children:create</strong> - 创建文档块（必需）</li>
+                              <li><strong>docx:block:children:list</strong> - 获取文档内容（必需）</li>
+                              <li><strong>docx:document:delete</strong> - 删除文档（可选）</li>
+                            </ul>
+                          </li>
+                          <li>点击"申请权限"，等待审核通过（通常需要几分钟到几小时）</li>
+                          <li>审核通过后，重新上传文件即可</li>
+                        </ol>
+                        <div className="bg-slate-900 text-green-400 p-3 rounded font-mono text-xs my-2">
+                          错误代码: 99991672<br/>
+                          错误详情: permission_violations
+                        </div>
+                        <p className="text-xs mb-3">如果申请权限需要审核，可以联系企业管理员加速审核流程。</p>
+                        <a 
+                          href="/docs/FEISHU_PERMISSION_GUIDE.md" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          查看详细配置指南 →
+                        </a>
                       </div>
                     </div>
                   )}
