@@ -28,23 +28,35 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentAssistantMessage, setCurrentAssistantMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isStreamingRef = useRef(false);
 
   // Scroll to bottom
-  const scrollToBottom = () => {
+  const scrollToBottom = (smooth = false) => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: smooth ? 'smooth' : 'auto',
         block: 'end',
       });
     }
   };
 
-  // 只在消息列表真正变化时滚动，避免流式输出时的抖动
+  // 消息列表变化时平滑滚动
   useEffect(() => {
     if (messages.length > 0) {
-      scrollToBottom();
+      scrollToBottom(true);
     }
   }, [messages]);
+
+  // 流式输出时即时滚动（无动画，避免抖动）
+  useEffect(() => {
+    if (currentAssistantMessage) {
+      isStreamingRef.current = true;
+      scrollToBottom(false); // auto模式，无动画
+    } else if (isStreamingRef.current) {
+      // 流式输出结束，恢复标记
+      isStreamingRef.current = false;
+    }
+  }, [currentAssistantMessage]);
 
   // Initialize with welcome message
   useEffect(() => {
