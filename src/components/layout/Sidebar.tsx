@@ -14,7 +14,6 @@ import {
   Briefcase,
   Gamepad2,
   CheckCircle,
-  Brain,
   Calculator,
 } from 'lucide-react';
 
@@ -29,7 +28,6 @@ const navigation = [
   { name: 'REITs估值计算器', href: '/valuation-calculator', icon: Calculator },
   { name: '休闲小游戏', href: '/games', icon: Gamepad2 },
   { name: '飞书集成', href: '/feishu', icon: CheckCircle },
-  { name: '文档分析', href: '/document-analysis', icon: Brain },
 ];
 
 export default function Sidebar() {
