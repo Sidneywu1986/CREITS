@@ -155,7 +155,7 @@ export default function AgentsPage() {
         setMessages([
           {
             role: 'assistant',
-            content: '文档分析已完成！' + data.analysisResult.substring(0, 500) + '...' + '您可以问我任何关于这份文档的问题。',
+            content: '文档分析已完成！您可以查看下方的完整分析结果，也可以问我任何关于这份文档的问题。',
             timestamp: new Date().toISOString(),
           },
         ]);
@@ -526,7 +526,18 @@ export default function AgentsPage() {
                           <CheckCircle className="w-4 h-4 text-green-600" />
                           分析结果
                         </h3>
-                        <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(analysisResult.analysisResult)}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            try {
+                              navigator.clipboard.writeText(analysisResult.analysisResult);
+                              addLog('分析结果已复制到剪贴板');
+                            } catch (error) {
+                              addLog('复制失败: ' + error);
+                            }
+                          }}
+                        >
                           <Copy className="w-4 h-4 mr-1" />
                           复制
                         </Button>
