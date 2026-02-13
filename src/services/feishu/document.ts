@@ -99,10 +99,10 @@ export async function getDocumentBlocks(documentId: string): Promise<FeishuDocum
   const client = createFeishuClient();
 
   try {
-    const response = await (client.docx as any).documentBlockChildren.list({
+    // 尝试使用 documentBlock.list 获取文档块
+    const response = await (client.docx as any).documentBlock.list({
       path: {
         document_id: documentId,
-        block_id: documentId,
       },
       params: {
         page_size: 500, // 最大返回500个块
@@ -111,9 +111,33 @@ export async function getDocumentBlocks(documentId: string): Promise<FeishuDocum
 
     const blocks = response.data?.items || [];
     return blocks;
-  } catch (error) {
+  } catch (error: any) {
     console.error('获取文档内容失败:', error);
-    throw new Error(`获取文档内容失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    
+    // 如果API调用失败，打印详细的错误信息
+    if (error.response?.data) {
+      console.log('Error details:', JSON.stringify(error.response.data, null, 2));
+    }
+    
+    // 尝试备选方案：使用 documentBlockDescendant
+    try {
+      const response = await (client.docx as any).documentBlockDescendant.list({
+        path: {
+          document_id: documentId,
+          block_id: documentId,
+        },
+        params: {
+          page_size: 500,
+        },
+      });
+
+      const blocks = response.data?.items || [];
+      console.log('使用 documentBlockDescendant 成功获取内容');
+      return blocks;
+    } catch (descendantError) {
+      console.error('备选方案也失败:', descendantError);
+      throw new Error(`获取文档内容失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    }
   }
 }
 
