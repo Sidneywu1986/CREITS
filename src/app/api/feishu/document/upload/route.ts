@@ -15,16 +15,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查文件类型
-    const validTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain',
-      'text/markdown',
-    ];
-
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
     const validExtensions = ['pdf', 'doc', 'docx', 'txt', 'md'];
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
 
     if (!validExtensions.includes(fileExt || '')) {
       return NextResponse.json(
@@ -50,21 +42,19 @@ export async function POST(request: NextRequest) {
     let textContent = '';
 
     if (fileExt === 'pdf') {
-      // 需要安装 pdf-parse
       textContent = await extractTextFromPDF(buffer);
     } else if (fileExt === 'doc' || fileExt === 'docx') {
-      // 需要安装 mammoth
       textContent = await extractTextFromWord(buffer);
     } else if (fileExt === 'txt' || fileExt === 'md') {
       textContent = buffer.toString('utf-8');
     }
 
     // 创建飞书文档
-    const documentTitle = file.name.replace(/\.[^/.]+$/, ''); // 移除扩展名
+    const documentTitle = file.name.replace(/\.[^/.]+$/, '');
     const document = await createFeishuDocument(documentTitle);
 
     // 将内容写入文档（分段写入，避免单次写入过长）
-    const chunkSize = 2000; // 每段2000字符
+    const chunkSize = 2000;
     for (let i = 0; i < textContent.length; i += chunkSize) {
       const chunk = textContent.slice(i, i + chunkSize);
       await addTextBlock(document.documentId, chunk);
@@ -89,10 +79,32 @@ export async function POST(request: NextRequest) {
 // 提取PDF文本
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    // 动态导入 pdf-parse
-    const pdfParse = await import('pdf-parse');
-    const data = await (pdfParse as any)(buffer);
-    return data.text;
+    // 动态导入 pdfjs-dist
+    const pdfjsLib = await import('pdfjs-dist');
+    
+    // 设置 worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+    // 加载 PDF 文档
+    const loadingTask = pdfjsLib.getDocument({ data: buffer });
+    const pdf = await loadingTask.promise;
+
+    let fullText = '';
+
+    // 遍历所有页面
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      
+      // 提取文本
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
+      
+      fullText += pageText + '\n';
+    }
+
+    return fullText;
   } catch (error) {
     console.error('PDF解析失败:', error);
     throw new Error('PDF文件解析失败，请确保文件格式正确');

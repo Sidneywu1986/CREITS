@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,11 @@ export default function IntegrationPage() {
   const [webhookMessage, setWebhookMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   const addLog = (log: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -357,7 +362,7 @@ for await (const chunk of stream) {
                   </h4>
                   <ul className="text-sm space-y-1">
                     <li>1. 本地开发需使用ngrok等内网穿透工具</li>
-                    <li>2. Webhook地址：{window.location.origin}/api/webhook/coze</li>
+                    <li>2. Webhook地址：{origin}/api/webhook/coze</li>
                     <li>3. 在扣子平台Bot设置中配置Webhook</li>
                   </ul>
                 </div>

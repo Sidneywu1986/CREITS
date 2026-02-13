@@ -131,7 +131,7 @@ export default function Game2048Page() {
   const moveUp = (currentGrid: number[][]) => {
     let moved = false;
     for (let j = 0; j < 4; j++) {
-      const col = [];
+      const col: number[] = [];
       for (let i = 0; i < 4; i++) {
         if (currentGrid[i][j] !== 0) col.push(currentGrid[i][j]);
       }
@@ -156,7 +156,7 @@ export default function Game2048Page() {
   const moveDown = (currentGrid: number[][]) => {
     let moved = false;
     for (let j = 0; j < 4; j++) {
-      const col = [];
+      const col: number[] = [];
       for (let i = 0; i < 4; i++) {
         if (currentGrid[i][j] !== 0) col.push(currentGrid[i][j]);
       }

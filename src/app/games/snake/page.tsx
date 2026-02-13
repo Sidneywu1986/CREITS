@@ -18,7 +18,7 @@ const INITIAL_SPEED = 150;
 export default function SnakeGamePage() {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gameLoopRef = useRef<number | null>(null);
+  const gameLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [snake, setSnake] = useState<Position[]>([{ x: 10, y: 10 }]);
   const [food, setFood] = useState<Position>({ x: 15, y: 15 });
