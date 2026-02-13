@@ -23,6 +23,7 @@ import {
   Shield,
   Star,
 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function IssuedABSPage() {
   return (
@@ -140,8 +141,10 @@ export default function IssuedABSPage() {
 
       {/* Projects List */}
       <div className="space-y-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Card key={i} className="hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-[#764ba2]">
+        {[1, 2, 3, 4, 5, 6].map((i) => {
+          return (
+            <Link key={i} href={`/issued-abs/${i}`}>
+              <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-[#764ba2]">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -216,7 +219,9 @@ export default function IssuedABSPage() {
               </div>
             </CardContent>
           </Card>
-        ))}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Load More */}
