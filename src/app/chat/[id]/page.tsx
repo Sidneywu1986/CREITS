@@ -62,19 +62,26 @@ export default function ChatPage() {
       timestamp: new Date(),
     };
 
+    // 更新消息列表
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
     setCurrentAssistantMessage('');
 
     try {
+      // 构建发送给API的消息数组（包含当前用户消息）
+      const messagesToSend = [
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+        { role: 'user', content: input },
+      ];
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: messages.map((m) => ({ role: m.role, content: m.content })),
+          messages: messagesToSend,
           agentId: agent.id,
         }),
       });
