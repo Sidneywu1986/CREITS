@@ -54,7 +54,7 @@ export async function addTextBlock(
   const client = createFeishuClient();
 
   try {
-    const response = await client.docx.block.children.create({
+    const response = await (client.docx as any).block.children.create({
       path: {
         document_id: documentId,
         block_id: documentId, // 使用document_id作为父block_id，表示添加到根节点
@@ -81,8 +81,8 @@ export async function addTextBlock(
       },
     });
 
-    const block = response.data;
-    const blockId = block?.block?.block_id;
+    const block = response.data as any;
+    const blockId = block?.block_id || block?.block?.block_id;
 
     if (!blockId) {
       throw new Error('添加文本块失败：未返回块ID');
@@ -100,7 +100,7 @@ export async function getDocumentBlocks(documentId: string): Promise<FeishuDocum
   const client = createFeishuClient();
 
   try {
-    const response = await client.docx.block.children.list({
+    const response = await (client.docx as any).block.children.list({
       path: {
         document_id: documentId,
         block_id: documentId,
@@ -123,7 +123,7 @@ export async function deleteDocument(documentId: string): Promise<boolean> {
   const client = createFeishuClient();
 
   try {
-    await client.docx.document.delete({
+    await (client.docx as any).document.delete({
       path: {
         document_id: documentId,
       },
@@ -192,4 +192,28 @@ function getStyleByType(type?: string): any {
         line_height: 1.5,
       };
   }
+}
+
+// 从文档块提取纯文本内容
+export function extractTextFromBlocks(blocks: FeishuDocumentBlock[]): string {
+  let text = '';
+
+  blocks.forEach(block => {
+    if (block.type === '1' && block.content) { // 1表示paragraph类型
+      const elements = block.content.elements || [];
+      elements.forEach((element: any) => {
+        if (element.text_run?.content) {
+          text += element.text_run.content + '\n';
+        }
+      });
+    }
+  });
+
+  return text.trim();
+}
+
+// 获取文档纯文本内容
+export async function getDocumentText(documentId: string): Promise<string> {
+  const blocks = await getDocumentBlocks(documentId);
+  return extractTextFromBlocks(blocks);
 }

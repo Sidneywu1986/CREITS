@@ -28,7 +28,7 @@ export async function getApprovalTemplates(): Promise<any[]> {
   const client = createFeishuClient();
 
   try {
-    const response = await client.approval.template.list({
+    const response = await (client.approval as any).template.list({
       params: {
         page_size: 50,
       },
@@ -71,23 +71,22 @@ export async function createApprovalInstance(
         approval_code: approvalCode,
         user_id: userOpenId,
         title: title,
-        form: form,
-        node_list: options?.nodeList,
+        form: JSON.stringify(form),
       },
     });
 
     const instance = response.data;
-    const instanceId = instance?.instance_id;
+    const instanceCode = instance?.instance_code;
 
-    if (!instanceId) {
+    if (!instanceCode) {
       throw new Error('创建审批实例失败：未返回实例ID');
     }
 
     // 构建审批链接
-    const url = `https://feishu.cn/approval/approval/view/${instanceId}`;
+    const url = `https://feishu.cn/approval/approval/view/${instanceCode}`;
 
     return {
-      instanceId,
+      instanceId: instanceCode,
       status: 'RUNNING',
       approvalCode,
       title,
@@ -118,9 +117,23 @@ export async function getApprovalInstanceStatus(
       return null;
     }
 
+    // 状态映射
+    const statusMap: Record<string, string> = {
+      'APPROVED': 'APPROVED',
+      'REJECTED': 'REJECTED',
+      'CANCELED': 'CANCELED',
+      'PENDING': 'RUNNING',
+      'DELETED': 'CANCELED',
+      'RUNNING': 'RUNNING',
+      'DRAFT': 'DRAFT',
+    };
+
+    const rawStatus = instance.status || 'UNKNOWN';
+    const mappedStatus = statusMap[rawStatus] || 'UNKNOWN';
+
     return {
-      instanceId: instance.instance_id || instanceId,
-      status: instance.status || 'UNKNOWN',
+      instanceId: instance.instance_code || instanceId,
+      status: mappedStatus as any,
       approvalCode: instance.approval_code || '',
     };
   } catch (error) {

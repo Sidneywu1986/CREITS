@@ -4,10 +4,10 @@ import { getApprovalInstanceStatus, getApprovalDetail } from '@/services/feishu/
 // 查询审批状态
 export async function GET(
   request: NextRequest,
-  { params }: { params: { instanceId: string } }
+  { params }: { params: Promise<{ instanceId: string }> }
 ) {
   try {
-    const instanceId = params.instanceId;
+    const { instanceId } = await params;
 
     if (!instanceId) {
       return NextResponse.json(

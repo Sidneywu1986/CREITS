@@ -15,6 +15,7 @@ import {
   Gamepad2,
   Zap,
   CheckCircle,
+  Brain,
 } from 'lucide-react';
 
 const navigation = [
@@ -28,6 +29,7 @@ const navigation = [
   { name: '休闲小游戏', href: '/games', icon: Gamepad2 },
   { name: '集成指南', href: '/integration', icon: Zap },
   { name: '飞书集成', href: '/feishu', icon: CheckCircle },
+  { name: '文档分析', href: '/document-analysis', icon: Brain },
 ];
 
 export default function Sidebar() {
