@@ -49,6 +49,7 @@ export default function AgentsPage() {
   const [chatLoading, setChatLoading] = useState(false);
   const [documentText, setDocumentText] = useState('');
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const addLog = (log: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -81,9 +82,11 @@ export default function AgentsPage() {
         setDocumentId(data.documentId);
         addLog('文件上传成功');
         addLog('文档ID: ' + data.documentId);
+        setUploadError(null);
       } else {
         addLog('文件上传失败: ' + data.error);
         setUploadedFile(null);
+        setUploadError(data.error);
       }
     } catch (error) {
       addLog('上传失败: ' + error);
@@ -440,6 +443,27 @@ export default function AgentsPage() {
                     开始分析
                   </Button>
 
+                  {uploadError && uploadError.includes('飞书应用ID和Secret未配置') && (
+                    <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-lg border border-amber-200 dark:border-amber-800 mb-3">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                        需要配置飞书应用凭证
+                      </h4>
+                      <div className="text-sm text-amber-700 dark:text-amber-300 space-y-2">
+                        <p>文档分析功能需要飞书应用配置才能正常使用。请按照以下步骤配置：</p>
+                        <ol className="list-decimal list-inside space-y-1">
+                          <li>登录飞书开放平台：<a href="https://open.feishu.cn/app" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://open.feishu.cn/app</a></li>
+                          <li>创建应用（选择"企业自建应用"）</li>
+                          <li>在应用凭证页面获取 App ID 和 App Secret</li>
+                          <li>在项目根目录创建 `.env.local` 文件，添加以下配置：</li>
+                        </ol>
+                        <div className="bg-slate-900 text-green-400 p-3 rounded font-mono text-xs my-2">
+                          FEISHU_APP_ID=你的应用ID<br/>
+                          FEISHU_APP_SECRET=你的应用密钥
+                        </div>
+                        <p className="text-xs">配置完成后重启服务即可使用文档分析功能。</p>
+                      </div>
+                    </div>
+                  )}
                   {logs.length > 0 && (
                     <div className="bg-slate-950 text-green-400 p-3 rounded-lg font-mono text-xs space-y-1 max-h-48 overflow-y-auto">
                       {logs.map((log, index) => (
