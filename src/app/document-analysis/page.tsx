@@ -8,16 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { AGENTS } from '@/types';
-import { FileText, Bot, CheckCircle, AlertCircle, Play, Copy, ExternalLink, Loader2 } from 'lucide-react';
+import { FileText, Bot, CheckCircle, AlertCircle, Play, Copy, ExternalLink, Loader2, Upload, File, X } from 'lucide-react';
 
 export default function DocumentAnalysisPage() {
   const [documentUrl, setDocumentUrl] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('policy');
   const [writeBack, setWriteBack] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [documentId, setDocumentId] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const addLog = (log: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -26,14 +28,61 @@ export default function DocumentAnalysisPage() {
 
   const extractDocumentId = (url: string): string => {
     // 从飞书文档URL中提取documentId
-    // 格式：https://feishu.cn/doc/doxxxxxxxxxxxx
     const match = url.match(/doc\/([a-zA-Z0-9_-]+)/);
     return match ? match[1] : url;
   };
 
+  // 文件上传处理
+  const handleFileUpload = async (file: File) => {
+    setUploading(true);
+    setUploadedFile(file);
+    addLog(`📁 开始上传文件: ${file.name}`);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/feishu/document/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setDocumentUrl(`https://feishu.cn/doc/${data.documentId}`);
+        setDocumentId(data.documentId);
+        addLog(`✓ 文件上传成功`);
+        addLog(`📄 创建的飞书文档ID: ${data.documentId}`);
+        addLog(`🔗 文档链接: ${documentUrl}`);
+      } else {
+        addLog(`✗ 文件上传失败: ${data.error}`);
+        setUploadedFile(null);
+      }
+    } catch (error) {
+      addLog(`✗ 上传失败: ${error}`);
+      setUploadedFile(null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // 拖拽上传处理
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFileUpload(files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
   const handleAnalyze = async () => {
-    if (!documentUrl.trim()) {
-      addLog('✗ 请输入文档URL或ID');
+    if (!documentId) {
+      addLog('✗ 请先上传文件或输入文档URL');
       return;
     }
 
@@ -42,11 +91,6 @@ export default function DocumentAnalysisPage() {
     addLog('开始文档分析流程...');
 
     try {
-      // 提取文档ID
-      const docId = extractDocumentId(documentUrl);
-      setDocumentId(docId);
-      addLog(`📄 文档ID: ${docId}`);
-
       // 获取选中的Agent信息
       const agent = AGENTS.find(a => a.id === selectedAgent);
       addLog(`🤖 使用Agent: ${agent?.name}`);
@@ -58,7 +102,7 @@ export default function DocumentAnalysisPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          documentId: docId,
+          documentId: documentId,
           agentId: selectedAgent,
           writeBack,
         }),
@@ -92,6 +136,13 @@ export default function DocumentAnalysisPage() {
     addLog('📋 分析结果已复制到剪贴板');
   };
 
+  const clearUpload = () => {
+    setUploadedFile(null);
+    setDocumentUrl('');
+    setDocumentId('');
+    addLog('🗑️ 已清除上传的文件');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
       <div className="container mx-auto p-6">
@@ -101,7 +152,7 @@ export default function DocumentAnalysisPage() {
             文档智能分析
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
-            将飞书文档发送给Agent进行分析，获取专业反馈
+            将飞书文档或本地文件发送给Agent进行分析，获取专业反馈
           </p>
         </div>
 
@@ -115,22 +166,89 @@ export default function DocumentAnalysisPage() {
                   文档配置
                 </CardTitle>
                 <CardDescription>
-                  配置要分析的文档和Agent
+                  上传本地文件或输入飞书文档URL
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* 文件上传区域 */}
+                {!uploadedFile && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">上传文件</label>
+                    <div
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer"
+                    >
+                      <input
+                        type="file"
+                        id="file-upload"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.txt,.md"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            handleFileUpload(e.target.files[0]);
+                          }
+                        }}
+                      />
+                      <label htmlFor="file-upload" className="cursor-pointer">
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          点击或拖拽文件到此处
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          支持 PDF, Word, TXT, MD
+                        </p>
+                      </label>
+                    </div>
+                    <div className="flex items-center justify-center text-xs text-muted-foreground">
+                      <span className="mx-2">或者</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 已上传文件显示 */}
+                {uploadedFile && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">已上传文件</label>
+                    <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <File className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium truncate max-w-[150px]">
+                          {uploadedFile.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          ({(uploadedFile.size / 1024).toFixed(2)} KB)
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearUpload}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 文档URL输入 */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">文档URL或ID</label>
                   <Input
                     placeholder="https://feishu.cn/doc/doxxxxxxxxxxxx"
                     value={documentUrl}
-                    onChange={(e) => setDocumentUrl(e.target.value)}
+                    onChange={(e) => {
+                      setDocumentUrl(e.target.value);
+                      setDocumentId(extractDocumentId(e.target.value));
+                    }}
                   />
                   <p className="text-xs text-muted-foreground">
                     输入飞书文档的完整URL或文档ID
                   </p>
                 </div>
 
+                {/* Agent选择 */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">选择Agent</label>
                   <Select value={selectedAgent} onValueChange={setSelectedAgent}>
@@ -153,6 +271,7 @@ export default function DocumentAnalysisPage() {
                   </p>
                 </div>
 
+                {/* 写回选项 */}
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="writeBack"
@@ -170,15 +289,16 @@ export default function DocumentAnalysisPage() {
                   启用后，分析结果将自动追加到文档末尾
                 </p>
 
+                {/* 分析按钮 */}
                 <Button
                   onClick={handleAnalyze}
-                  disabled={loading || !documentUrl.trim()}
+                  disabled={loading || uploading || !documentId}
                   className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"
                 >
-                  {loading ? (
+                  {(loading || uploading) ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      分析中...
+                      {uploading ? '上传中...' : '分析中...'}
                     </>
                   ) : (
                     <>
@@ -238,7 +358,7 @@ export default function DocumentAnalysisPage() {
                     <FileText className="w-16 h-16 mb-4 opacity-20" />
                     <p className="text-lg font-medium mb-2">等待分析</p>
                     <p className="text-sm">
-                      输入文档URL并选择Agent，点击"开始分析"按钮
+                      上传文件或输入文档URL，选择Agent后点击"开始分析"
                     </p>
                   </div>
                 ) : (
@@ -329,22 +449,18 @@ export default function DocumentAnalysisPage() {
             <div className="space-y-2 text-sm">
               <div className="flex items-start gap-2">
                 <Badge className="mt-0.5">1</Badge>
-                <span>在飞书中创建或打开一个文档（REITs项目报告、尽职调查报告等）</span>
+                <span>上传本地文件（PDF、Word、TXT、MD）或输入飞书文档URL</span>
               </div>
               <div className="flex items-start gap-2">
                 <Badge className="mt-0.5">2</Badge>
-                <span>复制文档的URL或直接使用文档ID</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Badge className="mt-0.5">3</Badge>
                 <span>选择要使用的Agent（政策解读、尽职调查、申报材料等）</span>
               </div>
               <div className="flex items-start gap-2">
-                <Badge className="mt-0.5">4</Badge>
+                <Badge className="mt-0.5">3</Badge>
                 <span>可选：勾选"将分析结果写回文档"</span>
               </div>
               <div className="flex items-start gap-2">
-                <Badge className="mt-0.5">5</Badge>
+                <Badge className="mt-0.5">4</Badge>
                 <span>点击"开始分析"，Agent将读取文档并提供专业反馈</span>
               </div>
             </div>
