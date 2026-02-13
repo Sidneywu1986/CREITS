@@ -12,17 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Building,
-  Search,
-  Filter,
-  TrendingUp,
-  TrendingDown,
-  ArrowRight,
-  Calendar,
-  DollarSign,
-  MapPin,
-} from 'lucide-react';
+import { Building, Search, Filter, TrendingUp, TrendingDown, ArrowRight, Calendar, DollarSign, MapPin, } from 'lucide-react';
+import Link from 'next/link';
 
 export default function IssuedREITsPage() {
   return (
@@ -140,72 +131,76 @@ export default function IssuedREITsPage() {
 
       {/* Projects List */}
       <div className="space-y-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Card key={i} className="hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-[#667eea]">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Badge className="bg-[#667eea] text-white">上市交易</Badge>
-                    <Badge variant="outline">{i % 2 === 0 ? '上海证券交易所' : '深圳证券交易所'}</Badge>
-                    <Badge variant="secondary">
-                      {['交通基础设施', '产业园区', '仓储物流', '商业地产', '能源基础设施', '环保设施'][i - 1]}
-                    </Badge>
+        {[1, 2, 3, 4, 5, 6].map((i) => {
+          return (
+            <Link key={i} href={`/issued-reits/${i}`}>
+              <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-[#667eea]">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Badge className="bg-[#667eea] text-white">上市交易</Badge>
+                        <Badge variant="outline">{i % 2 === 0 ? '上海证券交易所' : '深圳证券交易所'}</Badge>
+                        <Badge variant="secondary">
+                          {['交通基础设施', '产业园区', '仓储物流', '商业地产', '能源基础设施', '环保设施'][i - 1]}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-xl mb-1">
+                        {[
+                          '沪杭甬高速REIT',
+                          '张江光大园REIT',
+                          '普洛斯仓储物流REIT',
+                          '华润置地商业REIT',
+                          '深圳能源REIT',
+                          '首创环保REIT',
+                        ][i - 1]}
+                      </CardTitle>
+                      <div className="text-sm text-muted-foreground">代码: {i % 2 === 0 ? '508000' : '180101'}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-2xl font-bold ${i % 3 === 0 ? 'text-green-600' : i % 2 === 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {i % 3 === 0 ? '+1.25%' : i % 2 === 0 ? '-0.56%' : '+2.18%'}
+                      </div>
+                      <div className="text-sm text-muted-foreground">今日涨跌</div>
+                    </div>
                   </div>
-                  <CardTitle className="text-xl mb-1">
-                    {[
-                      '沪杭甬高速REIT',
-                      '张江光大园REIT',
-                      '普洛斯仓储物流REIT',
-                      '华润置地商业REIT',
-                      '深圳能源REIT',
-                      '首创环保REIT',
-                    ][i - 1]}
-                  </CardTitle>
-                  <div className="text-sm text-muted-foreground">代码: {i % 2 === 0 ? '508000' : '180101'}</div>
-                </div>
-                <div className="text-right">
-                  <div className={`text-2xl font-bold ${i % 3 === 0 ? 'text-green-600' : i % 2 === 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {i % 3 === 0 ? '+1.25%' : i % 2 === 0 ? '-0.56%' : '+2.18%'}
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">发行规模</div>
+                      <div className="text-lg font-semibold">{[58.2, 32.5, 45.8, 62.3, 28.9, 35.6][i - 1]} 亿元</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">发行价格</div>
+                      <div className="text-lg font-semibold">{[6.88, 5.62, 4.35, 7.25, 3.98, 5.15][i - 1]} 元/份</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">年化收益率</div>
+                      <div className="text-lg font-semibold text-[#48bb78]">{[4.35, 4.52, 4.18, 4.68, 3.95, 4.28][i - 1]}%</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">上市日期</div>
+                      <div className="text-lg font-semibold">
+                        2024-{(11 - i).toString().padStart(2, '0')}-{[15, 22, 8, 18, 5, 12][i - 1]}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">今日涨跌</div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">发行规模</div>
-                  <div className="text-lg font-semibold">{[58.2, 32.5, 45.8, 62.3, 28.9, 35.6][i - 1]} 亿元</div>
-                </div>
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">发行价格</div>
-                  <div className="text-lg font-semibold">{[6.88, 5.62, 4.35, 7.25, 3.98, 5.15][i - 1]} 元/份</div>
-                </div>
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">年化收益率</div>
-                  <div className="text-lg font-semibold text-[#48bb78]">{[4.35, 4.52, 4.18, 4.68, 3.95, 4.28][i - 1]}%</div>
-                </div>
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">上市日期</div>
-                  <div className="text-lg font-semibold">
-                    2024-{(11 - i).toString().padStart(2, '0')}-{[15, 22, 8, 18, 5, 12][i - 1]}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <MapPin className="mr-1 h-3 w-3" />
+                      {['上海', '北京', '深圳', '广州', '深圳', '北京'][i - 1]}
+                    </div>
+                    <Button variant="outline" size="sm">
+                      查看详情
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                   </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <MapPin className="mr-1 h-3 w-3" />
-                  {['上海', '北京', '深圳', '广州', '深圳', '北京'][i - 1]}
-                </div>
-                <Button variant="outline" size="sm">
-                  查看详情
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
 
       {/* Load More */}
