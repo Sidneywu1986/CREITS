@@ -520,15 +520,15 @@ export default function AgentsPage() {
 
                 <div className="flex-1 flex flex-col overflow-hidden">
                   {analysisResult && (
-                    <div className="p-4 border-b overflow-y-auto flex-1 min-h-0">
+                    <div className="p-4 pb-8 border-b overflow-y-auto flex-1 min-h-0">
                       <div className="flex items-center justify-between mb-3 sticky top-0 bg-background py-2">
                         <h3 className="font-semibold flex items-center gap-2">
                           <CheckCircle className="w-4 h-4 text-green-600" />
                           分析结果
                         </h3>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => {
                             try {
                               navigator.clipboard.writeText(analysisResult.analysisResult);
