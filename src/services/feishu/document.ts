@@ -54,10 +54,11 @@ export async function addTextBlock(
   const client = createFeishuClient();
 
   try {
-    // 使用documentBlock.create而不是documentBlockChildren.create
-    const response = await (client.docx as any).documentBlock.create({
+    // 使用正确的飞书SDK API路径：documentBlockChildren.create
+    const response = await (client.docx as any).documentBlockChildren.create({
       path: {
         document_id: documentId,
+        block_id: documentId,
       },
       data: {
         block_type: 1,
@@ -84,12 +85,12 @@ export async function addTextBlock(
     return blockId;
   } catch (error: any) {
     console.error('添加文本块失败:', error);
-    
+
     // 如果是400错误，打印详细的错误信息
     if (error.response?.data) {
       console.log('Error details:', JSON.stringify(error.response.data, null, 2));
     }
-    
+
     throw new Error(`添加文本块失败: ${error instanceof Error ? error.message : '未知错误'}`);
   }
 }
