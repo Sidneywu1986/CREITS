@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AGENTS } from '@/types';
 import { ArrowLeft, Send, Paperclip, Bot, User, Copy, ThumbsUp, ThumbsDown } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Message {
   id: string;
@@ -228,9 +227,9 @@ export default function ChatPage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 container mx-auto px-4 flex flex-col overflow-hidden">
+      <div className="flex-1 container mx-auto px-4 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
         {/* Messages Area */}
-        <ScrollArea className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           <div className="space-y-4 px-4 py-6">
             {messages.map((message) => (
               <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -310,7 +309,7 @@ export default function ChatPage() {
             )}
             <div ref={messagesEndRef} />
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Fixed Input Area at Bottom */}
         <div className="border-t bg-white dark:bg-gray-900 p-4 flex-shrink-0">
