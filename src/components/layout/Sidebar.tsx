@@ -13,7 +13,6 @@ import {
   Building,
   Briefcase,
   Gamepad2,
-  Zap,
   CheckCircle,
   Brain,
   Calculator,
@@ -29,7 +28,6 @@ const navigation = [
   { name: '已发行ABS项目', href: '/issued-abs', icon: Briefcase },
   { name: 'REITs估值计算器', href: '/valuation-calculator', icon: Calculator },
   { name: '休闲小游戏', href: '/games', icon: Gamepad2 },
-  { name: '集成指南', href: '/integration', icon: Zap },
   { name: '飞书集成', href: '/feishu', icon: CheckCircle },
   { name: '文档分析', href: '/document-analysis', icon: Brain },
 ];
