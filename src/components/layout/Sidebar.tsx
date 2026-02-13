@@ -12,6 +12,7 @@ import {
   Settings,
   Building,
   Briefcase,
+  Gamepad2,
 } from 'lucide-react';
 
 const navigation = [
@@ -22,6 +23,7 @@ const navigation = [
   { name: '资产证券化新闻', href: '/news', icon: FileText },
   { name: '已发行REITs项目', href: '/issued-reits', icon: Building },
   { name: '已发行ABS项目', href: '/issued-abs', icon: Briefcase },
+  { name: '休闲小游戏', href: '/games', icon: Gamepad2 },
 ];
 
 export default function Sidebar() {
