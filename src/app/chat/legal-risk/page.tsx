@@ -47,19 +47,19 @@ const SimpleMarkdownRenderer = ({ content }: { content: string }) => {
       });
       
       const tableHtml = `
-        <div className="overflow-x-auto my-2">
-          <table className="min-w-full border-collapse border-2 border-black text-sm">
-            <thead className="bg-gray-100 dark:bg-gray-800">
+        <div style="overflow-x: auto; margin: 8px 0;">
+          <table style="min-width: 100%; border-collapse: collapse; border: 2px solid #000000; font-size: 14px;">
+            <thead style="background-color: #f3f4f6;">
               ${tableRows.filter(r => r.isHeader).map(row => `
                 <tr>
-                  ${row.cells.map(cell => `<th className="border border-black px-3 py-2 text-left font-semibold">${cell}</th>`).join('')}
+                  ${row.cells.map(cell => `<th style="border: 1px solid #000000; padding: 8px 12px; text-align: left; font-weight: 600;">${cell}</th>`).join('')}
                 </tr>
               `).join('')}
             </thead>
             <tbody>
               ${tableRows.filter(r => !r.isHeader).map(row => `
                 <tr>
-                  ${row.cells.map(cell => `<td className="border border-black px-3 py-2">${cell}</td>`).join('')}
+                  ${row.cells.map(cell => `<td style="border: 1px solid #000000; padding: 8px 12px;">${cell}</td>`).join('')}
                 </tr>
               `).join('')}
             </tbody>
