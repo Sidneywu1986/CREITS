@@ -15,8 +15,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -43,6 +41,7 @@ import {
   Car,
   Activity,
 } from 'lucide-react';
+import MapLocationSelector from './MapLocationSelector';
 import type {
   LocationAnalysisResult,
   PopulationData,
@@ -61,28 +60,32 @@ export default function LocationAnalysis({
   latitude: propLatitude,
   longitude: propLongitude,
 }: LocationAnalysisProps) {
-  const [address, setAddress] = useState(propAddress || '');
-  const [latitude, setLatitude] = useState(propLatitude?.toString() || '');
-  const [longitude, setLongitude] = useState(propLongitude?.toString() || '');
+  const [selectedLatitude, setSelectedLatitude] = useState<number>(propLatitude || 39.9042);
+  const [selectedLongitude, setSelectedLongitude] = useState<number>(propLongitude || 116.4074);
+  const [selectedAddress, setSelectedAddress] = useState<string>(propAddress || '');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<LocationAnalysisResult | null>(null);
 
+  // 处理地图位置变化
+  const handleLocationChange = (lat: number, lng: number, address: string) => {
+    setSelectedLatitude(lat);
+    setSelectedLongitude(lng);
+    setSelectedAddress(address);
+  };
+
   const handleAnalyze = async () => {
-    if (!address && (!latitude || !longitude)) {
-      alert('请输入地址或经纬度');
+    if (!selectedAddress) {
+      alert('请先选择位置');
       return;
     }
 
     try {
       setLoading(true);
-      const body: any = {};
-      if (address) {
-        body.address = address;
-      }
-      if (latitude && longitude) {
-        body.latitude = Number(latitude);
-        body.longitude = Number(longitude);
-      }
+      const body = {
+        latitude: selectedLatitude,
+        longitude: selectedLongitude,
+        address: selectedAddress,
+      };
 
       const response = await fetch('/api/location-analysis', {
         method: 'POST',
@@ -383,7 +386,7 @@ export default function LocationAnalysis({
 
   return (
     <div className="space-y-6">
-      {/* 输入区域 */}
+      {/* 输入区域 - 地图选择器 */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -391,44 +394,17 @@ export default function LocationAnalysis({
             地理位置分析
           </CardTitle>
           <CardDescription>
-            输入地址或经纬度，分析人口、人流量、商业数据
+            在地图上选择位置，分析人口、人流量、商业数据（2公里范围）
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">地址</Label>
-              <Input
-                id="address"
-                placeholder="例如：北京市朝阳区三里屯"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="latitude">纬度</Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="0.000001"
-                  placeholder="例如：39.9042"
-                  value={latitude}
-                  onChange={(e) => setLatitude(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="longitude">经度</Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="0.000001"
-                  placeholder="例如：116.4074"
-                  value={longitude}
-                  onChange={(e) => setLongitude(e.target.value)}
-                />
-              </div>
-            </div>
+            <MapLocationSelector
+              onLocationChange={handleLocationChange}
+              initialLatitude={selectedLatitude}
+              initialLongitude={selectedLongitude}
+              radius={2}
+            />
             <Button
               onClick={handleAnalyze}
               disabled={loading}
