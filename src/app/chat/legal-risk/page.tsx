@@ -48,18 +48,18 @@ const SimpleMarkdownRenderer = ({ content }: { content: string }) => {
       
       const tableHtml = `
         <div className="overflow-x-auto my-2">
-          <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-700 text-sm">
+          <table className="min-w-full border-collapse border-2 border-black text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800">
               ${tableRows.filter(r => r.isHeader).map(row => `
                 <tr>
-                  ${row.cells.map(cell => `<th className="border border-gray-300 dark:border-gray-700 px-2 py-1 text-left">${cell}</th>`).join('')}
+                  ${row.cells.map(cell => `<th className="border border-black px-3 py-2 text-left font-semibold">${cell}</th>`).join('')}
                 </tr>
               `).join('')}
             </thead>
             <tbody>
               ${tableRows.filter(r => !r.isHeader).map(row => `
                 <tr>
-                  ${row.cells.map(cell => `<td className="border border-gray-300 dark:border-gray-700 px-2 py-1">${cell}</td>`).join('')}
+                  ${row.cells.map(cell => `<td className="border border-black px-3 py-2">${cell}</td>`).join('')}
                 </tr>
               `).join('')}
             </tbody>
