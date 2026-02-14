@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../src/components/ui/card';
 import { Button } from '../../src/components/ui/button';
 import { Badge } from '../../src/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../src/components/ui/tabs';
@@ -256,10 +256,9 @@ export default function REITsDetailPage() {
 
         {/* 主要内容 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="overview">项目概况</TabsTrigger>
             <TabsTrigger value="assets">底层资产</TabsTrigger>
-            <TabsTrigger value="discussion">讨论交流</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -362,6 +361,28 @@ export default function REITsDetailPage() {
                         <span>投资者应根据自身风险承受能力，理性投资</span>
                       </li>
                     </ul>
+                  </CardContent>
+                </Card>
+
+                {/* 讨论交流 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Info className="w-5 h-5 text-blue-600" />
+                      讨论交流
+                    </CardTitle>
+                    <CardDescription>参与该产品的讨论和交流</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ProjectBBS
+                      projectId={projectData.id}
+                      projectType="REITs"
+                      projectName={projectData.name}
+                      comments={comments}
+                      onAddComment={handleAddComment}
+                      onReplyComment={handleReplyComment}
+                      onLikeComment={handleLikeComment}
+                    />
                   </CardContent>
                 </Card>
               </div>
@@ -504,28 +525,6 @@ export default function REITsDetailPage() {
                     查看项目概况
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="discussion">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="w-5 h-5 text-blue-600" />
-                  讨论交流
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ProjectBBS
-                  projectId={projectData.id}
-                  projectType="REITs"
-                  projectName={projectData.name}
-                  comments={comments}
-                  onAddComment={handleAddComment}
-                  onReplyComment={handleReplyComment}
-                  onLikeComment={handleLikeComment}
-                />
               </CardContent>
             </Card>
           </TabsContent>
