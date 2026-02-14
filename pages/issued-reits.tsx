@@ -8,7 +8,29 @@ import { Badge } from '../src/components/ui/badge';
 import { ScrollArea } from '../src/components/ui/scroll-area';
 import ProjectBBS, { Comment } from '../src/components/ProjectBBS';
 import REITsValuationCalculator from '../src/components/reits/REITsValuationCalculator';
-import { Building, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight, RefreshCw, Activity, Calendar, Calculator } from 'lucide-react';
+import { Input } from '../src/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../src/components/ui/select';
+import {
+  Building,
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight,
+  ArrowRight,
+  RefreshCw,
+  Activity,
+  Calendar,
+  Calculator,
+  Search,
+  ArrowUp,
+  ArrowDown,
+  ExternalLink,
+} from 'lucide-react';
 import { Button } from '../src/components/ui/button';
 import { getREITsProducts } from '../src/lib/data/real-reits-products';
 
@@ -24,6 +46,9 @@ export default function IssuedREITsPage() {
     currentPrice: number;
     annualDistribution: number;
   } | null>(null);
+  const [sortBy, setSortBy] = useState<'change' | 'price' | 'volume'>('change');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const loadRealData = async () => {
     try {
@@ -38,6 +63,43 @@ export default function IssuedREITsPage() {
       setLoading(false);
     }
   };
+
+  // 格式化成交量/成交额
+  const formatVolume = (value: number): string => {
+    if (value >= 100000000) {
+      return `${(value / 100000000).toFixed(2)}亿`;
+    } else if (value >= 10000) {
+      return `${(value / 10000).toFixed(2)}万`;
+    }
+    return value.toFixed(0);
+  };
+
+  // 排序后的产品列表
+  const filteredProducts = products
+    .filter(p =>
+      p.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      let valueA, valueB;
+      switch (sortBy) {
+        case 'change':
+          valueA = a.change || 0;
+          valueB = b.change || 0;
+          break;
+        case 'price':
+          valueA = parseFloat(a.price.replace(/[^\d.]/g, '')) || 0;
+          valueB = parseFloat(b.price.replace(/[^\d.]/g, '')) || 0;
+          break;
+        case 'volume':
+          valueA = a.volume || 0;
+          valueB = b.volume || 0;
+          break;
+        default:
+          return 0;
+      }
+      return sortOrder === 'asc' ? valueA - valueB : valueB - valueA;
+    });
 
   useEffect(() => {
     loadRealData();
@@ -89,7 +151,7 @@ export default function IssuedREITsPage() {
       name: product.name,
       code: product.code,
       currentPrice: parseFloat(product.price.replace(/[^\d.]/g, '')) || 0,
-      annualDistribution: 0, // 数据源中没有年度分红，设为0，用户可在计算器中修改
+      annualDistribution: 0,
     });
     setShowCalculator(true);
   };
@@ -148,64 +210,134 @@ export default function IssuedREITsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {products.map((product: any) => (
-            <div key={product.id}>
-              <Card
-                className="border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-all group"
-                onClick={() => window.location.href = `/issued-reits/${product.code}`}
-              >
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center">
-                    {product.name}
-                    <ArrowRight className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 dark:text-blue-400" />
-                  </h3>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">代码:</span>
-                      <span className="font-medium">{product.code}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">现价:</span>
-                      <span className="font-medium">{product.price}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">涨跌:</span>
-                      <span className={`flex items-center ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {product.change >= 0 ? <ArrowUpRight className="w-4 h-4 mr-1" /> : <ArrowDownRight className="w-4 h-4 mr-1" />}
-                        {product.change}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">市值:</span>
-                      <span className="font-medium">{product.marketCap}亿</span>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 hover:from-[#667eea]/20 hover:to-[#764ba2]/20"
-                      onClick={(e) => handleOpenCalculator(product, e)}
-                    >
-                      <Calculator className="w-4 h-4 mr-2" />
-                      估值计算
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              <ProjectBBS
-                projectId={product.id}
-                projectType="REITs"
-                projectName={product.name}
-                comments={product.comments}
-                onAddComment={handleAddComment}
-                onReplyComment={handleReplyComment}
-                onLikeComment={handleLikeComment}
-              />
+        {/* D-1日 REITs收盘价表格 */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center">
+                <Activity className="mr-2 text-[#ed8936]" />
+                D-1日 REITs收盘价 ({products.length}只)
+              </CardTitle>
+              <div className="flex gap-2">
+                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="排序方式" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="change">涨跌幅</SelectItem>
+                    <SelectItem value="price">成交价</SelectItem>
+                    <SelectItem value="volume">成交量</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                >
+                  {sortOrder === 'asc' ? '升序' : '降序'}
+                  {sortOrder === 'asc' ? (
+                    <ArrowUp className="ml-1 h-4 w-4" />
+                  ) : (
+                    <ArrowDown className="ml-1 h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
-          ))}
-        </div>
+          </CardHeader>
+          <CardContent>
+            {/* 搜索框 */}
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="搜索REITs代码或名称..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* 数据表格 */}
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-400">加载中...</p>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
+                      <th className="text-left py-3 px-4 font-semibold text-sm">代码</th>
+                      <th className="text-left py-3 px-4 font-semibold text-sm">名称</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">收盘价</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">首发价</th>
+                      <th className="text-center py-3 px-4 font-semibold text-sm">发行时间</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">涨跌幅</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">涨跌额</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">成交量</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">成交额</th>
+                      <th className="text-center py-3 px-4 font-semibold text-sm">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map((product) => (
+                      <tr
+                        key={product.id}
+                        className="border-b border-gray-100 dark:border-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      >
+                        <td className="py-3 px-4 text-sm font-medium">
+                          <Link href={`/issued-reits/${product.code}`} className="flex items-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            {product.code}
+                            <ExternalLink className="ml-2 h-3 w-3 text-gray-400" />
+                          </Link>
+                        </td>
+                        <td className="py-3 px-4 text-sm">{product.name}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
+                          {product.price}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">
+                          {product.issuePrice ? product.issuePrice : '-'}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-center text-gray-600 dark:text-gray-400">
+                          {product.issueDate || '-'}
+                        </td>
+                        <td className={`py-3 px-4 text-sm text-right font-semibold ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {product.change >= 0 ? '+' : ''}{product.change}%
+                        </td>
+                        <td className={`py-3 px-4 text-sm text-right ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {(() => {
+                            const price = parseFloat(product.price.replace(/[^\d.]/g, '')) || 0;
+                            const changeAmount = (product.change / 100) * price;
+                            return `${product.change >= 0 ? '+' : ''}${changeAmount.toFixed(3)}`;
+                          })()}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">
+                          {formatVolume(product.volume || 0)}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">
+                          {formatVolume((product.volume || 0) * (parseFloat(product.price.replace(/[^\d.]/g, '')) || 0))}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => handleOpenCalculator(product, e)}
+                          >
+                            <Calculator className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* 估值计算器 */}
         {selectedREITs && (
