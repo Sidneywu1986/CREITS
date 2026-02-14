@@ -1,6 +1,6 @@
 /**
  * 地图选择器包装器
- * 动态导入 MapLocationSelector 以避免服务端渲染问题
+ * 动态导入 BaiduMapLocationSelector 以避免服务端渲染问题
  */
 
 'use client';
@@ -8,7 +8,7 @@
 import dynamic from 'next/dynamic';
 
 const MapLocationSelector = dynamic(
-  () => import('./MapLocationSelector'),
+  () => import('./BaiduMapLocationSelector'),
   {
     ssr: false, // 禁用服务端渲染
     loading: () => (
