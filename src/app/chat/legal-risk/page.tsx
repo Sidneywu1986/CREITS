@@ -36,7 +36,7 @@ interface RegulationResult {
   content: string;
   relevance: number;
   effective_date: string;
-  applicable_assets: string[];
+  applicable_assets: string | string[];
   interpretation: string;
 }
 
@@ -203,6 +203,27 @@ export default function LegalRiskChatPage() {
     }
   };
 
+  const parseApplicableAssets = (assets: string | string[]): string[] => {
+    // 如果已经是数组，直接返回
+    if (Array.isArray(assets)) {
+      return assets;
+    }
+    // 如果是字符串，按分隔符分割
+    if (typeof assets === 'string') {
+      // 尝试多种分隔符
+      const separators = ['、', ',', '，', '；', ';'];
+      for (const separator of separators) {
+        if (assets.includes(separator)) {
+          return assets.split(separator).map(s => s.trim()).filter(Boolean);
+        }
+      }
+      // 没有分隔符，返回整个字符串作为单个元素
+      return [assets.trim()];
+    }
+    // 其他情况返回空数组
+    return [];
+  };
+
   if (!agent) {
     return (
       <MainLayout>
@@ -311,7 +332,7 @@ export default function LegalRiskChatPage() {
                               <div className="flex items-start gap-2">
                                 <span className="font-medium">适用资产:</span>
                                 <div className="flex flex-wrap gap-1">
-                                  {result.applicable_assets.map((asset, idx) => (
+                                  {parseApplicableAssets(result.applicable_assets).map((asset, idx) => (
                                     <Badge key={idx} variant="secondary" className="text-xs">
                                       {asset}
                                     </Badge>
