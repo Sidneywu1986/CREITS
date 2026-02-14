@@ -1,100 +1,120 @@
 'use client';
-import ProjectBBS from "@/components/ProjectBBS";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ProjectBBS, { Comment } from '@/components/ProjectBBS';
+import { getABSDetail } from '@/lib/services/simple-real-data-service';
 import {
   ArrowLeft,
   Briefcase,
-  TrendingUp,
   DollarSign,
   Calendar,
   FileText,
   Download,
   Share2,
-  AlertTriangle,
   Info,
-  PieChart,
-  BarChart3,
-  Shield,
-  Layers,
-  Building,
-  CheckCircle,
-  Clock,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function ABSDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id;
+  const code = params.id as string;
 
   const [activeTab, setActiveTab] = useState('overview');
+  const [projectData, setProjectData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [comments, setComments] = useState<Comment[]>([]);
 
-  // Mock data - 实际应该从API获取
-  const projectData = {
-    name: '招商银行2024年第一期信贷资产支持证券',
-    code: '24招银1A',
-    initiator: '招商银行股份有限公司',
-    manager: '招商证券股份有限公司',
-    ratingAgency: '联合资信评估股份有限公司',
-    issuePlace: '银行间市场',
-    status: '存续期',
-    productType: 'CLO',
-    issueDate: '2024-01-18',
-    maturityDate: '2029-05-18',
-    issueScale: 85.6,
-    securityStructure: [
-      { name: '优先A-1档', amount: 35.5, percentage: 41.5, rating: 'AAA', rate: 3.58, status: '正常偿付' },
-      { name: '优先A-2档', amount: 28.2, percentage: 32.9, rating: 'AAA', rate: 3.62, status: '正常偿付' },
-      { name: '优先B档', amount: 12.5, percentage: 14.6, rating: 'AA+', rate: 3.85, status: '正常偿付' },
-      { name: '次级档', amount: 9.4, percentage: 11.0, rating: '无评级', rate: 0, status: '正常偿付' },
-    ],
-    assets: {
-      totalAssets: 95.8,
-      assetCount: 256,
-      averageYield: 4.65,
-      overdueRate: 0.85,
-      defaultRate: 0.32,
-      distribution: [
-        { type: '制造业', amount: 38.5, percentage: 40.2, count: 95 },
-        { type: '批发零售业', amount: 22.3, percentage: 23.3, count: 68 },
-        { type: '房地产业', amount: 15.2, percentage: 15.9, count: 42 },
-        { type: '交通运输业', amount: 12.8, percentage: 13.4, count: 35 },
-        { type: '其他', amount: 7.0, percentage: 7.2, count: 16 },
-      ],
-    },
-    creditEnhancement: [
-      { type: '超额抵押', detail: '资产池规模95.8亿元，证券发行规模85.6亿元，超额抵押率11.9%', level: 'high' },
-      { type: '优先/次级结构', detail: '次级档占比11.0%，为优先档提供信用支持', level: 'high' },
-      { type: '信用增级', detail: '原始权益人对证券提供信用增级支持', level: 'medium' },
-    ],
-    paymentSchedule: [
-      { period: '第一期', date: '2024-04-18', principal: 8.56, interest: 1.52, total: 10.08, status: '已完成' },
-      { period: '第二期', date: '2024-07-18', principal: 8.56, interest: 1.48, total: 10.04, status: '已完成' },
-      { period: '第三期', date: '2024-10-18', principal: 8.56, interest: 1.45, total: 10.01, status: '已完成' },
-      { period: '第四期', date: '2025-01-18', principal: 8.56, interest: 1.42, total: 9.98, status: '待偿付' },
-      { period: '第五期', date: '2025-04-18', principal: 8.56, interest: 1.38, total: 9.94, status: '未到期' },
-      { period: '第六期', date: '2025-07-18', principal: 8.56, interest: 1.35, total: 9.91, status: '未到期' },
-    ],
-    riskFactors: [
-      '借款人信用风险：部分借款人可能因经营不善导致无法按时偿还贷款',
-      '资产集中度风险：前十大借款人占比38.5%，存在一定的集中度风险',
-      '宏观经济风险：经济下行可能导致资产池整体违约率上升',
-      '利率风险：市场利率上升可能影响产品吸引力',
-      '流动性风险：次级档流动性较差，可能面临折价风险',
-    ],
-    documents: [
-      { name: '募集说明书', date: '2024-01-10', size: '18.5MB' },
-      { name: '信用评级报告', date: '2024-01-08', size: '12.3MB' },
-      { name: '法律意见书', date: '2024-01-05', size: '9.8MB' },
-      { name: '资产评估报告', date: '2024-01-06', size: '25.6MB' },
-      { name: '现金流压力测试报告', date: '2024-01-07', size: '8.2MB' },
-    ],
+  // 加载真实数据
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const data = await getABSDetail(code);
+
+      if (data) {
+        setProjectData(data);
+        setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
+      } else {
+        console.error('未找到ABS产品');
+      }
+    } catch (error) {
+      console.error('加载数据失败:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadData();
+  }, [code]);
+
+  // 处理添加评论
+  const handleAddComment = (projectId: string, content: string) => {
+    const newComment: Comment = {
+      id: `comment-${Date.now()}`,
+      userId: 'current-user',
+      userName: '当前用户',
+      content,
+      timestamp: new Date(),
+      likes: 0,
+      isLiked: false,
+      replies: [],
+      projectId: projectData?.id || '',
+      projectType: 'ABS',
+    };
+    setComments([newComment, ...comments]);
+  };
+
+  // 处理回复评论
+  const handleReplyComment = (commentId: string, content: string) => {
+    console.log('Reply to comment:', commentId, content);
+  };
+
+  // 处理点赞评论
+  const handleLikeComment = (commentId: string) => {
+    console.log('Like comment:', commentId);
+  };
+
+  // 格式化金额
+  const formatAmount = (amount: number) => {
+    return `${amount.toFixed(2)}亿元`;
+  };
+
+  if (loading && !projectData) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">加载真实数据中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!projectData) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <Briefcase className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            未找到ABS产品
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            代码: {code}
+          </p>
+          <Button onClick={() => router.push('/issued-abs')}>
+            返回列表
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -109,206 +129,226 @@ export default function ABSDetailPage() {
               <Briefcase className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">{projectData.name}</h1>
-              <p className="text-xs text-muted-foreground">代码: {projectData.code}</p>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {projectData.name}
+              </h1>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                代码: {projectData.code}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              <Share2 className="mr-2 h-4 w-4" />
-              分享
+            <Badge variant="outline" className="text-xs">
+              <Calendar className="w-3 h-3 mr-1" />
+              更新: {lastUpdate}
+            </Badge>
+            <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+              刷新
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        {/* Summary Card */}
-        <Card className="mb-6 border-2 border-[#764ba2]/20 bg-gradient-to-br from-[#764ba2]/5 to-[#667eea]/5">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        {/* 票面利率卡片 */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-purple-600" />
+              产品信息
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <div className="text-sm text-muted-foreground mb-1">发行规模</div>
-                <div className="text-3xl font-bold text-[#764ba2]">{projectData.issueScale}</div>
-                <div className="text-sm text-muted-foreground">亿元</div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">票面利率</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {projectData.couponRate.toFixed(2)}%
+                </p>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-1">优先档利率</div>
-                <div className="text-3xl font-bold text-[#667eea]">3.58%</div>
-                <div className="text-sm text-muted-foreground">平均</div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">发行规模</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {formatAmount(projectData.issueScale)}
+                </p>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-1">次级档占比</div>
-                <div className="text-3xl font-bold text-[#48bb78]">
-                  {projectData.securityStructure[3].percentage}%
-                </div>
-                <div className="text-sm text-muted-foreground">信用增级</div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">期限</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {projectData.term}
+                </p>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-1">资产池规模</div>
-                <div className="text-3xl font-bold">{projectData.assets.totalAssets}</div>
-                <div className="text-sm text-muted-foreground">亿元</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">存续期收益率</div>
-                <div className="text-3xl font-bold text-[#48bb78]">3.85%</div>
-                <div className="text-sm text-muted-foreground">优先A档</div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">信用评级</p>
+                <Badge variant="outline" className="text-base font-semibold">
+                  {projectData.rating}
+                </Badge>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Tabs Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-white dark:bg-gray-900">
-            <TabsTrigger value="overview">项目概览</TabsTrigger>
-            <TabsTrigger value="structure">证券结构</TabsTrigger>
-            <TabsTrigger value="assets">基础资产</TabsTrigger>
-            <TabsTrigger value="payment">偿付安排</TabsTrigger>
+        {/* 主要内容 */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="overview">项目概况</TabsTrigger>
+            <TabsTrigger value="assets">底层资产</TabsTrigger>
             <TabsTrigger value="documents">相关文档</TabsTrigger>
+            <TabsTrigger value="discussion">讨论交流</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Basic Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Info className="mr-2 h-5 w-5 text-[#764ba2]" />
-                    基本信息
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">项目名称</div>
-                      <div className="font-semibold text-sm">{projectData.name}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">项目代码</div>
-                      <div className="font-semibold">{projectData.code}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">发起机构</div>
-                      <div className="font-semibold text-sm">{projectData.initiator}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">计划管理人</div>
-                      <div className="font-semibold text-sm">{projectData.manager}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">评级机构</div>
-                      <div className="font-semibold text-sm">{projectData.ratingAgency}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">产品类型</div>
-                      <Badge variant="outline">{projectData.productType}</Badge>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">发行场所</div>
-                      <Badge className="bg-[#764ba2] text-white">{projectData.issuePlace}</Badge>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">当前状态</div>
-                      <Badge className="bg-[#48bb78] text-white">{projectData.status}</Badge>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">发行日期</div>
-                      <div className="font-semibold flex items-center">
-                        <Calendar className="mr-1 h-3 w-3" />
-                        {projectData.issueDate}
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* 基本信息 */}
+              <div className="lg:col-span-2 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Info className="w-5 h-5 text-purple-600" />
+                      基本信息
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">产品全称</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {projectData.name}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">产品代码</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {projectData.code}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">发起人</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {projectData.issuer}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">计划管理人</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {projectData.planManager}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">发行日期</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {projectData.issueDate}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">信用评级</p>
+                        <Badge variant="outline">{projectData.rating}</Badge>
                       </div>
                     </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">到期日期</div>
-                      <div className="font-semibold flex items-center">
-                        <Calendar className="mr-1 h-3 w-3" />
-                        {projectData.maturityDate}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              {/* Security Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Layers className="mr-2 h-5 w-5 text-[#764ba2]" />
-                    证券结构概览
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {projectData.securityStructure.map((security, index) => (
-                      <div key={index} className="p-4 rounded-lg border hover:border-[#764ba2] transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{
-                                backgroundColor: ['#667eea', '#764ba2', '#48bb78', '#ed8936'][index],
-                              }}
-                            ></div>
-                            <span className="font-semibold">{security.name}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge className={index === 3 ? 'bg-gray-500 text-white' : 'bg-[#48bb78] text-white'}>
-                              {security.rating}
-                            </Badge>
-                            <Badge variant="outline">{security.percentage}%</Badge>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 mt-3">
-                          <div>
-                            <div className="text-sm text-muted-foreground">金额</div>
-                            <div className="font-semibold">{security.amount} 亿元</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">利率</div>
-                            <div className="font-semibold">{security.rate}%</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">状态</div>
-                            <div className="font-semibold text-[#48bb78] flex items-center">
-                              <CheckCircle className="mr-1 h-3 w-3" />
-                              {security.status}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-purple-600" />
+                      项目描述
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {projectData.description}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* 风险提示 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-orange-600">
+                      <Info className="w-5 h-5" />
+                      风险提示
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 mt-1">•</span>
+                        <span>投资ABS产品存在信用风险，底层资产质量直接影响产品收益</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 mt-1">•</span>
+                        <span>ABS产品流动性相对较低，可能存在变现困难</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 mt-1">•</span>
+                        <span>投资者应根据自身风险承受能力，理性投资</span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* 右侧信息 */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">数据来源</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Briefcase className="w-4 h-4 text-purple-600" />
+                      <span className="text-gray-600 dark:text-gray-400">中国证券业协会</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <FileText className="w-4 h-4 text-green-600" />
+                      <span className="text-gray-600 dark:text-gray-400">沪深交易所</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">快捷操作</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      下载说明书
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" size="sm">
+                      <Share2 className="w-4 h-4 mr-2" />
+                      分享产品
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" size="sm" onClick={loadData}>
+                      <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                      刷新数据
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
+          </TabsContent>
 
-            {/* Credit Enhancement */}
+          <TabsContent value="assets">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="mr-2 h-5 w-5 text-[#764ba2]" />
-                  增信措施
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                  底层资产详情
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {projectData.creditEnhancement.map((item, index) => (
-                    <div
-                      key={index}
-                      className={`p-4 rounded-lg border-2 ${
-                        item.level === 'high'
-                          ? 'border-[#48bb78]/30 bg-gradient-to-br from-[#48bb78]/10 to-[#48bb78]/5'
-                          : 'border-[#ed8936]/30 bg-gradient-to-br from-[#ed8936]/10 to-[#ed8936]/5'
-                      }`}
-                    >
-                      <div className="flex items-center mb-2">
-                        <Shield className={`mr-2 h-5 w-5 ${item.level === 'high' ? 'text-[#48bb78]' : 'text-[#ed8936]'}`} />
-                        <span className="font-semibold">{item.type}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{item.detail}</p>
+                <div className="space-y-4">
+                  {projectData.underlyingAssets.map((asset: string, index: number) => (
+                    <div key={index} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        {asset}
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        该ABS产品的基础资产类型
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -316,288 +356,87 @@ export default function ABSDetailPage() {
             </Card>
           </TabsContent>
 
-          {/* Structure Tab */}
-          <TabsContent value="structure" className="space-y-6">
+          <TabsContent value="documents">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Layers className="mr-2 h-5 w-5 text-[#764ba2]" />
-                  证券层级结构
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Structure Chart */}
-                  <div className="h-80 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div className="text-center text-muted-foreground">
-                      <BarChart3 className="h-16 w-16 mx-auto mb-3 opacity-50" />
-                      <p>证券结构瀑布图</p>
-                      <p className="text-sm">（可集成ECharts或Recharts）</p>
-                    </div>
-                  </div>
-
-                  {/* Structure Details */}
-                  <div className="space-y-3">
-                    {projectData.securityStructure.map((security, index) => (
-                      <div key={index} className="p-4 rounded-lg border-2 hover:border-[#764ba2] transition-colors">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className="w-4 h-4 rounded-full"
-                              style={{
-                                backgroundColor: ['#667eea', '#764ba2', '#48bb78', '#ed8936'][index],
-                              }}
-                            ></div>
-                            <span className="font-semibold text-lg">{security.name}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge className={index === 3 ? 'bg-gray-500 text-white' : 'bg-[#48bb78] text-white'}>
-                              {security.rating}
-                            </Badge>
-                            <Badge variant="outline">{security.percentage}%</Badge>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 mb-3">
-                          <div>
-                            <div className="text-sm text-muted-foreground">发行金额</div>
-                            <div className="text-xl font-bold">{security.amount} 亿元</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">票面利率</div>
-                            <div className="text-xl font-bold">{security.rate}%</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">偿付顺序</div>
-                            <div className="text-xl font-bold">{index + 1}</div>
-                          </div>
-                        </div>
-                        <div className="mt-2 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${security.percentage}%`,
-                              backgroundColor: ['#667eea', '#764ba2', '#48bb78', '#ed8936'][index],
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Assets Tab */}
-          <TabsContent value="assets" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-sm text-muted-foreground mb-1">资产池总规模</div>
-                  <div className="text-2xl font-bold text-[#764ba2]">{projectData.assets.totalAssets} 亿元</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-sm text-muted-foreground mb-1">资产笔数</div>
-                  <div className="text-2xl font-bold">{projectData.assets.assetCount} 笔</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-sm text-muted-foreground mb-1">平均收益率</div>
-                  <div className="text-2xl font-bold text-[#48bb78]">{projectData.assets.averageYield}%</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-sm text-muted-foreground mb-1">逾期率</div>
-                  <div className="text-2xl font-bold text-[#ed8936]">{projectData.assets.overdueRate}%</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <PieChart className="mr-2 h-5 w-5 text-[#764ba2]" />
-                  资产分布
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Pie Chart */}
-                  <div className="h-80 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div className="text-center text-muted-foreground">
-                      <PieChart className="h-16 w-16 mx-auto mb-3 opacity-50" />
-                      <p>资产分布饼图</p>
-                      <p className="text-sm">（可集成ECharts或Recharts）</p>
-                    </div>
-                  </div>
-
-                  {/* Distribution Details */}
-                  <div className="space-y-3">
-                    {projectData.assets.distribution.map((item, index) => (
-                      <div key={index} className="p-4 rounded-lg border hover:border-[#764ba2] transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className="w-4 h-4 rounded-full"
-                              style={{
-                                backgroundColor: ['#667eea', '#764ba2', '#48bb78', '#ed8936', '#f56565'][index],
-                              }}
-                            ></div>
-                            <span className="font-semibold">{item.type}</span>
-                          </div>
-                          <Badge variant="outline">{item.percentage}%</Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <div className="text-sm text-muted-foreground">金额</div>
-                            <div className="font-semibold">{item.amount} 亿元</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">笔数</div>
-                            <div className="font-semibold">{item.count} 笔</div>
-                          </div>
-                        </div>
-                        <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${item.percentage}%`,
-                              backgroundColor: ['#667eea', '#764ba2', '#48bb78', '#ed8936', '#f56565'][index],
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-orange-500/20">
-              <CardHeader>
-                <CardTitle className="flex items-center text-orange-600">
-                  <AlertTriangle className="mr-2 h-5 w-5" />
-                  风险提示
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {projectData.riskFactors.map((risk, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border-l-4 border-orange-500">
-                      <p className="text-sm">{risk}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Payment Tab */}
-          <TabsContent value="payment" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="mr-2 h-5 w-5 text-[#764ba2]" />
-                  偿付计划
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4">期数</th>
-                        <th className="text-left py-3 px-4">偿付日期</th>
-                        <th className="text-right py-3 px-4">本金（亿元）</th>
-                        <th className="text-right py-3 px-4">利息（亿元）</th>
-                        <th className="text-right py-3 px-4">合计（亿元）</th>
-                        <th className="text-center py-3 px-4">状态</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {projectData.paymentSchedule.map((payment, index) => (
-                        <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                          <td className="py-4 px-4 font-semibold">{payment.period}</td>
-                          <td className="py-4 px-4">{payment.date}</td>
-                          <td className="py-4 px-4 text-right">{payment.principal.toFixed(2)}</td>
-                          <td className="py-4 px-4 text-right">{payment.interest.toFixed(2)}</td>
-                          <td className="py-4 px-4 text-right font-semibold">{payment.total.toFixed(2)}</td>
-                          <td className="py-4 px-4 text-center">
-                            {payment.status === '已完成' ? (
-                              <Badge className="bg-[#48bb78] text-white flex items-center justify-center w-20">
-                                <CheckCircle className="mr-1 h-3 w-3" />
-                                已完成
-                              </Badge>
-                            ) : payment.status === '待偿付' ? (
-                              <Badge className="bg-[#ed8936] text-white flex items-center justify-center w-20">
-                                <Clock className="mr-1 h-3 w-3" />
-                                待偿付
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="flex items-center justify-center w-20">
-                                未到期
-                              </Badge>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Documents Tab */}
-          <TabsContent value="documents" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5 text-[#764ba2]" />
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-600" />
                   相关文档
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {projectData.documents.map((doc, index) => (
-                    <div key={index} className="p-4 rounded-lg border hover:border-[#764ba2] transition-colors flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#764ba2] to-[#667eea] flex items-center justify-center">
-                          <FileText className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <div className="font-semibold">{doc.name}</div>
-                          <div className="text-sm text-muted-foreground flex items-center space-x-2">
-                            <Calendar className="h-3 w-3" />
-                            <span>{doc.date}</span>
-                            <span>•</span>
-                            <span>{doc.size}</span>
-                          </div>
-                        </div>
+                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="mr-2 h-4 w-4" />
-                        下载
-                      </Button>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">发行说明书</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">PDF文档</p>
+                      </div>
                     </div>
-                  ))}
+                    <Button variant="ghost" size="sm">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">法律意见书</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">PDF文档</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">信用评级报告</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">PDF文档</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
 
-        {/* BBS讨论区 */}
-        <ProjectBBS
-          projectId={projectData.code}
-          projectType="ABS"
-          projectName={projectData.name}
-          comments={[]}
-        />
+          <TabsContent value="discussion">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Info className="w-5 h-5 text-purple-600" />
+                  讨论交流
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ProjectBBS
+                  projectId={projectData.id}
+                  projectType="ABS"
+                  projectName={projectData.name}
+                  comments={comments}
+                  onAddComment={handleAddComment}
+                  onReplyComment={handleReplyComment}
+                  onLikeComment={handleLikeComment}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

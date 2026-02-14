@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,10 +13,73 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Building, Search, Filter, TrendingUp, TrendingDown, ArrowRight, Calendar, DollarSign, MapPin, } from 'lucide-react';
+import {
+  Building,
+  Search,
+  Filter,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  DollarSign,
+  RefreshCw,
+} from 'lucide-react';
 import Link from 'next/link';
+import { getREITsWithQuotes, getMarketOverview } from '@/lib/services/simple-real-data-service';
 
 export default function IssuedREITsPage() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [marketOverview, setMarketOverview] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [assetTypeFilter, setAssetTypeFilter] = useState('all');
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+
+  // 加载真实数据
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [productsData, overviewData] = await Promise.all([
+        getREITsWithQuotes(),
+        getMarketOverview(),
+      ]);
+
+      setProducts(productsData);
+      setMarketOverview(overviewData);
+      setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
+    } catch (error) {
+      console.error('加载数据失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // 过滤产品
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = assetTypeFilter === 'all' || product.assetType === assetTypeFilter;
+    return matchesSearch && matchesType;
+  });
+
+  // 获取所有资产类型
+  const assetTypes = Array.from(new Set(products.map(p => p.assetType)));
+
+  // 格式化金额
+  const formatAmount = (amount: number) => {
+    return `${amount.toFixed(2)}亿元`;
+  };
+
+  // 获取涨跌颜色
+  const getPriceChangeColor = (change: number) => {
+    if (change > 0) return 'text-red-600 dark:text-red-400';
+    if (change < 0) return 'text-green-600 dark:text-green-400';
+    return 'text-gray-600 dark:text-gray-400';
+  };
+
   return (
     <MainLayout>
       <div className="mb-6 flex items-center justify-between">
@@ -23,9 +87,13 @@ export default function IssuedREITsPage() {
           <Building className="mr-3 text-[#667eea]" />
           已发行REITs项目
         </h1>
+        <Button variant="outline" onClick={loadData} disabled={loading}>
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          刷新数据
+        </Button>
       </div>
 
-      {/* Statistics Cards */}
+      {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card className="bg-gradient-to-br from-[#667eea]/10 to-[#667eea]/5 border-[#667eea]/20">
           <CardHeader className="pb-3">
@@ -35,8 +103,12 @@ export default function IssuedREITsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[#667eea]">68</div>
-            <div className="text-sm text-muted-foreground mt-1">截至2024年1月</div>
+            <div className="text-3xl font-bold text-[#667eea]">
+              {marketOverview?.reitsCount || '-'}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              更新: {lastUpdate}
+            </div>
           </CardContent>
         </Card>
 
@@ -48,8 +120,10 @@ export default function IssuedREITsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[#764ba2]">1,852.5亿</div>
-            <div className="text-sm text-green-600 mt-1">↑ 23.6% 同比</div>
+            <div className="text-3xl font-bold text-[#764ba2]">
+              {products.length > 0 ? formatAmount(products.reduce((sum, p) => sum + p.issueScale, 0)) : '-'}
+            </div>
+            <div className="text-sm text-muted-foreground mt-1">真实数据统计</div>
           </CardContent>
         </Card>
 
@@ -57,12 +131,16 @@ export default function IssuedREITsPage() {
           <CardHeader className="pb-3">
             <div className="text-sm text-muted-foreground flex items-center">
               <TrendingUp className="mr-2 h-4 w-4" />
-              平均收益率
+              REITs指数
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[#48bb78]">4.25%</div>
-            <div className="text-sm text-muted-foreground mt-1">年度化收益</div>
+            <div className="text-3xl font-bold text-[#48bb78]">
+              {marketOverview?.reitsIndex.toFixed(2) || '-'}
+            </div>
+            <div className={`text-sm mt-1 ${marketOverview?.reitsChangePercent >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {marketOverview?.reitsChangePercent >= 0 ? '↑' : '↓'} {Math.abs(marketOverview?.reitsChangePercent || 0).toFixed(2)}%
+            </div>
           </CardContent>
         </Card>
 
@@ -70,131 +148,140 @@ export default function IssuedREITsPage() {
           <CardHeader className="pb-3">
             <div className="text-sm text-muted-foreground flex items-center">
               <Calendar className="mr-2 h-4 w-4" />
-              本月新增
+              审核中项目
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[#ed8936]">5</div>
-            <div className="text-sm text-green-600 mt-1">↑ 2 个 环比</div>
+            <div className="text-3xl font-bold text-[#ed8936]">
+              {marketOverview?.issuingCount || '-'}
+            </div>
+            <div className="text-sm text-muted-foreground mt-1">发行状态跟踪</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filter Bar */}
+      {/* 筛选栏 */}
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px] relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input placeholder="搜索项目名称、代码..." className="pl-10" />
+              <Input
+                placeholder="搜索项目名称、代码..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <Select>
+            <Select value={assetTypeFilter} onValueChange={setAssetTypeFilter}>
               <SelectTrigger className="w-[180px]">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="资产类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                <SelectItem value="transport">交通基础设施</SelectItem>
-                <SelectItem value="industrial">产业园区</SelectItem>
-                <SelectItem value="warehouse">仓储物流</SelectItem>
-                <SelectItem value="commercial">商业地产</SelectItem>
-                <SelectItem value="energy">能源基础设施</SelectItem>
-                <SelectItem value="environmental">环保设施</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="交易所" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部交易所</SelectItem>
-                <SelectItem value="sh">上海证券交易所</SelectItem>
-                <SelectItem value="sz">深圳证券交易所</SelectItem>
-                <SelectItem value="hk">香港联交所</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="收益率范围" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部</SelectItem>
-                <SelectItem value="high">5%以上</SelectItem>
-                <SelectItem value="medium">4%-5%</SelectItem>
-                <SelectItem value="low">4%以下</SelectItem>
+                {assetTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Projects List */}
+      {/* 数据来源说明 */}
+      <Card className="mb-6 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+        <CardContent className="pt-4">
+          <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+            <Building className="w-4 h-4" />
+            <span>
+              <strong>数据来源：</strong>
+              产品信息来自上海/深圳证券交易所，实时行情来自新浪财经API（免费）。
+              数据每30秒自动刷新。
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 加载状态 */}
+      {loading && products.length === 0 && (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">加载真实数据中...</p>
+          </div>
+        </div>
+      )}
+
+      {/* 产品列表 */}
       <div className="space-y-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => {
+        {filteredProducts.map((product) => {
+          const quote = product.quote;
           return (
-            <Link key={i} href={`/issued-reits/${i}`}>
+            <Link key={product.id} href={`/issued-reits/${product.code}`}>
               <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-[#667eea]">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
+                      <div className="flex items-center space-x-2 mb-2 flex-wrap">
                         <Badge className="bg-[#667eea] text-white">上市交易</Badge>
-                        <Badge variant="outline">{i % 2 === 0 ? '上海证券交易所' : '深圳证券交易所'}</Badge>
-                        <Badge variant="secondary">
-                          {['交通基础设施', '产业园区', '仓储物流', '商业地产', '能源基础设施', '环保设施'][i - 1]}
-                        </Badge>
+                        <Badge variant="outline">{product.code}</Badge>
+                        <Badge variant="secondary">{product.assetType}</Badge>
                       </div>
                       <CardTitle className="text-xl mb-1">
-                        {[
-                          '沪杭甬高速REIT',
-                          '张江光大园REIT',
-                          '普洛斯仓储物流REIT',
-                          '华润置地商业REIT',
-                          '深圳能源REIT',
-                          '首创环保REIT',
-                        ][i - 1]}
+                        {product.name}
                       </CardTitle>
-                      <div className="text-sm text-muted-foreground">代码: {i % 2 === 0 ? '508000' : '180101'}</div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {product.issuer}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <div className={`text-2xl font-bold ${i % 3 === 0 ? 'text-green-600' : i % 2 === 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {i % 3 === 0 ? '+1.25%' : i % 2 === 0 ? '-0.56%' : '+2.18%'}
-                      </div>
-                      <div className="text-sm text-muted-foreground">今日涨跌</div>
+                      {quote ? (
+                        <>
+                          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {quote.price.toFixed(2)}
+                          </div>
+                          <div className={`flex items-center justify-end gap-1 text-sm ${getPriceChangeColor(quote.change)}`}>
+                            {quote.change > 0 && <TrendingUp className="w-3 h-3" />}
+                            {quote.change < 0 && <TrendingDown className="w-3 h-3" />}
+                            {quote.change > 0 ? '+' : ''}{quote.change.toFixed(2)}
+                            <span className="text-xs">
+                              ({quote.changePercent > 0 ? '+' : ''}{quote.changePercent.toFixed(2)}%)
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-gray-500">行情加载中...</div>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <div className="text-sm text-muted-foreground mb-1">发行规模</div>
-                      <div className="text-lg font-semibold">{[58.2, 32.5, 45.8, 62.3, 28.9, 35.6][i - 1]} 亿元</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">发行价格</div>
-                      <div className="text-lg font-semibold">{[6.88, 5.62, 4.35, 7.25, 3.98, 5.15][i - 1]} 元/份</div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">发行日期</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {product.issueDate}
+                      </p>
                     </div>
                     <div>
-                      <div className="text-sm text-muted-foreground mb-1">年化收益率</div>
-                      <div className="text-lg font-semibold text-[#48bb78]">{[4.35, 4.52, 4.18, 4.68, 3.95, 4.28][i - 1]}%</div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">上市日期</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {product.listingDate}
+                      </p>
                     </div>
                     <div>
-                      <div className="text-sm text-muted-foreground mb-1">上市日期</div>
-                      <div className="text-lg font-semibold">
-                        2024-{(11 - i).toString().padStart(2, '0')}-{[15, 22, 8, 18, 5, 12][i - 1]}
-                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">发行规模</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {formatAmount(product.issueScale)}
+                      </p>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="mr-1 h-3 w-3" />
-                      {['上海', '北京', '深圳', '广州', '深圳', '北京'][i - 1]}
+                    <div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">发行价格</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {product.issuePrice.toFixed(2)}元
+                      </p>
                     </div>
-                    <Button variant="outline" size="sm">
-                      查看详情
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -203,13 +290,20 @@ export default function IssuedREITsPage() {
         })}
       </div>
 
-      {/* Load More */}
-      <div className="mt-8 text-center">
-        <Button variant="outline" size="lg" className="w-full md:w-auto">
-          加载更多项目
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
+      {/* 空状态 */}
+      {!loading && filteredProducts.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-20">
+            <Building className="w-16 h-16 text-gray-400 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              未找到匹配的REITs产品
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              请尝试调整搜索条件或筛选器
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </MainLayout>
   );
 }
