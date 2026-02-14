@@ -10,6 +10,7 @@ import ProjectBBS, { Comment } from '../../src/components/ProjectBBS';
 import DraggableFloatingWindow from '../../src/components/common/DraggableFloatingWindow';
 import FloatingValuationCalculator from '../../src/components/reits/FloatingValuationCalculator';
 import AnnouncementQuery from '../../src/components/reits/AnnouncementQuery';
+import LocationAnalysis from '../../src/components/reits/LocationAnalysis';
 import { getREITsDetail } from '../../src/lib/services/simple-real-data-service';
 import {
   ArrowLeft,
@@ -764,6 +765,11 @@ export default function REITsDetailPage() {
                 <AnnouncementQuery
                   code={projectData.code}
                   name={projectData.name}
+                />
+
+                {/* 地理位置分析 */}
+                <LocationAnalysis
+                  address={projectData.location}
                 />
               </div>
             </div>
