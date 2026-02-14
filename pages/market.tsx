@@ -74,6 +74,10 @@ const CHINA_REITS_ABS_INDEX = [
     features: '反映沪深交易所上市REITs的价格表现。',
     indexValue: 1025.6,
     changePercent: 0.8,
+    highestValue: 1156.8,
+    highestDate: '2024-03-15',
+    lowestValue: 932.5,
+    lowestDate: '2023-10-25',
   },
   {
     name: '中证REITs全收益指数',
@@ -83,6 +87,10 @@ const CHINA_REITS_ABS_INDEX = [
     features: '在价格指数基础上，考虑了现金分红再投资，更全面反映投资者实际收益。',
     indexValue: 1087.2,
     changePercent: 1.2,
+    highestValue: 1224.6,
+    highestDate: '2024-03-15',
+    lowestValue: 978.3,
+    lowestDate: '2023-10-25',
   },
   {
     name: '细分领域REITs指数',
@@ -92,6 +100,10 @@ const CHINA_REITS_ABS_INDEX = [
     features: '反映不同底层资产类别的表现，如园区基础设施、交通基础设施、仓储物流、消费基础设施、保障性租赁住房、能源基础设施、生态环保、新型基础设施等。',
     indexValue: 998.5,
     changePercent: -0.3,
+    highestValue: 1087.2,
+    highestDate: '2024-02-28',
+    lowestValue: 892.6,
+    lowestDate: '2023-11-15',
   },
   {
     name: '中金C-REITs指数',
@@ -101,6 +113,10 @@ const CHINA_REITS_ABS_INDEX = [
     features: '研究机构发布的指数，包含价格指数和总回报指数，用于行业研究和市场监测。',
     indexValue: 1032.8,
     changePercent: 0.5,
+    highestValue: 1125.4,
+    highestDate: '2024-03-10',
+    lowestValue: 915.7,
+    lowestDate: '2023-11-02',
   },
   {
     name: '中证资产支持证券指数系列',
@@ -110,6 +126,10 @@ const CHINA_REITS_ABS_INDEX = [
     features: '综合性指数，选取在交易所及银行间市场挂牌的ABS作为样本，反映ABS市场整体表现。',
     indexValue: 156.3,
     changePercent: 0.4,
+    highestValue: 178.5,
+    highestDate: '2024-02-20',
+    lowestValue: 132.8,
+    lowestDate: '2023-09-18',
   },
   {
     name: '中证华泰证券资管资产支持证券指数',
@@ -119,6 +139,10 @@ const CHINA_REITS_ABS_INDEX = [
     features: '市场首只以单一券商资管管理人发行的产品为编制基础的ABS指数，反映该管理人发行的ABS产品的整体表现。',
     indexValue: 142.7,
     changePercent: 0.6,
+    highestValue: 165.3,
+    highestDate: '2024-02-25',
+    lowestDate: '2023-10-05',
+    lowestValue: 118.9,
   },
   {
     name: '惠誉博华银行间市场个贷ABS指数系列',
@@ -128,6 +152,10 @@ const CHINA_REITS_ABS_INDEX = [
     features: '专业评级机构发布的指数，专注于银行间市场的个人贷款ABS，包括车贷ABS、消费贷ABS、RMBS等细分领域的指数，反映其逾期率、提前偿付率等表现。',
     indexValue: 98.2,
     changePercent: 0.1,
+    highestValue: 112.6,
+    highestDate: '2024-01-18',
+    lowestValue: 85.4,
+    lowestDate: '2023-08-20',
   },
 ];
 
@@ -391,6 +419,8 @@ export default function MarketPage() {
                   <th className="text-left py-3 px-4 font-semibold text-sm">发布方/代码</th>
                   <th className="text-left py-3 px-4 font-semibold text-sm">主要特点</th>
                   <th className="text-right py-3 px-4 font-semibold text-sm">指数值</th>
+                  <th className="text-right py-3 px-4 font-semibold text-sm">最高值/时间</th>
+                  <th className="text-right py-3 px-4 font-semibold text-sm">最低值/时间</th>
                   <th className="text-right py-3 px-4 font-semibold text-sm">涨跌幅</th>
                 </tr>
               </thead>
@@ -419,6 +449,18 @@ export default function MarketPage() {
                       {item.features}
                     </td>
                     <td className="py-3 px-4 text-sm text-right font-medium">{item.indexValue.toFixed(1)}</td>
+                    <td className="py-3 px-4 text-sm text-right">
+                      <div className="flex flex-col items-end">
+                        <span className="font-semibold text-green-600 dark:text-green-400">{item.highestValue?.toFixed(1) || '-'}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{item.highestDate || '-'}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-right">
+                      <div className="flex flex-col items-end">
+                        <span className="font-semibold text-red-600 dark:text-red-400">{item.lowestValue?.toFixed(1) || '-'}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{item.lowestDate || '-'}</span>
+                      </div>
+                    </td>
                     <td className={`py-3 px-4 text-sm text-right font-semibold ${item.changePercent >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
                     </td>
