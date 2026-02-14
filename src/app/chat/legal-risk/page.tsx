@@ -529,9 +529,9 @@ export default function LegalRiskChatPage() {
                 与法务风控专家进行实时对话
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col overflow-hidden">
-              <ScrollArea className="flex-1 mb-4">
-                <div className="space-y-4">
+            <CardContent className="flex-1 flex flex-col overflow-hidden p-4">
+              <ScrollArea className="flex-1 mb-4 min-h-0">
+                <div className="space-y-4 pr-2">
                   {messages.length === 0 && !loading ? (
                     <div className="text-center py-10">
                       <Scale className="w-12 h-12 mx-auto mb-3 text-gray-400" />
