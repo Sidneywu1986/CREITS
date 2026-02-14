@@ -222,6 +222,11 @@ export function getREITsProductById(code: string) {
   return REAL_REITS_PRODUCTS.find(p => p.code === code);
 }
 
+// 获取所有REITs产品
+export function getREITsProducts() {
+  return REAL_REITS_PRODUCTS;
+}
+
 // 获取所有REITs产品代码
 export function getAllREITsCodes(): string[] {
   return REAL_REITS_PRODUCTS.map(p => p.code);
