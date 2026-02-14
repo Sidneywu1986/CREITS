@@ -15,6 +15,7 @@ import {
   Gamepad2,
   CheckCircle,
   Calculator,
+  Clock,
 } from 'lucide-react';
 
 const navigation = [
@@ -23,6 +24,7 @@ const navigation = [
   { name: '项目管理', href: '/projects', icon: FolderKanban },
   { name: '市场行情', href: '/market', icon: TrendingUp },
   { name: '资产证券化新闻', href: '/news', icon: FileText },
+  { name: '发行状态', href: '/issuance-status', icon: Clock },
   { name: '已发行REITs项目', href: '/issued-reits', icon: Building },
   { name: '已发行ABS项目', href: '/issued-abs', icon: Briefcase },
   { name: 'REITs估值计算器', href: '/valuation-calculator', icon: Calculator },
