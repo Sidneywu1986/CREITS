@@ -2,13 +2,26 @@
  * 地理位置分析服务
  * 通过地址或经纬度生成人口、人流量、商业数据
  * 分析范围：以目标位置为中心，2公里范围内
+ * 支持集成运营商数据（中国联通/中国移动/中国电信）
  */
+
+import { CarrierDataService, CarrierAnalysisData, CarrierDataSource } from './carrier-data-service';
 
 // 分析范围半径（公里）
 const ANALYSIS_RADIUS_KM = 2;
 
 // 2公里范围内的面积（平方公里）
 const ANALYSIS_AREA_SQKM = Math.PI * ANALYSIS_RADIUS_KM * ANALYSIS_RADIUS_KM;
+
+// 数据源类型
+export type DataSourceType = 'traditional' | 'carrier';
+
+// 分析选项
+export interface AnalysisOptions {
+  useCarrierData?: boolean; // 是否使用运营商数据
+  carrierDataSource?: CarrierDataSource; // 运营商数据源
+  includeRealtime?: boolean; // 是否包含实时数据
+}
 
 export interface LocationData {
   address: string;
@@ -142,9 +155,11 @@ export interface LocationAnalysisResult {
     threats: string[]; // 威胁分析
     recommendation: string; // 投资建议
   };
+  carrierData?: CarrierAnalysisData; // 运营商数据（可选）
   metadata: {
     analysisRadiusKm: number; // 分析半径（公里）
     analysisAreaSqKm: number; // 分析面积（平方公里）
+    dataSourceType: DataSourceType; // 数据源类型
     analysisDate: string; // 分析日期
   };
 }
@@ -406,8 +421,11 @@ export function analyzeLocation(
  * 根据地址或经纬度生成完整的地理位置分析报告
  */
 export async function analyzeLocationByAddress(
-  address: string
+  address: string,
+  options: AnalysisOptions = {}
 ): Promise<LocationAnalysisResult> {
+  const { useCarrierData = false, carrierDataSource = CarrierDataSource.SIMULATED, includeRealtime = true } = options;
+  
   // 1. 地址解析
   const location = await geocodeAddress(address);
   
@@ -423,15 +441,34 @@ export async function analyzeLocationByAddress(
   // 5. 综合分析
   const analysis = analyzeLocation(population, footTraffic, commercial);
   
+  // 6. 获取运营商数据（可选）
+  let carrierData: CarrierAnalysisData | undefined;
+  if (useCarrierData) {
+    try {
+      carrierData = await CarrierDataService.getCarrierAnalysis({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        radius: ANALYSIS_RADIUS_KM,
+        dataSource: carrierDataSource,
+        includeRealtime,
+      });
+    } catch (error) {
+      console.error('获取运营商数据失败:', error);
+      // 运营商数据获取失败不影响整体分析
+    }
+  }
+  
   return {
     location,
     population,
     footTraffic,
     commercial,
     analysis,
+    carrierData,
     metadata: {
       analysisRadiusKm: ANALYSIS_RADIUS_KM,
       analysisAreaSqKm: ANALYSIS_AREA_SQKM,
+      dataSourceType: useCarrierData ? 'carrier' : 'traditional',
       analysisDate: new Date().toISOString(),
     },
   };
@@ -443,8 +480,11 @@ export async function analyzeLocationByAddress(
 export async function analyzeLocationByCoordinates(
   latitude: number,
   longitude: number,
-  address?: string
+  address?: string,
+  options: AnalysisOptions = {}
 ): Promise<LocationAnalysisResult> {
+  const { useCarrierData = false, carrierDataSource = CarrierDataSource.SIMULATED, includeRealtime = true } = options;
+  
   // 如果没有提供地址，可以通过反向地理编码获取
   const location: LocationData = {
     address: address || `${latitude}, ${longitude}`,
@@ -461,15 +501,33 @@ export async function analyzeLocationByCoordinates(
   const commercial = generateCommercialData(location);
   const analysis = analyzeLocation(population, footTraffic, commercial);
   
+  // 获取运营商数据（可选）
+  let carrierData: CarrierAnalysisData | undefined;
+  if (useCarrierData) {
+    try {
+      carrierData = await CarrierDataService.getCarrierAnalysis({
+        latitude,
+        longitude,
+        radius: ANALYSIS_RADIUS_KM,
+        dataSource: carrierDataSource,
+        includeRealtime,
+      });
+    } catch (error) {
+      console.error('获取运营商数据失败:', error);
+    }
+  }
+  
   return {
     location,
     population,
     footTraffic,
     commercial,
     analysis,
+    carrierData,
     metadata: {
       analysisRadiusKm: ANALYSIS_RADIUS_KM,
       analysisAreaSqKm: ANALYSIS_AREA_SQKM,
+      dataSourceType: useCarrierData ? 'carrier' : 'traditional',
       analysisDate: new Date().toISOString(),
     },
   };

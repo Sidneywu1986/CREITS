@@ -40,6 +40,9 @@ import {
   Bus,
   Car,
   Activity,
+  Database,
+  Signal,
+  CheckCircle,
 } from 'lucide-react';
 import MapLocationSelector from './MapLocationSelector';
 import type {
@@ -48,6 +51,7 @@ import type {
   FootTrafficData,
   CommercialData,
 } from '@/lib/services/location-analysis-service';
+import { CarrierDataSource } from '@/lib/services/carrier-data-service';
 
 interface LocationAnalysisProps {
   address?: string;
@@ -65,6 +69,9 @@ export default function LocationAnalysis({
   const [selectedAddress, setSelectedAddress] = useState<string>(propAddress || '');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<LocationAnalysisResult | null>(null);
+  const [useCarrierData, setUseCarrierData] = useState(false);
+  const [carrierDataSource, setCarrierDataSource] = useState<CarrierDataSource>(CarrierDataSource.SIMULATED);
+  const [includeRealtime, setIncludeRealtime] = useState(true);
 
   // 处理地图位置变化
   const handleLocationChange = (lat: number, lng: number, address: string) => {
@@ -85,6 +92,9 @@ export default function LocationAnalysis({
         latitude: selectedLatitude,
         longitude: selectedLongitude,
         address: selectedAddress,
+        useCarrierData,
+        carrierDataSource,
+        includeRealtime,
       };
 
       const response = await fetch('/api/location-analysis', {
@@ -114,6 +124,23 @@ export default function LocationAnalysis({
     if (score >= 80) return 'text-green-600 bg-green-50';
     if (score >= 60) return 'text-blue-600 bg-blue-50';
     return 'text-orange-600 bg-orange-50';
+  };
+
+  const getCarrierDataSourceName = (source: CarrierDataSource): string => {
+    switch (source) {
+      case CarrierDataSource.SIMULATED:
+        return '模拟数据';
+      case CarrierDataSource.UNICOM:
+        return '中国联通智慧足迹';
+      case CarrierDataSource.MOBILE:
+        return '中国移动大数据';
+      case CarrierDataSource.TELECOM:
+        return '中国电信天翼大数据';
+      case CarrierDataSource.AGGREGATED:
+        return '聚合数据（多运营商）';
+      default:
+        return '未知数据源';
+    }
   };
 
   const renderPopulationData = (data: PopulationData) => (
@@ -422,6 +449,71 @@ export default function LocationAnalysis({
                 </>
               )}
             </Button>
+
+            {/* 数据来源选择 */}
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="useCarrierData"
+                    checked={useCarrierData}
+                    onChange={(e) => setUseCarrierData(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-[#667eea] focus:ring-[#667eea]"
+                  />
+                  <label htmlFor="useCarrierData" className="text-sm font-medium flex items-center gap-2">
+                    <Database className="w-4 h-4" />
+                    使用运营商大数据（更精准）
+                  </label>
+                </div>
+
+                {useCarrierData && (
+                  <div className="ml-7 space-y-2">
+                    <div className="text-xs text-muted-foreground">选择运营商数据源：</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: CarrierDataSource.SIMULATED, label: '模拟数据', icon: Activity },
+                        { value: CarrierDataSource.UNICOM, label: '联通智慧足迹', icon: Signal },
+                        { value: CarrierDataSource.MOBILE, label: '移动大数据', icon: Signal },
+                        { value: CarrierDataSource.TELECOM, label: '电信天翼数据', icon: Signal },
+                        { value: CarrierDataSource.AGGREGATED, label: '聚合数据（推荐）', icon: CheckCircle },
+                      ].map((source) => (
+                        <button
+                          key={source.value}
+                          onClick={() => setCarrierDataSource(source.value)}
+                          className={`flex items-center gap-2 px-3 py-2 text-xs rounded-md border transition-all ${
+                            carrierDataSource === source.value
+                              ? 'border-[#667eea] bg-[#667eea]/10 text-[#667eea]'
+                              : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
+                          }`}
+                        >
+                          <source.icon className="w-3.5 h-3.5" />
+                          {source.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="includeRealtime"
+                        checked={includeRealtime}
+                        onChange={(e) => setIncludeRealtime(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-[#667eea] focus:ring-[#667eea]"
+                      />
+                      <label htmlFor="includeRealtime" className="text-xs text-muted-foreground">
+                        包含实时监测数据
+                      </label>
+                    </div>
+
+                    <div className="text-xs text-muted-foreground flex items-start gap-1">
+                      <span>💡</span>
+                      <span>真实运营商数据需要商业合作，当前使用模拟数据演示</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -520,6 +612,224 @@ export default function LocationAnalysis({
               </div>
             </CardContent>
           </Card>
+
+          {/* 运营商数据分析 */}
+          {result.carrierData && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="w-5 h-5 text-blue-600" />
+                  运营商大数据分析
+                </CardTitle>
+                <CardDescription>
+                  数据来源：{getCarrierDataSourceName(result.carrierData.metadata.primaryDataSource)}
+                  {' '}| 数据质量：{result.carrierData.metadata.dataQuality.overallScore}/100
+                  {' '}| 置信度：{result.carrierData.populationDensity.confidence}%
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* 人口密度数据 */}
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-blue-600" />
+                      人口密度（基于基站）
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {(result.carrierData.populationDensity.totalPopulation / 10000).toFixed(1)}万
+                        </div>
+                        <div className="text-xs text-muted-foreground">覆盖人口</div>
+                      </div>
+                      <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {(result.carrierData.populationDensity.populationPerSqKm / 10000).toFixed(1)}万
+                        </div>
+                        <div className="text-xs text-muted-foreground">人口密度/km²</div>
+                      </div>
+                      <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          {(result.carrierData.populationDensity.residentPopulation / 10000).toFixed(1)}万
+                        </div>
+                        <div className="text-xs text-muted-foreground">常住人口</div>
+                      </div>
+                      <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600">
+                          {(result.carrierData.populationDensity.floatingPopulation / 10000).toFixed(1)}万
+                        </div>
+                        <div className="text-xs text-muted-foreground">流动人口</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 人流量数据 */}
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-red-600" />
+                      人流量数据（基于移动轨迹）
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="p-3 bg-red-50 dark:bg-red-950 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">
+                          {(result.carrierData.footTraffic.dailyFootfall / 10000).toFixed(1)}万
+                        </div>
+                        <div className="text-xs text-muted-foreground">日均人流量</div>
+                      </div>
+                      <div className="p-3 bg-red-50 dark:bg-red-950 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">
+                          {(result.carrierData.footTraffic.returnVisitorRate)}%
+                        </div>
+                        <div className="text-xs text-muted-foreground">复访率</div>
+                      </div>
+                      <div className="p-3 bg-red-50 dark:bg-red-950 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {result.carrierData.footTraffic.averageStayTime}分钟
+                        </div>
+                        <div className="text-xs text-muted-foreground">平均停留</div>
+                      </div>
+                      <div className="p-3 bg-red-50 dark:bg-red-950 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          {result.carrierData.footTraffic.visitorProfile.localResident}%
+                        </div>
+                        <div className="text-xs text-muted-foreground">本地居民</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 用户画像 */}
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Target className="w-4 h-4 text-purple-600" />
+                      用户画像
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                        <div className="text-sm font-semibold mb-2">消费能力</div>
+                        <div className="text-3xl font-bold text-purple-600 mb-1">
+                          {result.carrierData.userPortrait.consumptionPower.score}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {result.carrierData.userPortrait.consumptionPower.level === 'high' ? '高消费' :
+                           result.carrierData.userPortrait.consumptionPower.level === 'medium_high' ? '中高消费' :
+                           result.carrierData.userPortrait.consumptionPower.level === 'medium' ? '中等消费' : '低消费'}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          月均消费 ¥{result.carrierData.userPortrait.consumptionPower.averageMonthlyConsumption}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                        <div className="text-sm font-semibold mb-2">性别分布</div>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>男性</span>
+                            <span className="font-semibold">{result.carrierData.userPortrait.genderDistribution.male}%</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span>女性</span>
+                            <span className="font-semibold">{result.carrierData.userPortrait.genderDistribution.female}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                        <div className="text-sm font-semibold mb-2">生活方式标签</div>
+                        <div className="flex flex-wrap gap-1">
+                          {result.carrierData.userPortrait.lifestyleTags.map((tag, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 职住分析 */}
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Navigation className="w-4 h-4 text-green-600" />
+                      职住分析
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                        <div className="text-sm font-semibold mb-2">平均通勤距离</div>
+                        <div className="text-2xl font-bold text-green-600">
+                          {result.carrierData.workHomeAnalysis.commuteDistance.average}公里
+                        </div>
+                        <div className="mt-2 space-y-1">
+                          <div className="text-xs flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span>短距离（&lt;5km）: {result.carrierData.workHomeAnalysis.commuteDistance.short}%</span>
+                          </div>
+                          <div className="text-xs flex items-center gap-2">
+                            <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                            <span>中距离（5-15km）: {result.carrierData.workHomeAnalysis.commuteDistance.medium}%</span>
+                          </div>
+                          <div className="text-xs flex items-center gap-2">
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                            <span>长距离（&gt;15km）: {result.carrierData.workHomeAnalysis.commuteDistance.long}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                        <div className="text-sm font-semibold mb-2">平均通勤时间</div>
+                        <div className="text-2xl font-bold text-green-600">
+                          {result.carrierData.workHomeAnalysis.commuteTime.average}分钟
+                        </div>
+                        <div className="mt-2 space-y-1 text-xs">
+                          <div>驾车平均: {result.carrierData.workHomeAnalysis.commuteTime.byCar}分钟</div>
+                          <div>公交平均: {result.carrierData.workHomeAnalysis.commuteTime.byPublicTransport}分钟</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 实时数据 */}
+                  {result.carrierData.realtimeData && result.carrierData.realtimeData.currentPopulation > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-orange-600" />
+                        实时监测数据
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                          <div className="text-sm font-semibold mb-1">当前人口</div>
+                          <div className="text-2xl font-bold text-orange-600">
+                            {(result.carrierData.realtimeData.currentPopulation / 10000).toFixed(1)}万
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            趋势: {
+                              result.carrierData.realtimeData.populationTrend === 'rising' ? '↑ 上升' :
+                              result.carrierData.realtimeData.populationTrend === 'stable' ? '→ 稳定' : '↓ 下降'
+                            }
+                          </div>
+                        </div>
+                        <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                          <div className="text-sm font-semibold mb-1">当前人流量</div>
+                          <div className="text-2xl font-bold text-orange-600">
+                            {(result.carrierData.realtimeData.currentFootfall / 10000).toFixed(1)}万
+                          </div>
+                        </div>
+                        <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg col-span-2">
+                          <div className="text-sm font-semibold mb-2">高峰时段</div>
+                          <div className="space-y-1">
+                            {result.carrierData.realtimeData.peakHours.map((peak, index) => (
+                              <div key={index} className="text-xs flex items-center justify-between">
+                                <span>{peak.startTime} - {peak.endTime}</span>
+                                <span className="font-semibold text-orange-600">
+                                  {(peak.footfall / 10000).toFixed(1)}万
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* 详细数据 */}
           <Tabs defaultValue="population" className="w-full">

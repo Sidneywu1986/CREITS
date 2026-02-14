@@ -1,6 +1,7 @@
 /**
  * 地理位置分析API路由
  * 根据地址或经纬度生成人口、人流量、商业数据
+ * 支持集成运营商数据（中国联通/中国移动/中国电信）
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -8,6 +9,7 @@ import {
   analyzeLocationByAddress,
   analyzeLocationByCoordinates,
 } from '@/lib/services/location-analysis-service';
+import { CarrierDataSource } from '@/lib/services/carrier-data-service';
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,10 +26,30 @@ export default async function handler(
 /**
  * POST /api/location-analysis
  * 执行地理位置分析
+ * 
+ * 请求体参数：
+ * - address: 地址（可选）
+ * - latitude: 纬度（可选）
+ * - longitude: 经度（可选）
+ * - useCarrierData: 是否使用运营商数据（可选，默认false）
+ * - carrierDataSource: 运营商数据源（可选，默认'simulated'）
+ *   - 'simulated': 模拟数据
+ *   - 'unicom': 中国联通智慧足迹
+ *   - 'mobile': 中国移动大数据
+ *   - 'telecom': 中国电信天翼大数据
+ *   - 'aggregated': 聚合数据
+ * - includeRealtime: 是否包含实时数据（可选，默认true）
  */
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { address, latitude, longitude } = req.body;
+    const { 
+      address, 
+      latitude, 
+      longitude,
+      useCarrierData = false,
+      carrierDataSource = CarrierDataSource.SIMULATED,
+      includeRealtime = true
+    } = req.body;
 
     // 参数验证
     if (!address && (!latitude || !longitude)) {
@@ -37,17 +59,33 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
+    // 验证运营商数据源
+    if (useCarrierData && !Object.values(CarrierDataSource).includes(carrierDataSource)) {
+      return res.status(400).json({
+        error: '无效的运营商数据源',
+        validValues: Object.values(CarrierDataSource),
+      });
+    }
+
+    const options = {
+      useCarrierData,
+      carrierDataSource,
+      includeRealtime,
+    };
+
     let result;
 
     // 根据地址分析
     if (address) {
-      result = await analyzeLocationByAddress(address);
+      result = await analyzeLocationByAddress(address, options);
     }
     // 根据经纬度分析
     else if (latitude && longitude) {
       result = await analyzeLocationByCoordinates(
         Number(latitude),
-        Number(longitude)
+        Number(longitude),
+        address,
+        options
       );
     }
 
