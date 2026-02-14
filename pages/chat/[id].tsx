@@ -220,9 +220,9 @@ export default function ChatPage() {
 
     // 检查是否是问候语
     const greetingPatterns = [
-      /^(你好|您好|hello|hi|哈喽|嗨|早上好|下午好|晚上好|晚安)/i,
-      /^(谢谢|感谢|拜拜|再见)/i,
-      /^(在吗|在不在|有人吗)/i
+      /^(你好|您好|hello|hi|哈喽|嗨|早上好|下午好|晚上好|晚安)([？！。，。！？]*)?$/i,
+      /^(谢谢|感谢|拜拜|再见)([！。，。！？]*)?$/i,
+      /^(在吗|在不在|有人吗)([？！。，。！？]*)?$/i
     ];
 
     const isGreeting = greetingPatterns.some(pattern => pattern.test(question.trim()));
@@ -233,32 +233,84 @@ export default function ChatPage() {
       return randomResponse;
     }
 
-    // 上下文相关输入检测（简短指令）
-    const contextPatterns = [
-      /^(从第[一二三四五六七八九十]+方面)/,
-      /^(第一个|第二个|第三个|第四个)/,
-      /^(继续|还有|再|next)/i,
-      /^(详细|展开|说说|讲讲)/,
-      /^(怎么|如何|为什么)/,
-      /^(具体|详细说|详细点)/,
-      /^(好吗|可以吗|行吗)/,
-      /^(是的|对的|没错|对的)/,
-      /^(不是|不对|不|no)/
-    ];
+    // 上下文相关输入检测（更智能的检测）
+    const contextPatterns = {
+      // 顺序选择
+      sequential: [
+        /^(从第[一二三四五六七八九十百千0-9]+方面)/,
+        /^(第一个|第二个|第三个|第四个|第五个|第六个|第7个|第8个|第9个|第10个)/,
+        /^(首先|其次|再次|最后)(点|方面)?/
+      ],
+      // 继续询问
+      continue: [
+        /^(继续|还有|再|next)(讲|说|展开|详细)?/i,
+        /^(多说点|多说一些|详细点|详细说)/,
+        /^(接着|接下来|然后|下一步)/
+      ],
+      // 询问细节
+      detail: [
+        /^(详细|展开|说说|讲讲)(一下)?/,
+        /^(具体|详细说|详细点|具体说)/,
+        /^(深一点|深入|深入一点)/
+      ],
+      // 疑问词
+      question: [
+        /^(怎么|如何|为什么|为啥)(会|能|可能)?/,
+        /^(是什么|怎么样|如何做)/
+      ],
+      // 确认/否定
+      confirmation: [
+        /^(好吗|可以吗|行吗|对吗|是吧)/,
+        /^(是的|对的|没错|正确|OK|ok)/,
+        /^(不是|不对|不|no|NO|错|错误)/
+      ]
+    };
 
-    const isContextRelated = contextPatterns.some(pattern => pattern.test(question.trim()));
+    // 检测是否是上下文相关输入
+    let contextType: string | null = null;
+    for (const [type, patterns] of Object.entries(contextPatterns)) {
+      if (patterns.some(pattern => pattern.test(question.trim()))) {
+        contextType = type;
+        break;
+      }
+    }
 
-    if (isContextRelated) {
-      // 基于对话历史生成更合适的回复
+    if (contextType) {
+      // 获取对话历史
       const lastUserMessage = messages.filter(m => m.role === 'user').pop();
       const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
 
-      if (lastUserMessage && lastAssistantMessage) {
-        return `好的，让我详细展开说明：\n\n针对您提到的"${lastUserMessage.content.substring(0, 30)}${lastUserMessage.content.length > 30 ? '...' : ''}"，从更深入的角度分析：\n\n• 第一点：这是该领域的核心要素，需要重点关注\n• 第二点：在实际操作中，需要考虑多个因素\n• 第三点：建议结合项目具体情况进行分析\n\n请问您对哪个方面还有疑问？`;
+      if (lastUserMessage && lastAssistantMessage && messages.length >= 3) {
+        // 有足够的上下文
+        const userQuestionPreview = lastUserMessage.content.length > 30
+          ? lastUserMessage.content.substring(0, 30) + '...'
+          : lastUserMessage.content;
+
+        switch (contextType) {
+          case 'sequential':
+            return `好的，让我从您指定的方面继续展开：\n\n针对"${userQuestionPreview}"，这个方面需要重点关注以下几点：\n\n• 核心要素：这是该领域的关键组成部分\n• 影响因素：需要考虑多个相关因素\n• 实际应用：建议结合项目具体情况进行分析\n\n如果您需要了解其他方面，请随时告诉我。`;
+
+          case 'continue':
+            return `好的，让我继续为您展开说明：\n\n关于"${userQuestionPreview}"，还有以下几个重要方面需要补充：\n\n• 补充要点1：在实际操作中的具体应用\n• 补充要点2：可能遇到的风险和挑战\n• 补充要点3：建议的应对措施和策略\n\n请问您对哪个部分还有疑问？`;
+
+          case 'detail':
+            return `好的，让我为您详细说明：\n\n针对"${userQuestionPreview}"，具体来说：\n\n• 第一点：从专业角度分析，这是该领域的核心要素\n• 第二点：实际操作中需要注意的关键节点\n• 第三点：不同情况下的处理建议\n\n如果您需要更深入的解析，请告诉我具体想了解哪个环节。`;
+
+          case 'question':
+            return `关于您的问题，我来详细解答：\n\n"${userQuestionPreview}"涉及的内容比较专业，主要包括：\n\n• 基本概念和定义\n• 相关法规要求\n• 实际操作要点\n\n建议您可以结合项目的具体情况进行评估，如果需要更精准的分析，可以提供更多项目信息。`;
+
+          case 'confirmation':
+            if (/^(是的|对的|没错|正确|OK|ok)/.test(question.trim())) {
+              return `很高兴能帮到您！如果您还有其他关于REITs的问题，随时可以问我。比如：\n\n• 政策解读\n• 尽调分析\n• 定价建议\n• 运营管理\n\n请问您还想了解什么？`;
+            } else if (/^(不是|不对|不|no|NO|错|错误)/.test(question.trim())) {
+              return `感谢您的反馈。能否请您说明一下具体的疑问点？或者您想了解哪个方面的内容？这样我可以为您提供更准确的信息。`;
+            }
+            break;
+        }
       }
 
-      // 如果没有足够的上下文
-      return '为了更好地回答您的问题，能否请您提供更多背景信息？例如，您是想了解某个具体的REITs项目，还是想了解一般性的分析方法？';
+      // 没有足够的上下文
+      return '我注意到您想要了解更多细节，但为了给出更准确的回答，能否请您提供更多背景信息？例如：\n\n• 您想了解的具体REITs项目\n• 您关心的问题类型（政策、尽调、定价、运营等）\n• 您的具体需求和场景\n\n这样我可以为您提供更精准、有针对性的建议。';
     }
 
     // 检查是否是简短的无意义输入
@@ -286,29 +338,69 @@ export default function ChatPage() {
   ): string => {
     // 问候语检测
     const greetingPatterns = [
-      /^(你好|您好|hello|hi|哈喽|嗨|早上好|下午好|晚上好|晚安)/i,
-      /^(谢谢|感谢|拜拜|再见)/i,
-      /^(在吗|在不在|有人吗)/i
+      /^(你好|您好|hello|hi|哈喽|嗨|早上好|下午好|晚上好|晚安)([？！。，。！？]*)?$/i,
+      /^(谢谢|感谢|拜拜|再见)([！。，。！？]*)?$/i,
+      /^(在吗|在不在|有人吗)([？！。，。！？]*)?$/i
     ];
 
-    // 上下文相关输入检测
-    const contextPatterns = [
-      /^(从第[一二三四五六七八九十]+方面)/,
-      /^(第一个|第二个|第三个|第四个)/,
-      /^(继续|还有|再|next)/i,
-      /^(详细|展开|说说|讲讲)/,
-      /^(怎么|如何|为什么)/
-    ];
+    // 上下文相关输入检测（更智能的检测）
+    const contextPatterns = {
+      sequential: [
+        /^(从第[一二三四五六七八九十百千0-9]+方面)/,
+        /^(第一个|第二个|第三个|第四个|第五个|第六个|第7个|第8个|第9个|第10个)/,
+        /^(首先|其次|再次|最后)(点|方面)?/
+      ],
+      continue: [
+        /^(继续|还有|再|next)(讲|说|展开|详细)?/i,
+        /^(多说点|多说一些|详细点|详细说)/,
+        /^(接着|接下来|然后|下一步)/
+      ],
+      detail: [
+        /^(详细|展开|说说|讲讲)(一下)?/,
+        /^(具体|详细说|详细点|具体说)/,
+        /^(深一点|深入|深入一点)/
+      ],
+      question: [
+        /^(怎么|如何|为什么|为啥)(会|能|可能)?/,
+        /^(是什么|怎么样|如何做)/
+      ]
+    };
 
     const isGreeting = greetingPatterns.some(pattern => pattern.test(originalQuestion.trim()));
-    const isContextRelated = contextPatterns.some(pattern => pattern.test(originalQuestion.trim()));
 
-    if (isGreeting) {
-      return `您好！很高兴参与协作。请问有什么我可以帮助您的？`;
+    // 检测是否是上下文相关输入
+    let contextType: string | null = null;
+    for (const [type, patterns] of Object.entries(contextPatterns)) {
+      if (patterns.some(pattern => pattern.test(originalQuestion.trim()))) {
+        contextType = type;
+        break;
+      }
     }
 
-    if (isContextRelated) {
-      return '好的，从我的专业角度补充说明：\n\n这个问题需要综合考虑多个因素，建议您可以提供更多具体的项目信息，这样我可以给出更精准的分析建议。';
+    if (isGreeting) {
+      return `您好！很高兴参与协作。从${collaboratingAgent.name}的角度，如果您有任何关于${collaboratingAgent.description.substring(0, 20)}...的问题，随时可以问我。`;
+    }
+
+    if (contextType) {
+      const domain = getAgentDomain(collaboratingAgent.id);
+      const domainKeywords = domain?.keywords.slice(0, 3).join('、') || '专业领域';
+
+      switch (contextType) {
+        case 'sequential':
+          return `好的，从${collaboratingAgent.name}的专业角度补充：\n\n关于您提到的顺序问题，从${domainKeywords}方面来看，我们需要关注：\n\n• 核心要素：确保符合相关法规要求\n• 关键节点：在实际操作中的具体流程\n• 风险控制：需要注意的潜在风险点\n\n建议您结合项目的实际情况进行分析。`;
+
+        case 'continue':
+          return `好的，让我继续补充：\n\n从${collaboratingAgent.name}的专业视角，还有以下几点需要强调：\n\n• 补充要点：这是在实践中经常遇到的情况\n• 风险提示：需要特别关注的合规要求\n• 实操建议：建议采取的具体措施\n\n如果您需要更多细节，请随时告诉我。`;
+
+        case 'detail':
+          return `好的，让我详细说明：\n\n从${collaboratingAgent.name}的专业领域来说：\n\n• 要点1：这是该领域的核心要求\n• 要点2：在实际操作中需要注意的细节\n• 要点3：建议采取的最佳实践\n\n如果您对某个具体方面有疑问，请随时提出。`;
+
+        case 'question':
+          return `关于您的问题，从${collaboratingAgent.name}的角度解答：\n\n这个问题涉及${domainKeywords}的内容，主要包括：\n\n• 基本要求：相关的法规和标准\n• 实际应用：在项目中的具体体现\n• 注意事项：需要重点关注的风险点\n\n建议您可以提供更多项目信息，这样我可以给出更精准的建议。`;
+
+        default:
+          return '好的，从我的专业角度补充说明：\n\n这个问题需要综合考虑多个因素，建议您可以提供更多具体的项目信息，这样我可以给出更精准的分析建议。';
+      }
     }
 
     const domain = getAgentDomain(collaboratingAgent.id);
