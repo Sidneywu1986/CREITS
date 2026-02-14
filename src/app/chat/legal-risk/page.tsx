@@ -532,7 +532,7 @@ export default function LegalRiskChatPage() {
             <CardContent className="flex-1 flex flex-col overflow-hidden">
               <ScrollArea className="flex-1 mb-4">
                 <div className="space-y-4">
-                  {messages.length === 0 ? (
+                  {messages.length === 0 && !loading ? (
                     <div className="text-center py-10">
                       <Scale className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                       <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -543,32 +543,48 @@ export default function LegalRiskChatPage() {
                       </p>
                     </div>
                   ) : (
-                    messages.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`flex ${
-                          message.role === 'user' ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
+                    <>
+                      {messages.map((message, index) => (
                         <div
-                          className={`max-w-[80%] rounded-lg p-3 ${
-                            message.role === 'user'
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                          key={index}
+                          className={`flex ${
+                            message.role === 'user' ? 'justify-end' : 'justify-start'
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap">
-                            {message.content}
-                          </p>
-                          <p className="text-xs mt-1 opacity-70">
-                            {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
+                          <div
+                            className={`max-w-[80%] rounded-lg p-3 ${
+                              message.role === 'user'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                            }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap">
+                              {message.content}
+                            </p>
+                            <p className="text-xs mt-1 opacity-70">
+                              {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                      
+                      {/* 正在处理提示 */}
+                      {loading && (
+                        <div className="flex justify-start">
+                          <div className="max-w-[80%] rounded-lg p-3 bg-gray-100 dark:bg-gray-800">
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="w-4 h-4 animate-spin text-gray-600 dark:text-gray-400" />
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                正在思考中，请稍候...
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </ScrollArea>
@@ -592,6 +608,14 @@ export default function LegalRiskChatPage() {
                   )}
                 </Button>
               </div>
+              
+              {loading && (
+                <div className="mt-2 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    💡 提示：AI正在分析您的问题，通常需要30-60秒，请耐心等待
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
