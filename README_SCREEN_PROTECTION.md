@@ -1,8 +1,19 @@
 # 匿名BBS - 防截屏和录屏功能说明
 
+## 📋 功能状态
+
+> **⚠️ 当前状态**: 功能已关闭
+> 
+> 防截屏和录屏功能目前已设置为 `enabled={false}`，不会激活。
+> 如需启用，请修改 `src/components/bbs/HackerAnonymousBBS.tsx` 文件中的 `enabled` 属性为 `true`。
+
+---
+
 ## 📋 概述
 
 为匿名BBS添加了多层隐私保护机制，包括动态水印、截屏快捷键监听、页面失去焦点检测等，最大程度防止截屏和录屏行为。
+
+> **注意**: 当前功能处于关闭状态，以下文档仅供技术参考。
 
 ---
 
@@ -187,6 +198,77 @@ const checkScreenRecording = async () => {
 
 #### 内容模糊遮罩
 检测到截屏行为时，内容会被模糊隐藏：
+
+```typescript
+{blurContent && (
+  <div className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-sm flex items-center justify-center">
+    <div className="bg-black/95 border-2 border-green-500/30 rounded-lg p-8 max-w-md text-center">
+      <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+      <h3 className="text-green-400 font-mono text-lg font-semibold mb-2">
+        检测到可能的截屏行为
+      </h3>
+      <p className="text-green-600/70 text-sm mb-4">
+        为了保护隐私，内容已暂时隐藏。截屏和录屏行为可能违反隐私协议。
+      </p>
+      <Button 
+        onClick={handleDismissWarning}
+        className="bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
+      >
+        我理解了，恢复显示
+      </Button>
+    </div>
+  </div>
+)}
+```
+
+---
+
+## 🔧 使用方法
+
+### 启用防截屏功能
+
+在 `src/components/bbs/HackerAnonymousBBS.tsx` 文件中，找到 `ScreenRecordingProtection` 组件，将 `enabled` 属性设置为 `true`：
+
+```typescript
+<ScreenRecordingProtection
+  enabled={true}  // 设置为 true 启用功能
+  userId={currentUser?.id}
+  onScreenCaptureDetected={handleScreenCaptureDetected}
+/>
+```
+
+### 关闭防截屏功能
+
+将 `enabled` 属性设置为 `false`：
+
+```typescript
+<ScreenRecordingProtection
+  enabled={false}  // 设置为 false 关闭功能
+  userId={currentUser?.id}
+  onScreenCaptureDetected={handleScreenCaptureDetected}
+/>
+```
+
+---
+
+## 📝 注意事项
+
+1. **浏览器兼容性**: 部分功能（如屏幕录制检测）依赖于现代浏览器 API
+2. **用户体验**: 启用此功能可能会影响用户体验，请根据实际需求决定是否启用
+3. **隐私声明**: 使用匿名BBS的用户应当知晓并接受隐私保护措施
+4. **法律合规**: 此功能仅用于隐私保护，不得用于恶意监控用户行为
+
+---
+
+## 🔐 安全性说明
+
+此防截屏功能通过多种技术手段保护用户隐私，但无法100%防止所有截屏行为。用户应当：
+- 在安全的环境中使用匿名BBS
+- 避免在公共场所讨论敏感话题
+- 理解匿名通信的局限性
+- 遵守相关法律法规
+
+---
 
 ```typescript
 {blurContent && (

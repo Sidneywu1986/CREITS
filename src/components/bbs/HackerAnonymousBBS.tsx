@@ -306,7 +306,7 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
     <div className={`hacker-bbs ${className}`}>
       {/* 屏幕录制保护 */}
       <ScreenRecordingProtection
-        enabled={true}
+        enabled={false}
         userId={currentUser?.id}
         onScreenCaptureDetected={handleScreenCaptureDetected}
       />
