@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../src/components/ui/card';
 import { Button } from '../../src/components/ui/button';
@@ -33,77 +33,37 @@ import {
   Calculator,
 } from 'lucide-react';
 
-export default function REITsDetailPage() {
-  const router = useRouter();
-  
-  // 从 URL 路径中提取 code 参数
-  const [extractedCode, setExtractedCode] = useState<string | undefined>(() => {
-    // 在初始渲染时尝试提取 code
-    if (typeof window !== 'undefined') {
-      const pathname = window.location.pathname;
-      const match = pathname.match(/\/issued-reits\/([^/]+)/);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-    return undefined;
-  });
-  
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const pathname = window.location.pathname;
-      const match = pathname.match(/\/issued-reits\/([^/]+)/);
-      console.log('Extracting code from pathname:', pathname);
-      console.log('Match result:', match);
-      if (match && match[1]) {
-        console.log('Setting extractedCode:', match[1]);
-        setExtractedCode(match[1]);
-      }
-    }
-  }, []);
-  
-  // 监听 router.asPath 的变化
-  useEffect(() => {
-    if (typeof window !== 'undefined' && router.asPath) {
-      const match = router.asPath.match(/\/issued-reits\/([^/?]+)/);
-      console.log('Router asPath:', router.asPath);
-      console.log('Match from asPath:', match);
-      if (match && match[1]) {
-        console.log('Setting extractedCode from asPath:', match[1]);
-        setExtractedCode(match[1]);
-      }
-    }
-  }, [router.asPath]);
-  
-  // 从 router 获取 code（可能为空）
-  const code = router.query.code as string | undefined;
-  
-  // 合并 code 和 extractedCode，优先使用 extractedCode
-  const finalCode = extractedCode || code;
+interface PageProps {
+  code: string;
+  initialData: any;
+}
 
-  // 调试日志
-  console.log('Router isReady:', router.isReady);
+export default function REITsDetailPage({ code, initialData }: PageProps) {
+  const router = useRouter();
+
+  console.log('=== Component rendered ===');
+  console.log('Server-side code prop:', code);
+  console.log('Server-side initialData:', initialData);
   console.log('Router query:', router.query);
-  console.log('Extracted code:', extractedCode);
-  console.log('Code:', code);
-  console.log('Final code:', finalCode);
 
   const [activeTab, setActiveTab] = useState('overview');
-  const [projectData, setProjectData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [projectData, setProjectData] = useState<any>(initialData);
+  const [loading, setLoading] = useState(!initialData);
+  const [lastUpdate, setLastUpdate] = useState<string>(
+    initialData ? new Date().toLocaleTimeString('zh-CN') : ''
+  );
   const [comments, setComments] = useState<Comment[]>([]);
   const [countdown, setCountdown] = useState(60);
   const [showValuationCalculator, setShowValuationCalculator] = useState(false);
 
   // 加载真实数据
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      if (!finalCode) return;
+      if (!code) return;
 
       setLoading(true);
-      console.log('正在加载REITs详情，代码:', finalCode);
-      const data = await getREITsDetail(finalCode as string);
+      console.log('正在加载REITs详情，代码:', code);
+      const data = await getREITsDetail(code);
 
       if (data) {
         setProjectData(data);
@@ -119,46 +79,25 @@ export default function REITsDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [code]);
 
   useEffect(() => {
-    // 等待路由参数准备好，或者 extractedCode 被设置
-    if (finalCode) {
-      console.log('开始加载数据，finalCode:', finalCode);
-      loadData();
-
-      // 设置1分钟自动刷新
-      const interval = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            loadData();
-            return 60;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      // 清理定时器
-      return () => clearInterval(interval);
+    console.log('=== useEffect triggered ===');
+    console.log('code value:', code);
+    console.log('initialData:', initialData);
+    
+    // 如果初始数据存在，不需要再次加载
+    if (initialData) {
+      console.log('Initial data already loaded, skipping data fetch');
+      return;
     }
-  }, [finalCode]);
 
-  // 监听路由变化
-  useEffect(() => {
-    const handleRouteChange = () => {
-      console.log('路由变化:', router.query);
-      if (router.query.code) {
-        console.log('重新加载数据，code:', router.query.code);
-        loadData();
-      }
-    };
-
-    router.events.on('routeChangeComplete', handleRouteChange);
-
-    return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
-    };
-  }, [router]);
+    console.log('About to call loadData, code exists:', !!code);
+    if (code) {
+      console.log('开始加载数据，code:', code);
+      loadData();
+    }
+  }, [code, initialData, loadData]);
 
   // 处理添加评论
   const handleAddComment = (projectId: string, content: string) => {
@@ -215,7 +154,7 @@ export default function REITsDetailPage() {
     return null;
   };
 
-  if (!finalCode && !loading) {
+  if (!code) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <div className="text-center">
@@ -226,17 +165,6 @@ export default function REITsDetailPage() {
           <Button onClick={() => router.push('/issued-reits')}>
             返回列表
           </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading && !finalCode) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">正在解析URL参数...</p>
         </div>
       </div>
     );
@@ -262,7 +190,7 @@ export default function REITsDetailPage() {
             未找到REITs产品
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            代码: {finalCode}
+            代码: {code}
           </p>
           <Button onClick={() => router.push('/issued-reits')}>
             返回列表
@@ -908,4 +836,19 @@ export default function REITsDetailPage() {
       </div>
     </div>
   );
+}
+
+export async function getServerSideProps(context: any) {
+  const { code } = context.params;
+  
+  // 在服务端加载数据
+  const { getREITsDetail } = await import('../../src/lib/services/simple-real-data-service');
+  const initialData = await getREITsDetail(code);
+  
+  return {
+    props: {
+      code,
+      initialData: initialData || null,
+    },
+  };
 }
