@@ -54,11 +54,31 @@ export async function addTextBlock(
   const client = createFeishuClient();
 
   try {
-    // 使用正确的飞书SDK API路径：documentBlockChildren.create
-    const response = await (client.docx as any).documentBlockChildren.create({
+    // 获取文档的块列表，找到根块
+    const blocksResponse = await (client.docx as any).documentBlockChildren.list({
       path: {
         document_id: documentId,
         block_id: documentId,
+      },
+      params: {
+        page_size: 100,
+      },
+    });
+
+    const blocks = blocksResponse.data?.items || [];
+    let parentBlockId = documentId;
+
+    // 如果文档已有块，使用最后一个块作为父块
+    if (blocks.length > 0) {
+      parentBlockId = blocks[blocks.length - 1].block_id;
+    }
+
+    // 使用正确的飞书SDK API路径：documentBlockChildren.create
+    // 根据飞书API文档，block_type 应该是数字类型
+    const response = await (client.docx as any).documentBlockChildren.create({
+      path: {
+        document_id: documentId,
+        block_id: parentBlockId,
       },
       data: {
         children: [
@@ -75,7 +95,7 @@ export async function addTextBlock(
             },
           },
         ],
-        index: -1, // 添加到末尾
+        index: -1,
       },
     });
 
