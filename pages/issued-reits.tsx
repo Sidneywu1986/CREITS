@@ -118,7 +118,11 @@ export default function IssuedREITsPage({ products, lastUpdate }: PageProps) {
                             <ExternalLink className="ml-2 h-3 w-3 text-gray-400" />
                           </Link>
                         </td>
-                        <td className="py-3 px-4 text-sm">{product.name}</td>
+                        <td className="py-3 px-4 text-sm">
+                          <Link href={`/issued-reits/${product.code}`} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            {product.name}
+                          </Link>
+                        </td>
                         <td className="py-3 px-4 text-sm text-right font-medium">
                           {product.price ? String(product.price) : '0.00'}
                         </td>
