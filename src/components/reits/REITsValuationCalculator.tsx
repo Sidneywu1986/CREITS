@@ -258,13 +258,10 @@ export default function REITsValuationCalculator({
 
         <CardContent className="p-6">
           <Tabs defaultValue="inputs" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="inputs">输入参数</TabsTrigger>
               <TabsTrigger value="results" disabled={!result}>
                 估值结果
-              </TabsTrigger>
-              <TabsTrigger value="analysis" disabled={!result}>
-                分析报告
               </TabsTrigger>
             </TabsList>
 
@@ -568,73 +565,73 @@ export default function REITsValuationCalculator({
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* 投资建议分析 */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <TrendingUp className="mr-2 h-5 w-5 text-[#667eea]" />
+                        投资建议分析
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">估值结论</h4>
+                        {result.averagePrice > inputs.currentPrice * 1.1 ? (
+                          <p className="text-green-600">
+                            当前价格被低估，综合估值价格比当前价格高出{' '}
+                            {((result.averagePrice - inputs.currentPrice) / inputs.currentPrice * 100).toFixed(2)}%
+                            ，建议增持。
+                          </p>
+                        ) : result.averagePrice < inputs.currentPrice * 0.9 ? (
+                          <p className="text-red-600">
+                            当前价格被高估，综合估值价格比当前价格低{' '}
+                            {((inputs.currentPrice - result.averagePrice) / inputs.currentPrice * 100).toFixed(2)}%
+                            ，建议减持。
+                          </p>
+                        ) : (
+                          <p className="text-blue-600">
+                            当前价格处于合理区间，综合估值价格与当前价格接近，建议持有。
+                          </p>
+                        )}
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h4 className="font-semibold mb-2">DCF分析</h4>
+                        <p className="text-sm text-muted-foreground">
+                          DCF模型显示，基于{inputs.projectionYears}年的现金流预测，假设增长率为{' '}
+                          {inputs.growthRate}%，折现率为{inputs.discountRate}%，DCF估值为¥{result.dcfPrice}，
+                          {result.dcfUpsideDownside >= 0 ? '存在上行' : '存在下行'}空间{Math.abs(result.dcfUpsideDownside)}%。
+                        </p>
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h4 className="font-semibold mb-2">相对估值分析</h4>
+                        <p className="text-sm text-muted-foreground">
+                          与同业相比，PE法估值为¥{result.peBasedPrice}，PB法估值为¥{result.pbBasedPrice}，
+                          收益率法估值为¥{result.yieldBasedPrice}。当前隐含资本化率为{result.impliedCapRate.toFixed(2)}%，
+                          与分红率{inputs.distributionYield}%相比{result.impliedCapRate > inputs.distributionYield ? '偏高' : '偏低'}。
+                        </p>
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h4 className="font-semibold mb-2">风险提示</h4>
+                        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                          <li>估值结果基于假设参数，实际结果可能因市场环境变化而不同</li>
+                          <li>DCF模型对增长率、折现率等参数较为敏感</li>
+                          <li>相对估值依赖于同业数据的准确性和可比性</li>
+                          <li>建议结合市场环境、公司基本面等因素综合判断</li>
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </>
-              )}
-            </TabsContent>
-
-            <TabsContent value="analysis" className="space-y-6">
-              {result && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>投资建议分析</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold mb-2">估值结论</h4>
-                      {result.averagePrice > inputs.currentPrice * 1.1 ? (
-                        <p className="text-green-600">
-                          当前价格被低估，综合估值价格比当前价格高出{' '}
-                          {((result.averagePrice - inputs.currentPrice) / inputs.currentPrice * 100).toFixed(2)}%
-                          ，建议增持。
-                        </p>
-                      ) : result.averagePrice < inputs.currentPrice * 0.9 ? (
-                        <p className="text-red-600">
-                          当前价格被高估，综合估值价格比当前价格低{' '}
-                          {((inputs.currentPrice - result.averagePrice) / inputs.currentPrice * 100).toFixed(2)}%
-                          ，建议减持。
-                        </p>
-                      ) : (
-                        <p className="text-blue-600">
-                          当前价格处于合理区间，综合估值价格与当前价格接近，建议持有。
-                        </p>
-                      )}
-                    </div>
-
-                    <Separator />
-
-                    <div>
-                      <h4 className="font-semibold mb-2">DCF分析</h4>
-                      <p className="text-sm text-muted-foreground">
-                        DCF模型显示，基于{inputs.projectionYears}年的现金流预测，假设增长率为{' '}
-                        {inputs.growthRate}%，折现率为{inputs.discountRate}%，DCF估值为¥{result.dcfPrice}，
-                        {result.dcfUpsideDownside >= 0 ? '存在上行' : '存在下行'}空间{Math.abs(result.dcfUpsideDownside)}%。
-                      </p>
-                    </div>
-
-                    <Separator />
-
-                    <div>
-                      <h4 className="font-semibold mb-2">相对估值分析</h4>
-                      <p className="text-sm text-muted-foreground">
-                        与同业相比，PE法估值为¥{result.peBasedPrice}，PB法估值为¥{result.pbBasedPrice}，
-                        收益率法估值为¥{result.yieldBasedPrice}。当前隐含资本化率为{result.impliedCapRate.toFixed(2)}%，
-                        与分红率{inputs.distributionYield}%相比{result.impliedCapRate > inputs.distributionYield ? '偏高' : '偏低'}。
-                      </p>
-                    </div>
-
-                    <Separator />
-
-                    <div>
-                      <h4 className="font-semibold mb-2">风险提示</h4>
-                      <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                        <li>估值结果基于假设参数，实际结果可能因市场环境变化而不同</li>
-                        <li>DCF模型对增长率、折现率等参数较为敏感</li>
-                        <li>相对估值依赖于同业数据的准确性和可比性</li>
-                        <li>建议结合市场环境、公司基本面等因素综合判断</li>
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
               )}
             </TabsContent>
           </Tabs>

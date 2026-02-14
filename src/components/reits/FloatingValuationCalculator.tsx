@@ -190,15 +190,12 @@ export default function FloatingValuationCalculator({
       </div>
 
       <Tabs defaultValue="inputs" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-3 mb-3 h-8">
+        <TabsList className="grid w-full grid-cols-2 mb-3 h-8">
           <TabsTrigger value="inputs" className="text-xs">
             输入参数
           </TabsTrigger>
           <TabsTrigger value="results" disabled={!result} className="text-xs">
             估值结果
-          </TabsTrigger>
-          <TabsTrigger value="analysis" disabled={!result} className="text-xs">
-            分析报告
           </TabsTrigger>
         </TabsList>
 
@@ -462,50 +459,50 @@ export default function FloatingValuationCalculator({
                   </div>
                 </CardContent>
               </Card>
+
+              {/* 投资建议 */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs flex items-center">
+                    <TrendingUp className="mr-1 h-3 w-3 text-[#667eea]" />
+                    投资建议
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-xs">
+                  <div>
+                    <h4 className="font-semibold mb-1">估值结论</h4>
+                    {result.averagePrice > inputs.currentPrice * 1.1 ? (
+                      <p className="text-green-600">
+                        当前价格被低估，估值价格比当前价格高出{' '}
+                        {((result.averagePrice - inputs.currentPrice) / inputs.currentPrice * 100).toFixed(2)}%
+                        ，建议增持。
+                      </p>
+                    ) : result.averagePrice < inputs.currentPrice * 0.9 ? (
+                      <p className="text-red-600">
+                        当前价格被高估，估值价格比当前价格低{' '}
+                        {((inputs.currentPrice - result.averagePrice) / inputs.currentPrice * 100).toFixed(2)}%
+                        ，建议减持。
+                      </p>
+                    ) : (
+                      <p className="text-blue-600">
+                        当前价格处于合理区间，估值价格与当前价格接近，建议持有。
+                      </p>
+                    )}
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-semibold mb-1">风险提示</h4>
+                    <ul className="text-[10px] text-muted-foreground list-disc list-inside space-y-1">
+                      <li>估值结果基于假设参数，实际结果可能因市场环境变化而不同</li>
+                      <li>DCF模型对增长率、折现率等参数较为敏感</li>
+                      <li>建议结合市场环境、公司基本面等因素综合判断</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
             </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="analysis" className="flex-1 overflow-y-auto">
-          {result && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs">投资建议</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-xs">
-                <div>
-                  <h4 className="font-semibold mb-1">估值结论</h4>
-                  {result.averagePrice > inputs.currentPrice * 1.1 ? (
-                    <p className="text-green-600">
-                      当前价格被低估，估值价格比当前价格高出{' '}
-                      {((result.averagePrice - inputs.currentPrice) / inputs.currentPrice * 100).toFixed(2)}%
-                      ，建议增持。
-                    </p>
-                  ) : result.averagePrice < inputs.currentPrice * 0.9 ? (
-                    <p className="text-red-600">
-                      当前价格被高估，估值价格比当前价格低{' '}
-                      {((inputs.currentPrice - result.averagePrice) / inputs.currentPrice * 100).toFixed(2)}%
-                      ，建议减持。
-                    </p>
-                  ) : (
-                    <p className="text-blue-600">
-                      当前价格处于合理区间，估值价格与当前价格接近，建议持有。
-                    </p>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h4 className="font-semibold mb-1">风险提示</h4>
-                  <ul className="text-[10px] text-muted-foreground list-disc list-inside space-y-1">
-                    <li>估值结果基于假设参数，实际结果可能因市场环境变化而不同</li>
-                    <li>DCF模型对增长率、折现率等参数较为敏感</li>
-                    <li>建议结合市场环境、公司基本面等因素综合判断</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
           )}
         </TabsContent>
       </Tabs>
