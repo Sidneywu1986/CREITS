@@ -417,50 +417,257 @@ export default function REITsDetailPage() {
                       相关文档
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded bg-red-100 dark:bg-red-900 flex items-center justify-center">
-                          <FileText className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  <CardContent className="space-y-4">
+                    {/* 发行期文档 */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b">
+                        <FileText className="w-4 h-4 text-blue-600" />
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm">发行期文档</h4>
+                      </div>
+                      <div className="space-y-2 ml-6">
+                        <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer bg-gray-50 dark:bg-gray-900">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                              <FileText className="w-3 h-3 text-red-600 dark:text-red-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white text-xs">发起人承诺函</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">2021-05-15</p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <Download className="w-3 h-3" />
+                          </Button>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white text-sm">招募说明书</p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">PDF文档</p>
+
+                        <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                              <FileText className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white text-xs">专项计划说明书</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">2021-05-20</p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <Download className="w-3 h-3" />
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                              <FileText className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white text-xs">法律意见书</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">2021-05-25</p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <Download className="w-3 h-3" />
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
+                              <FileText className="w-3 h-3 text-yellow-600 dark:text-yellow-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white text-xs">评级报告</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">2021-05-28</p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <Download className="w-3 h-3" />
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                              <FileText className="w-3 h-3 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white text-xs">审计报告</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">2021-05-30</p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <Download className="w-3 h-3" />
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                              <FileText className="w-3 h-3 text-orange-600 dark:text-orange-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white text-xs">资产评估报告</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">2021-06-01</p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <Download className="w-3 h-3" />
+                          </Button>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        <Download className="w-4 h-4" />
-                      </Button>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white text-sm">法律意见书</p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">PDF文档</p>
-                        </div>
+                    {/* 运营期文档 */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b">
+                        <FileText className="w-4 h-4 text-green-600" />
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm">运营期文档</h4>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        <Download className="w-4 h-4" />
-                      </Button>
-                    </div>
+                      <div className="space-y-3 ml-6">
+                        {/* 2024年 */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline" className="text-xs">2024年</Badge>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer ml-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                  <FileText className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white text-xs">2024年第一季度报告</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">2024-04-30</p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                <Download className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
 
-                    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                          <FileText className="w-4 h-4 text-green-600 dark:text-green-400" />
+                            <div className="flex items-center justify-between p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer ml-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                  <FileText className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white text-xs">2024年半年度报告</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">2024-08-31</p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                <Download className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
+
+                            <div className="flex items-center justify-between p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer ml-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                  <FileText className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white text-xs">2024年第三季度报告</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">2024-10-31</p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                <Download className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
+
+                            <div className="flex items-center justify-between p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer ml-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                                  <FileText className="w-2.5 h-2.5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white text-xs">2024年年度报告</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">2025-04-30</p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                <Download className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
+                          </div>
                         </div>
+
+                        {/* 2023年 */}
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white text-sm">年度报告</p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">PDF文档</p>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline" className="text-xs">2023年</Badge>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer ml-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                  <FileText className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white text-xs">2023年半年度报告</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">2023-08-31</p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                <Download className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
+
+                            <div className="flex items-center justify-between p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer ml-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                                  <FileText className="w-2.5 h-2.5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white text-xs">2023年年度报告</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">2024-04-30</p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                <Download className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 2022年 */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline" className="text-xs">2022年</Badge>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer ml-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                  <FileText className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white text-xs">2022年半年度报告</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">2022-08-31</p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                <Download className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
+
+                            <div className="flex items-center justify-between p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer ml-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                                  <FileText className="w-2.5 h-2.5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white text-xs">2022年年度报告</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">2023-04-30</p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                <Download className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        <Download className="w-4 h-4" />
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
