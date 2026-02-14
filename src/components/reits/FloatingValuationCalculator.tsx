@@ -182,11 +182,11 @@ export default function FloatingValuationCalculator({
   return (
     <div className="h-full flex flex-col p-3">
       {/* 标题 */}
-      <div className="mb-3 pb-2 border-b">
+      <div className="mb-2 pb-1.5 border-b">
         <h3 className="font-semibold text-sm text-gray-900 dark:text-white">
           {reitsName} ({reitsCode})
         </h3>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
           当前价格: ¥{currentPrice.toFixed(2)}
         </p>
       </div>
@@ -201,7 +201,7 @@ export default function FloatingValuationCalculator({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="inputs" className="flex-1 overflow-y-auto space-y-2">
+        <TabsContent value="inputs" className="flex-1 overflow-y-auto space-y-1.5">
           {/* 基础参数 */}
           <Card>
             <CardHeader className="pb-1 pt-2 px-3">
@@ -210,8 +210,8 @@ export default function FloatingValuationCalculator({
                 基础参数
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 px-3 pb-2">
-              <div className="grid grid-cols-2 gap-2">
+            <CardContent className="space-y-1.5 px-3 pb-2">
+              <div className="grid grid-cols-2 gap-1.5">
                 <div>
                   <Label htmlFor="currentPrice" className="text-xs">当前价格(元)</Label>
                   <Input
@@ -257,8 +257,8 @@ export default function FloatingValuationCalculator({
                 DCF参数
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 px-3 pb-2">
-              <div className="grid grid-cols-2 gap-2">
+            <CardContent className="space-y-1.5 px-3 pb-2">
+              <div className="grid grid-cols-2 gap-1.5">
                 <div>
                   <Label htmlFor="growthRate" className="text-xs">
                     增长率(%)
@@ -305,8 +305,8 @@ export default function FloatingValuationCalculator({
                 相对估值参数
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 px-3 pb-2">
-              <div className="grid grid-cols-2 gap-2">
+            <CardContent className="space-y-1.5 px-3 pb-2">
+              <div className="grid grid-cols-2 gap-1.5">
                 <div>
                   <Label htmlFor="peerAveragePE" className="text-xs">同业PE</Label>
                   <Input
@@ -360,7 +360,7 @@ export default function FloatingValuationCalculator({
           </div>
         </TabsContent>
 
-        <TabsContent value="results" className="flex-1 overflow-y-auto space-y-2">
+        <TabsContent value="results" className="flex-1 overflow-y-auto space-y-1.5">
           {result && (
             <>
               {/* 综合估值 */}
@@ -372,21 +372,21 @@ export default function FloatingValuationCalculator({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 pb-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="text-center p-2 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div className="text-center p-1.5 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded">
                       <div className="text-[10px] text-muted-foreground">估值价格</div>
                       <div className="text-lg font-bold text-[#667eea]">
                         ¥{result.averagePrice.toFixed(2)}
                       </div>
                       <Badge
                         variant={result.averagePrice >= inputs.currentPrice ? 'default' : 'destructive'}
-                        className="mt-1 text-[10px]"
+                        className="mt-0.5 text-[10px]"
                       >
                         {result.averagePrice >= inputs.currentPrice ? '+' : ''}
                         {((result.averagePrice - inputs.currentPrice) / inputs.currentPrice * 100).toFixed(2)}%
                       </Badge>
                     </div>
-                    <div className="text-center p-2 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950 dark:to-amber-950 rounded">
+                    <div className="text-center p-1.5 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950 dark:to-amber-950 rounded">
                       <div className="text-[10px] text-muted-foreground">隐含资本化率</div>
                       <div className="text-lg font-bold text-orange-600">
                         {result.impliedCapRate.toFixed(2)}%
@@ -402,7 +402,7 @@ export default function FloatingValuationCalculator({
                   <CardTitle className="text-xs">DCF估值</CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 pb-2">
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-2 gap-1.5 text-xs">
                     <div>
                       <div className="text-[10px] text-muted-foreground">DCF价格</div>
                       <div className="font-bold">¥{result.dcfPrice}</div>
@@ -426,7 +426,7 @@ export default function FloatingValuationCalculator({
                   <CardTitle className="text-xs">相对估值</CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 pb-2">
-                  <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="grid grid-cols-3 gap-1.5 text-xs">
                     <div>
                       <div className="text-[10px] text-muted-foreground">PE法</div>
                       <div className="font-bold">¥{result.peBasedPrice}</div>
@@ -449,7 +449,7 @@ export default function FloatingValuationCalculator({
                   <CardTitle className="text-xs">关键指标</CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 pb-2">
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-2 gap-1.5 text-xs">
                     <div>
                       <div className="text-[10px] text-muted-foreground">NAV</div>
                       <div className="font-bold">¥{result.nav}</div>
@@ -470,9 +470,9 @@ export default function FloatingValuationCalculator({
                     投资建议
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 text-xs px-3 pb-2">
+                <CardContent className="space-y-1.5 text-xs px-3 pb-2">
                   <div>
-                    <h4 className="font-semibold mb-1">估值结论</h4>
+                    <h4 className="font-semibold mb-0.5">估值结论</h4>
                     {result.averagePrice > inputs.currentPrice * 1.1 ? (
                       <p className="text-green-600">
                         当前价格被低估，估值价格比当前价格高出{' '}
@@ -495,8 +495,8 @@ export default function FloatingValuationCalculator({
                   <Separator />
 
                   <div>
-                    <h4 className="font-semibold mb-1">风险提示</h4>
-                    <ul className="text-[10px] text-muted-foreground list-disc list-inside space-y-1">
+                    <h4 className="font-semibold mb-0.5">风险提示</h4>
+                    <ul className="text-[10px] text-muted-foreground list-disc list-inside space-y-0.5">
                       <li>估值结果基于假设参数，实际结果可能因市场环境变化而不同</li>
                       <li>DCF模型对增长率、折现率等参数较为敏感</li>
                       <li>建议结合市场环境、公司基本面等因素综合判断</li>
