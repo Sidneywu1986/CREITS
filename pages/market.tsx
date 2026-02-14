@@ -23,6 +23,7 @@ import {
   ArrowUp,
   ArrowDown,
   BarChart3,
+  Database,
 } from 'lucide-react';
 import Link from 'next/link';
 import { getREITsWithQuotes } from '@/src/lib/services/simple-real-data-service';
@@ -60,6 +61,73 @@ const TREASURY_BOND_DATA = [
   { country: '德国', yield: 2.45, change: 0.03, name: 'Bund 10-Year' },
   { country: '英国', yield: 4.12, change: 0.07, name: 'Gilt 10-Year' },
   { country: '法国', yield: 2.98, change: 0.04, name: 'OAT 10-Year' },
+];
+
+// 中国REITs/ABS指数
+const CHINA_REITS_ABS_INDEX = [
+  {
+    name: '中证REITs（收盘）指数',
+    type: 'REITs',
+    publisher: '中证指数',
+    code: '',
+    features: '反映沪深交易所上市REITs的价格表现。',
+    indexValue: 1025.6,
+    changePercent: 0.8,
+  },
+  {
+    name: '中证REITs全收益指数',
+    type: 'REITs',
+    publisher: '中证指数',
+    code: '',
+    features: '在价格指数基础上，考虑了现金分红再投资，更全面反映投资者实际收益。',
+    indexValue: 1087.2,
+    changePercent: 1.2,
+  },
+  {
+    name: '细分领域REITs指数',
+    type: 'REITs',
+    publisher: '中证指数（及其他机构）',
+    code: '',
+    features: '反映不同底层资产类别的表现，如园区基础设施、交通基础设施、仓储物流、消费基础设施、保障性租赁住房、能源基础设施、生态环保、新型基础设施等。',
+    indexValue: 998.5,
+    changePercent: -0.3,
+  },
+  {
+    name: '中金C-REITs指数',
+    type: 'REITs',
+    publisher: '中金公司',
+    code: '',
+    features: '研究机构发布的指数，包含价格指数和总回报指数，用于行业研究和市场监测。',
+    indexValue: 1032.8,
+    changePercent: 0.5,
+  },
+  {
+    name: '中证资产支持证券指数系列',
+    type: 'ABS',
+    publisher: '中证指数',
+    code: '932220',
+    features: '综合性指数，选取在交易所及银行间市场挂牌的ABS作为样本，反映ABS市场整体表现。',
+    indexValue: 156.3,
+    changePercent: 0.4,
+  },
+  {
+    name: '中证华泰证券资管资产支持证券指数',
+    type: 'ABS',
+    publisher: '中证指数、华泰证券资管',
+    code: '932356',
+    features: '市场首只以单一券商资管管理人发行的产品为编制基础的ABS指数，反映该管理人发行的ABS产品的整体表现。',
+    indexValue: 142.7,
+    changePercent: 0.6,
+  },
+  {
+    name: '惠誉博华银行间市场个贷ABS指数系列',
+    type: 'ABS',
+    publisher: '惠誉博华',
+    code: '',
+    features: '专业评级机构发布的指数，专注于银行间市场的个人贷款ABS，包括车贷ABS、消费贷ABS、RMBS等细分领域的指数，反映其逾期率、提前偿付率等表现。',
+    indexValue: 98.2,
+    changePercent: 0.1,
+  },
 ];
 
 export default function MarketPage() {
@@ -291,7 +359,64 @@ export default function MarketPage() {
         </CardContent>
       </Card>
 
-      {/* 板块4: D-1日 全部REITs收盘价 */}
+      {/* 板块4: 中国REITs/ABS指数 */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Database className="mr-2 text-[#667eea]" />
+            中国REITs/ABS指数
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-3 px-4 font-semibold text-sm">指数名称</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">类型</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">发布方/代码</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">主要特点</th>
+                  <th className="text-right py-3 px-4 font-semibold text-sm">指数值</th>
+                  <th className="text-right py-3 px-4 font-semibold text-sm">涨跌幅</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CHINA_REITS_ABS_INDEX.map((item, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <td className="py-3 px-4 text-sm font-medium">{item.name}</td>
+                    <td className="py-3 px-4">
+                      <Badge
+                        variant="outline"
+                        className={item.type === 'REITs' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-purple-50 text-purple-700 border-purple-200'}
+                      >
+                        {item.type}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground">{item.publisher}</span>
+                        {item.code && <span className="text-xs text-muted-foreground">代码: {item.code}</span>}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground max-w-xs truncate" title={item.features}>
+                      {item.features}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-right font-medium">{item.indexValue.toFixed(1)}</td>
+                    <td className={`py-3 px-4 text-sm text-right font-semibold ${item.changePercent >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 板块5: D-1日 全部REITs收盘价 */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
