@@ -82,7 +82,9 @@ const AGENT_DOMAINS: AgentDomain[] = [
       '尽调', '尽职调查', '资产评估', '财务分析', '现金流',
       '风险评估', '运营数据', '财务指标', '资产负债', '利润',
       '资产质量', '运营状况', '审计', '评估报告', '财务数据',
-      '运营分析', '偿债能力', '盈利能力', '资产状况'
+      '运营分析', '偿债能力', '盈利能力', '资产状况',
+      '分配率', '收益率', '回报率', '趋势', '后期', '前景',
+      '经营分析', '经营状况', '经营指标', '经营效率', '经营数据'
     ],
     relatedAgents: ['legal-risk', 'pricing', 'management']
   },
@@ -104,7 +106,9 @@ const AGENT_DOMAINS: AgentDomain[] = [
       '定价', '估值', '价格', '估值方法', '收益法', '市场法',
       '折现率', '资本化率', '发行价', '投资价值', '投资建议',
       '定价区间', '市场分析', '估值倍数', 'NAV', '现金流折现',
-      '资产收益率', '投资回报', '定价策略'
+      '资产收益率', '投资回报', '定价策略',
+      '分配率', '收益率', '回报率', '趋势', '前景',
+      '产品', 'reits', 'REITs', '投资', '收益'
     ],
     relatedAgents: ['due-diligence', 'management']
   },
@@ -115,7 +119,11 @@ const AGENT_DOMAINS: AgentDomain[] = [
       '运营', '管理', '存续期', '运营效率', '资产运营',
       '价值提升', '运营管理', '租户管理', '出租率', '租金',
       '运营成本', '信息披露', '投资者关系', '运营优化',
-      '运营指标', '资产管理', '基金管理', '定期报告'
+      '运营指标', '资产管理', '基金管理', '定期报告',
+      '分配率', '收益率', '回报率', '分红', '派息',
+      '趋势', '后期', '前景', '增长', '发展',
+      '经营', '经营分析', '经营状况', '经营指标',
+      '产品', 'reits', 'REITs', '不动产', '资产包'
     ],
     relatedAgents: ['due-diligence', 'pricing']
   },
@@ -231,6 +239,20 @@ export class QuestionAnalyzer {
   ];
 
   /**
+   * 同义词映射（用于关键词匹配）
+   */
+  private static readonly SYNONYM_MAP: Record<string, string[]> = {
+    '经营': ['运营', '管理', '经营分析', '运营分析'],
+    '运营': ['经营', '管理', '运营分析', '经营分析'],
+    '管理': ['运营', '经营', '管理分析'],
+    '分析': ['评估', '判断', '研究', '分析判断'],
+    '判断': ['分析', '评估', '判断分析'],
+    '趋势': ['走势', '方向', '发展', '前景', '后期趋势'],
+    '后期': ['未来', '后续', '后期发展'],
+    '产品': ['项目', '基金', '资产', 'REITs', 'reits']
+  };
+
+  /**
    * 协作触发的配置参数
    */
   private static readonly COLLABORATION_CONFIG = {
@@ -291,9 +313,12 @@ export class QuestionAnalyzer {
       };
     }
 
-    // 匹配领域关键词
+    // 扩展问题关键词（添加同义词）
+    const expandedKeywords = this.expandKeywordsWithSynonyms(questionKeywords);
+
+    // 匹配领域关键词（使用扩展后的关键词）
     const matchedKeywords = agentDomain.keywords.filter(kw =>
-      questionKeywords.some(qk => qk.includes(kw) || kw.includes(qk))
+      expandedKeywords.some(qk => qk.includes(kw) || kw.includes(qk))
     );
 
     // 4. 检查匹配的关键词数量是否达到协作门槛
@@ -388,6 +413,30 @@ export class QuestionAnalyzer {
   }
 
   /**
+   * 扩展关键词（添加同义词）
+   */
+  private static expandKeywordsWithSynonyms(keywords: string[]): string[] {
+    const expanded = [...keywords];
+
+    keywords.forEach(keyword => {
+      // 检查该关键词是否有同义词
+      for (const [baseWord, synonyms] of Object.entries(this.SYNONYM_MAP)) {
+        // 如果关键词是基准词或同义词，添加所有相关词
+        if (keyword === baseWord || synonyms.includes(keyword)) {
+          expanded.push(baseWord);
+          synonyms.forEach(syn => {
+            if (!expanded.includes(syn)) {
+              expanded.push(syn);
+            }
+          });
+        }
+      }
+    });
+
+    return expanded;
+  }
+
+  /**
    * 找到最相关的Agent
    */
   private static findRelevantAgents(
@@ -398,11 +447,13 @@ export class QuestionAnalyzer {
     reason: string;
   } {
     const questionKeywords = this.extractKeywords(question);
+    // 扩展问题关键词（添加同义词）
+    const expandedKeywords = this.expandKeywordsWithSynonyms(questionKeywords);
     const scores: Record<string, number> = {};
 
     AGENT_DOMAINS.forEach(domain => {
       const matched = domain.keywords.filter(kw =>
-        questionKeywords.some(qk => qk.includes(kw) || kw.includes(qk))
+        expandedKeywords.some(qk => qk.includes(kw) || kw.includes(qk))
       );
       scores[domain.agentId] = matched.length;
     });
@@ -447,6 +498,8 @@ export class QuestionAnalyzer {
 
     // 检查是否涉及相关Agent的关键词
     const questionKeywords = this.extractKeywords(question);
+    // 扩展问题关键词（添加同义词）
+    const expandedKeywords = this.expandKeywordsWithSynonyms(questionKeywords);
     const collaborationAgents: string[] = [];
 
     domain.relatedAgents.forEach(relatedId => {
@@ -454,7 +507,7 @@ export class QuestionAnalyzer {
       if (relatedDomain) {
         const overlaps = AGENT_KNOWLEDGE_MATRIX[agentId]?.overlaps[relatedId] || [];
         const matchedOverlaps = overlaps.filter(overlap =>
-          questionKeywords.some(qk => qk.includes(overlap) || overlap.includes(qk))
+          expandedKeywords.some(qk => qk.includes(overlap) || overlap.includes(qk))
         );
 
         // 至少需要匹配2个重叠点才建议协作
