@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AGENTS } from '@/types';
 import { 
   Search,
@@ -148,6 +147,18 @@ export default function LegalRiskChatPage() {
   const [projectInfo, setProjectInfo] = useState('');
   const [riskResults, setRiskResults] = useState<any>(null);
   const [riskLoading, setRiskLoading] = useState(false);
+
+  // 监听ESC键关闭弹窗
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && expandedMessage) {
+        setExpandedMessage(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [expandedMessage]);
 
   const handleRegulationSearch = async () => {
     if (!regulationQuery.trim()) return;
@@ -740,35 +751,60 @@ export default function LegalRiskChatPage() {
         </div>
       </div>
 
-      {/* 展开消息的对话框 */}
-      <Dialog open={!!expandedMessage} onOpenChange={(open) => !open && setExpandedMessage(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <div className="flex items-center gap-2">
-              <Scale className="w-5 h-5" />
-              <DialogTitle>法务风控专家回复</DialogTitle>
-            </div>
-            <DialogDescription>
-              {expandedMessage && new Date(expandedMessage.timestamp).toLocaleString('zh-CN')}
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="pr-4">
-              {expandedMessage && (
-                <div className="markdown-content text-base">
-                  <SimpleMarkdownRenderer content={expandedMessage.content} />
+      {/* 展开消息的全屏覆盖层 */}
+      {expandedMessage && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setExpandedMessage(null)}
+        >
+          <div 
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-[95vw] h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 头部 */}
+            <div className="flex flex-row items-center justify-between p-4 border-b bg-gray-50 dark:bg-gray-800">
+              <div className="flex items-center gap-2">
+                <Scale className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    法务风控专家回复
+                  </h2>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {new Date(expandedMessage.timestamp).toLocaleString('zh-CN')}
+                  </p>
                 </div>
-              )}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setExpandedMessage(null)}
+                className="h-8 w-8 p-0 hover:bg-gray-200 dark:hover:bg-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </Button>
             </div>
-          </ScrollArea>
-          <div className="flex justify-end pt-4 border-t">
-            <Button variant="outline" onClick={() => setExpandedMessage(null)}>
-              <X className="w-4 h-4 mr-2" />
-              关闭
-            </Button>
+            
+            {/* 内容区域 */}
+            <ScrollArea className="flex-1 min-h-0 p-6">
+              <div className="markdown-content text-base max-w-none">
+                <SimpleMarkdownRenderer content={expandedMessage.content} />
+              </div>
+            </ScrollArea>
+            
+            {/* 底部提示 */}
+            <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-2">
+                <span>💡</span>
+                <span>提示：可以通过调整浏览器窗口大小来改变显示区域</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">ESC</kbd>
+                <span>关闭窗口</span>
+              </div>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </MainLayout>
   );
 }
