@@ -233,6 +233,34 @@ export default function ChatPage() {
       return randomResponse;
     }
 
+    // 上下文相关输入检测（简短指令）
+    const contextPatterns = [
+      /^(从第[一二三四五六七八九十]+方面)/,
+      /^(第一个|第二个|第三个|第四个)/,
+      /^(继续|还有|再|next)/i,
+      /^(详细|展开|说说|讲讲)/,
+      /^(怎么|如何|为什么)/,
+      /^(具体|详细说|详细点)/,
+      /^(好吗|可以吗|行吗)/,
+      /^(是的|对的|没错|对的)/,
+      /^(不是|不对|不|no)/
+    ];
+
+    const isContextRelated = contextPatterns.some(pattern => pattern.test(question.trim()));
+
+    if (isContextRelated) {
+      // 基于对话历史生成更合适的回复
+      const lastUserMessage = messages.filter(m => m.role === 'user').pop();
+      const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
+
+      if (lastUserMessage && lastAssistantMessage) {
+        return `好的，让我详细展开说明：\n\n针对您提到的"${lastUserMessage.content.substring(0, 30)}${lastUserMessage.content.length > 30 ? '...' : ''}"，从更深入的角度分析：\n\n• 第一点：这是该领域的核心要素，需要重点关注\n• 第二点：在实际操作中，需要考虑多个因素\n• 第三点：建议结合项目具体情况进行分析\n\n请问您对哪个方面还有疑问？`;
+      }
+
+      // 如果没有足够的上下文
+      return '为了更好地回答您的问题，能否请您提供更多背景信息？例如，您是想了解某个具体的REITs项目，还是想了解一般性的分析方法？';
+    }
+
     // 检查是否是简短的无意义输入
     if (question.trim().length < 3) {
       return '您好，请问您有什么具体的问题需要咨询吗？我可以为您解答关于REITs发行、法律合规、政策解读、尽调分析、定价发行、运营管理等各方面的问题。';
@@ -263,10 +291,24 @@ export default function ChatPage() {
       /^(在吗|在不在|有人吗)/i
     ];
 
+    // 上下文相关输入检测
+    const contextPatterns = [
+      /^(从第[一二三四五六七八九十]+方面)/,
+      /^(第一个|第二个|第三个|第四个)/,
+      /^(继续|还有|再|next)/i,
+      /^(详细|展开|说说|讲讲)/,
+      /^(怎么|如何|为什么)/
+    ];
+
     const isGreeting = greetingPatterns.some(pattern => pattern.test(originalQuestion.trim()));
+    const isContextRelated = contextPatterns.some(pattern => pattern.test(originalQuestion.trim()));
 
     if (isGreeting) {
       return `您好！很高兴参与协作。请问有什么我可以帮助您的？`;
+    }
+
+    if (isContextRelated) {
+      return '好的，从我的专业角度补充说明：\n\n这个问题需要综合考虑多个因素，建议您可以提供更多具体的项目信息，这样我可以给出更精准的分析建议。';
     }
 
     const domain = getAgentDomain(collaboratingAgent.id);
