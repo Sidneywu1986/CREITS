@@ -300,8 +300,8 @@ export default function LegalRiskChatPage() {
                       <FileText className="w-4 h-4" />
                       检索结果 ({regulationResults.length})
                     </h4>
-                    <ScrollArea className="h-[400px]">
-                      <div className="space-y-3">
+                    <ScrollArea className="h-[600px]">
+                      <div className="space-y-3 pb-2">
                         {regulationResults.map((result, index) => (
                           <div
                             key={index}
@@ -315,21 +315,21 @@ export default function LegalRiskChatPage() {
                                 相关度: {(result.relevance * 100).toFixed(0)}%
                               </Badge>
                             </div>
-                            <h5 className="font-semibold text-sm mb-2">
+                            <h5 className="font-semibold text-sm mb-2 leading-relaxed">
                               {result.source}
                             </h5>
-                            <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-2">
+                            <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-2 break-words">
                               {result.article}
                             </p>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 leading-relaxed break-words">
                               {result.content}
                             </p>
-                            <div className="space-y-2 text-xs">
+                            <div className="space-y-3 text-xs">
                               <div className="flex items-center gap-2">
-                                <span className="font-medium">生效日期:</span>
+                                <span className="font-medium whitespace-nowrap">生效日期:</span>
                                 <span>{result.effective_date}</span>
                               </div>
-                              <div className="flex items-start gap-2">
+                              <div className="flex flex-col gap-1">
                                 <span className="font-medium">适用资产:</span>
                                 <div className="flex flex-wrap gap-1">
                                   {parseApplicableAssets(result.applicable_assets).map((asset, idx) => (
@@ -339,11 +339,11 @@ export default function LegalRiskChatPage() {
                                   ))}
                                 </div>
                               </div>
-                              <div className="flex items-start gap-2">
-                                <span className="font-medium">法理解释:</span>
-                                <span className="text-gray-600 dark:text-gray-400">
+                              <div className="flex flex-col gap-1">
+                                <span className="font-medium whitespace-nowrap">法理解释:</span>
+                                <p className="text-gray-600 dark:text-gray-400 leading-relaxed break-words">
                                   {result.interpretation}
-                                </span>
+                                </p>
                               </div>
                             </div>
                           </div>

@@ -33,7 +33,12 @@ export async function POST(request: NextRequest) {
 
 检索问题：${query}
 
-请提供最相关的5条法规条款，并按照JSON格式输出。`;
+请提供最相关的10条法规条款，并按照JSON格式输出。
+
+注意：
+- 确保每个法规条款的content字段包含完整的条款内容，不要截断
+- 确保interpretation字段包含完整的法理解释，不要截断
+- 确保返回完整的JSON格式，不要有遗漏`;
 
     // 调用LLM
     const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
@@ -58,20 +63,32 @@ export async function POST(request: NextRequest) {
     // 解析LLM返回的JSON
     let result;
     try {
-      // 尝试提取JSON内容
       const content = response.content;
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      console.log('LLM返回内容:', content.substring(0, 500)); // 记录前500字符
+
+      // 尝试提取JSON内容 - 改进的正则表达式，支持嵌套对象
+      const jsonMatch = content.match(/\{[\s\S]*"results"[\s\S]*\}/);
       if (jsonMatch) {
         result = JSON.parse(jsonMatch[0]);
+        console.log('JSON解析成功，结果数量:', result.results?.length || 0);
       } else {
-        throw new Error('无法提取JSON内容');
+        // 如果第一个匹配失败，尝试其他方式
+        const jsonMatch2 = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch2) {
+          result = JSON.parse(jsonMatch2[0]);
+          console.log('JSON解析成功（备用方式），结果数量:', result.results?.length || 0);
+        } else {
+          throw new Error('无法提取JSON内容');
+        }
       }
     } catch (error) {
+      console.error('JSON解析失败:', error);
       // 如果JSON解析失败，返回原始内容
       result = {
         query,
         results: [],
         raw_content: response.content,
+        error: 'JSON解析失败',
       };
     }
 
