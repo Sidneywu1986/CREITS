@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ProjectBBS, { Comment } from '@/components/ProjectBBS';
 import {
   ArrowLeft,
   Building,
@@ -553,6 +554,14 @@ export default function REITsDetailPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* BBS讨论区 */}
+        <ProjectBBS
+          projectId={projectData.code}
+          projectType="REITs"
+          projectName={projectData.name}
+          comments={[]}
+        />
       </div>
     </div>
   );

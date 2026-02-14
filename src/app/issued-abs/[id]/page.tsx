@@ -1,4 +1,5 @@
 'use client';
+import ProjectBBS from "@/components/ProjectBBS";
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -589,6 +590,14 @@ export default function ABSDetailPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* BBS讨论区 */}
+        <ProjectBBS
+          projectId={projectData.code}
+          projectType="ABS"
+          projectName={projectData.name}
+          comments={[]}
+        />
       </div>
     </div>
   );
