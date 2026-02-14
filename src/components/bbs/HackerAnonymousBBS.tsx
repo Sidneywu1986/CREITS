@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import ScreenRecordingProtection from './ScreenRecordingProtection';
 import {
   Terminal,
   Lock,
@@ -295,8 +296,21 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
     ? topics.filter(t => t.author.id === currentUser.id || rooms.get(t.id)?.participants.some(p => p.id === currentUser.id)).length
     : 0;
 
+  // 处理截屏检测
+  const handleScreenCaptureDetected = useCallback(() => {
+    console.log('Screen capture detected');
+    // 可以在这里添加更多的处理逻辑，比如记录日志、清除敏感数据等
+  }, []);
+
   return (
     <div className={`hacker-bbs ${className}`}>
+      {/* 屏幕录制保护 */}
+      <ScreenRecordingProtection
+        enabled={true}
+        userId={currentUser?.id}
+        onScreenCaptureDetected={handleScreenCaptureDetected}
+      />
+
       <Card className="border-green-500/30 bg-black/95 backdrop-blur-sm">
         <CardHeader className="border-b border-green-500/30 bg-gradient-to-r from-green-950/50 to-black">
           <div className="flex items-center justify-between">
