@@ -148,26 +148,14 @@ export default function MarketPage() {
   const [sortBy, setSortBy] = useState<'change' | 'price' | 'volume'>('change');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [searchTerm, setSearchTerm] = useState('');
+  const [countdown, setCountdown] = useState(30);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
 
-  // 初始化加载
-  useEffect(() => {
-    console.log('useEffect triggered');
-    // 直接使用模拟数据进行测试
-    const mockData = REAL_REITS_PRODUCTS.map(item => ({
-      id: item.id,
-      code: item.code,
-      name: item.name,
-      price: item.issuePrice * (1 + (Math.random() * 0.2 - 0.1)),
-      change: Math.random() * 10 - 5,
-      volume: Math.floor(Math.random() * 10000000),
-      amount: item.issueScale * 100000000,
-    }));
-    console.log('mockData:', mockData);
-    setProducts(mockData);
-    setLoading(false);
-
-    // 尝试获取真实数据（非阻塞）
-    getREITsWithQuotes().then(data => {
+  // 加载数据函数
+  const loadMarketData = async () => {
+    try {
+      setLoading(true);
+      const data = await getREITsWithQuotes();
       const realProducts = data.map(item => ({
         id: item.id,
         code: item.code,
@@ -178,14 +166,17 @@ export default function MarketPage() {
         amount: item.quote?.volume * (item.quote?.price || item.issuePrice) || 0,
       }));
       setProducts(realProducts);
-    }).catch(error => {
+      setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
+      setCountdown(30); // 重置倒计时
+    } catch (error) {
       console.error('获取真实数据失败，使用模拟数据:', error);
-    });
-  }, []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 初始化加载
   useEffect(() => {
-    console.log('useEffect triggered');
     // 直接使用模拟数据进行测试
     const mockData = REAL_REITS_PRODUCTS.map(item => ({
       id: item.id,
@@ -196,25 +187,25 @@ export default function MarketPage() {
       volume: Math.floor(Math.random() * 10000000),
       amount: item.issueScale * 100000000,
     }));
-    console.log('mockData:', mockData);
     setProducts(mockData);
     setLoading(false);
 
-    // 尝试获取真实数据（非阻塞）
-    getREITsWithQuotes().then(data => {
-      const realProducts = data.map(item => ({
-        id: item.id,
-        code: item.code,
-        name: item.name,
-        price: item.quote?.price || item.issuePrice,
-        change: item.quote?.changePercent || 0,
-        volume: item.quote?.volume || 0,
-        amount: item.quote?.volume * (item.quote?.price || item.issuePrice) || 0,
-      }));
-      setProducts(realProducts);
-    }).catch(error => {
-      console.error('获取真实数据失败，使用模拟数据:', error);
-    });
+    // 尝试获取真实数据
+    loadMarketData();
+
+    // 设置30秒自动刷新
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          loadMarketData();
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // 清理定时器
+    return () => clearInterval(interval);
   }, []);
 
   // 排序函数
@@ -260,11 +251,28 @@ export default function MarketPage() {
             <Globe className="mr-3 text-[#667eea]" />
             金融看板
           </h1>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-sm">
+              <Activity className="w-3 h-3 mr-1" />
+              {countdown}s 后自动刷新
+            </Badge>
+            {lastUpdate && (
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                更新于 {lastUpdate}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadMarketData}
+              disabled={loading}
+              className="relative"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              刷新
+            </Button>
+          </div>
         </div>
-        <Button variant="outline" onClick={() => window.location.reload()}>
-          <RefreshCw className="mr-2 h-4 w-4" />
-          刷新
-        </Button>
       </div>
 
       {/* 板块1: 全球REITs指数 */}

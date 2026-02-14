@@ -25,6 +25,7 @@ import {
   BarChart3,
   RefreshCw,
   ArrowUpRight,
+  Activity,
 } from 'lucide-react';
 
 export default function REITsDetailPage() {
@@ -36,6 +37,7 @@ export default function REITsDetailPage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [comments, setComments] = useState<Comment[]>([]);
+  const [countdown, setCountdown] = useState(30);
 
   // 加载真实数据
   const loadData = async () => {
@@ -61,6 +63,20 @@ export default function REITsDetailPage() {
   useEffect(() => {
     if (code) {
       loadData();
+
+      // 设置30秒自动刷新
+      const interval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            loadData();
+            return 30;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // 清理定时器
+      return () => clearInterval(interval);
     }
   }, [code]);
 
@@ -189,6 +205,10 @@ export default function REITsDetailPage() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="text-xs">
+              <Activity className="w-3 h-3 mr-1" />
+              {countdown}s 后自动刷新
+            </Badge>
             <Badge variant="outline" className="text-xs">
               <Calendar className="w-3 h-3 mr-1" />
               更新: {lastUpdate}

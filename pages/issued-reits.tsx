@@ -7,27 +7,46 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../sr
 import { Badge } from '../src/components/ui/badge';
 import { ScrollArea } from '../src/components/ui/scroll-area';
 import ProjectBBS, { Comment } from '../src/components/ProjectBBS';
-import { Building, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
+import { Building, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight, RefreshCw, Activity, Calendar } from 'lucide-react';
 import { Button } from '../src/components/ui/button';
 import { getREITsProducts } from '../src/lib/data/real-reits-products';
 
 export default function IssuedREITsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [countdown, setCountdown] = useState(30);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+
+  const loadRealData = async () => {
+    try {
+      setLoading(true);
+      const data = await getREITsProducts();
+      setProducts(data.map((p: any) => ({ ...p, comments: [] })));
+      setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
+      setCountdown(30);
+    } catch (error) {
+      console.error('加载REITs数据失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadRealData = async () => {
-      try {
-        const data = await getREITsProducts();
-        setProducts(data.map((p: any) => ({ ...p, comments: [] })));
-      } catch (error) {
-        console.error('加载REITs数据失败:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadRealData();
+
+    // 设置30秒自动刷新
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          loadRealData();
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // 清理定时器
+    return () => clearInterval(interval);
   }, []);
 
   const handleAddComment = (projectId: string, content: string) => {
@@ -73,20 +92,38 @@ export default function IssuedREITsPage() {
     <MainLayout>
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <div className="flex items-center">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="mr-4">
-                <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
-                返回
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost" size="sm">
+                  <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
+                  返回
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  已发行REITs
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  查看市场上已发行的REITs产品实时行情
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline">
+                <Activity className="w-3 h-3 mr-1" />
+                {countdown}s 后自动刷新
+              </Badge>
+              <Badge variant="outline">
+                <Calendar className="w-3 h-3 mr-1" />
+                更新: {lastUpdate}
+              </Badge>
+              <Button variant="outline" size="sm" onClick={loadRealData} disabled={loading}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                刷新
               </Button>
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              已发行REITs
-            </h1>
+            </div>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
-            查看市场上已发行的REITs产品实时行情
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
