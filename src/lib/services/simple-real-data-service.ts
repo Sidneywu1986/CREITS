@@ -64,13 +64,20 @@ async function fetchSinaQuote(code: string): Promise<Quote | null> {
     const prefix = code.startsWith('508') || code.startsWith('588') ? 'sh' : 'sz';
     const url = `https://hq.sinajs.cn/list=${prefix}${code}`;
 
+    // 添加超时控制
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+
     const response = await fetch(url, {
       headers: {
         'Referer': 'https://finance.sina.com.cn',
         'User-Agent': 'Mozilla/5.0',
       },
+      signal: controller.signal,
       next: { revalidate: 30 }, // 30秒缓存
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

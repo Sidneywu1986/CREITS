@@ -200,7 +200,8 @@ export default function MarketPage() {
       setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
       setCountdown(30); // 重置倒计时
     } catch (error) {
-      console.error('获取真实数据失败，使用模拟数据:', error);
+      console.error('获取真实数据失败，继续使用模拟数据:', error);
+      // 不重新设置products，保持当前数据
     } finally {
       setLoading(false);
     }
