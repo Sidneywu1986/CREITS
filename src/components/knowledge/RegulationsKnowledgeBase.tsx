@@ -122,6 +122,8 @@ export default function RegulationsKnowledgeBase() {
         return 'bg-green-100 text-green-700 border-green-300';
       case '通用指引':
         return 'bg-purple-100 text-purple-700 border-purple-300';
+      case '沪深交易所':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-300';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-300';
     }
@@ -129,7 +131,18 @@ export default function RegulationsKnowledgeBase() {
 
   // 获取法规类型的颜色
   const getTypeColor = (type: string) => {
-    return type === '试行' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700';
+    switch (type) {
+      case '试行':
+        return 'bg-orange-100 text-orange-700';
+      case '正式':
+        return 'bg-blue-100 text-blue-700';
+      case '通知':
+        return 'bg-green-100 text-green-700';
+      case '指引':
+        return 'bg-purple-100 text-purple-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
   };
 
   if (loading) {
