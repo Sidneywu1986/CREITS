@@ -24,6 +24,7 @@ import {
   PieChart,
   BarChart3,
   RefreshCw,
+  ArrowUpRight,
 } from 'lucide-react';
 
 export default function REITsDetailPage() {
@@ -420,11 +421,14 @@ export default function REITsDetailPage() {
                   <CardContent className="space-y-4">
                     {/* 发行期文档 */}
                     <div>
-                      <div className="flex items-center gap-2 mb-3 pb-2 border-b">
-                        <FileText className="w-4 h-4 text-blue-600" />
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm">发行期文档</h4>
+                      <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-blue-600" />
+                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">发行期文档</h4>
+                        </div>
+                        <Badge variant="outline" className="text-xs">6份</Badge>
                       </div>
-                      <div className="space-y-2 ml-6">
+                      <div className="space-y-2 ml-6 max-h-[280px] overflow-y-auto pr-2">
                         <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer bg-gray-50 dark:bg-gray-900">
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded bg-red-100 dark:bg-red-900 flex items-center justify-center">
@@ -519,11 +523,22 @@ export default function REITsDetailPage() {
 
                     {/* 运营期文档 */}
                     <div>
-                      <div className="flex items-center gap-2 mb-3 pb-2 border-b">
-                        <FileText className="w-4 h-4 text-green-600" />
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm">运营期文档</h4>
+                      <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-green-600" />
+                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">运营期文档</h4>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 text-xs text-blue-600 hover:text-blue-700 p-0"
+                          onClick={() => window.open(`/issued-reits/${projectData?.code}/documents`, '_blank')}
+                        >
+                          查看全部
+                          <ArrowUpRight className="w-3 h-3 ml-1" />
+                        </Button>
                       </div>
-                      <div className="space-y-3 ml-6">
+                      <div className="space-y-3 ml-6 max-h-[280px] overflow-y-auto pr-2">
                         {/* 2024年 */}
                         <div>
                           <div className="flex items-center gap-2 mb-2">
