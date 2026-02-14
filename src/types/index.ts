@@ -6,6 +6,7 @@ export interface Agent {
   systemPrompt: string;
   color: string;
   personality: AgentPersonality;
+  greeting: string;
 }
 
 export interface AgentPersonality {
@@ -261,6 +262,7 @@ export const AGENTS: Agent[] = [
       catchphrase: '基于法规条款，我的专业判断如下',
       tags: ['法务专家', '合规顾问', '风险管控', '法律意见']
     },
+    greeting: '您好！我是法务风控Agent，专注于REITs法律合规与风险管控。我已准备好为您解答法律问题、审核申报材料、识别潜在风险。请问您需要哪方面的法务支持？',
   },
   {
     id: 'policy',
@@ -381,6 +383,7 @@ export const AGENTS: Agent[] = [
       catchphrase: '从政策演进的角度分析',
       tags: ['政策解读', '监管趋势', '宏观分析', '合规指引']
     },
+    greeting: '您好！我是政策解读Agent，致力于为您提供REITs政策的深度解读和合规指引。从政策演进的角度分析，我可以帮您理解监管动态、把握市场趋势。请问您想了解哪方面的政策内容？',
   },
   {
     id: 'due-diligence',
@@ -503,6 +506,7 @@ export const AGENTS: Agent[] = [
       catchphrase: '基于尽调数据分析',
       tags: ['风险识别', '资产评估', '财务分析', '运营分析']
     },
+    greeting: '您好！我是尽职调查Agent，专注于REITs项目的全面风险评估。基于尽调数据分析，我可以帮您识别潜在风险、评估项目质量、提供风险缓释建议。请问您需要对哪个项目进行尽职调查？',
   },
   {
     id: 'material',
@@ -622,6 +626,7 @@ export const AGENTS: Agent[] = [
       catchphrase: '按照监管规范，标准材料如下',
       tags: ['申报材料', '文书生成', '合规审查', '材料优化']
     },
+    greeting: '您好！我是申报材料生成Agent，专注于REITs发行申报材料的标准化制作。按照监管规范，我可以帮您快速生成符合要求的申报材料，提高发行效率。请问您需要生成哪种申报材料？',
   },
   {
     id: 'pricing',
@@ -738,6 +743,7 @@ export const AGENTS: Agent[] = [
       catchphrase: '基于市场数据分析',
       tags: ['定价分析', '市场估值', '投资建议', '风险评估']
     },
+    greeting: '您好！我是定价发行建议Agent，专注于REITs产品定价和市场分析。基于市场数据分析，我可以帮您评估投资价值、制定发行策略、选择最佳发行时机。请问您需要定价方面的什么建议？',
   },
   {
     id: 'management',
@@ -847,7 +853,7 @@ export const AGENTS: Agent[] = [
       catchphrase: '从运营优化的角度建议',
       tags: ['运营管理', '价值提升', '风险监控', '信息披露']
     },
-
+    greeting: '您好！我是存续期管理Agent，专注于REITs项目的运营管理和价值提升。从运营优化的角度建议，我可以帮您提升运营效率、优化资产配置、增强投资者关系。请问您需要哪方面的管理支持？',
   },
   {
     id: 'collaboration',
@@ -865,6 +871,7 @@ export const AGENTS: Agent[] = [
       catchphrase: '综合各专家意见，最优方案如下',
       tags: ['智能协作', '任务协调', '方案整合', '多方协同']
     },
+    greeting: '您好！我是智能协作Agent，可以协调其他6位专业Agent为您协同工作。无论您的需求涉及法律、政策、尽调、材料、定价还是运营，我都会整合各专家的意见，为您提供最优的综合解决方案。请问您需要哪方面的协作服务？',
   },
 ];
 

@@ -237,6 +237,25 @@ export default function AgentPersonalityDisplay({ agentId }: AgentPersonalityDis
         </Card>
       )}
 
+      {/* 问候语 */}
+      {selectedAgent.greeting && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-2xl">👋</span>
+              问候语
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p className="text-base leading-relaxed">
+                {selectedAgent.greeting}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 个性标签 */}
       <Card>
         <CardHeader>

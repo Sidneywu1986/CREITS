@@ -5,18 +5,27 @@ import { Input } from '@/components/ui/input';
 import { ArrowRight, Bot, Send, User, Loader2 } from 'lucide-react';
 import { AGENTS } from '@/types';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function ChatPage() {
   const router = useRouter();
   const { id: agentId } = router.query;
   const agent = AGENTS.find(a => a.id === agentId);
 
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: '您好！我是AI助手，很高兴为您服务。请问有什么可以帮您？' },
-  ]);
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const initializedRef = useRef(false);
+
+  // 初始化问候语
+  useEffect(() => {
+    if (agent && !initializedRef.current) {
+      setMessages([
+        { role: 'assistant', content: agent.greeting },
+      ]);
+      initializedRef.current = true;
+    }
+  }, [agent]);
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
