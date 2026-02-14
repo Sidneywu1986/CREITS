@@ -138,21 +138,39 @@ export default function LegalRiskChatPage() {
     setMessages(newMessages);
 
     try {
-      // TODO: 实现对话功能
-      // 暂时返回模拟响应
-      setTimeout(() => {
+      const response = await fetch('/api/legal-risk/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
         setMessages([
           ...newMessages,
           {
             role: 'assistant' as const,
-            content: '我是法务风控合规专家，很高兴为您服务！\n\n您可以：\n1. 使用左侧的"法规智能检索"功能查询相关法规\n2. 使用左侧的"合规风险识别"功能识别项目风险\n3. 在此处直接向我咨询REITs相关的法律问题\n\n请注意：本Agent提供的法律意见仅供参考，重大问题建议咨询专业律师。',
+            content: data.data.response,
             timestamp: new Date(),
           },
         ]);
-        setLoading(false);
-      }, 1000);
+      } else {
+        throw new Error(data.error || '获取响应失败');
+      }
     } catch (error) {
       console.error('发送消息失败:', error);
+      setMessages([
+        ...newMessages,
+        {
+          role: 'assistant' as const,
+          content: '抱歉，我遇到了一些问题，请稍后再试。',
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
       setLoading(false);
     }
   };
