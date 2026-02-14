@@ -1,10 +1,17 @@
 import { useRouter } from 'next/router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, FileText, Trash2, Download } from 'lucide-react';
+import { Upload, FileText, Trash2, Download, BookOpen } from 'lucide-react';
 import { AGENTS } from '@/types';
 import Link from 'next/link';
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
+
+// 动态导入法规知识库组件（避免SSR问题）
+const RegulationsKnowledgeBase = dynamic(
+  () => import('@/components/knowledge/RegulationsKnowledgeBase'),
+  { ssr: false }
+);
 
 export default function KnowledgePage() {
   const router = useRouter();
@@ -15,6 +22,9 @@ export default function KnowledgePage() {
     { id: 1, name: 'REITs发行指引.pdf', size: '2.5 MB', uploadDate: '2024-01-15' },
     { id: 2, name: '合规检查清单.docx', size: '1.2 MB', uploadDate: '2024-01-14' },
   ]);
+
+  // 判断是否是法务风控Agent
+  const isLegalAgent = agentId === 'legal';
 
   if (!agent) {
     return (
@@ -31,6 +41,41 @@ export default function KnowledgePage() {
     );
   }
 
+  // 法务风控Agent显示法规知识库
+  if (isLegalAgent) {
+    return (
+      <div className="container mx-auto px-6 py-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center">
+            <Link href="/agents">
+              <Button variant="ghost" size="sm" className="mr-4">
+                ← 返回
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold flex items-center">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-2xl mr-3"
+                style={{ backgroundColor: agent.color + '20', border: '2px solid ' + agent.color }}
+              >
+                {agent.icon}
+              </div>
+              {agent.name} - 法规知识库
+            </h1>
+          </div>
+          <Link href="/chat?agentId=legal">
+            <Button className="bg-gradient-to-r from-[#667eea] to-[#764ba2]">
+              <BookOpen className="mr-2 h-4 w-4" />
+              法规问答
+            </Button>
+          </Link>
+        </div>
+
+        <RegulationsKnowledgeBase />
+      </div>
+    );
+  }
+
+  // 其他Agent显示普通知识库
   return (
     <div className="container mx-auto px-6 py-8">
       <div className="mb-6 flex items-center justify-between">
