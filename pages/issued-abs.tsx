@@ -20,6 +20,7 @@ import {
   Calendar,
   DollarSign,
   RefreshCw,
+  ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import { getABSServices } from '../src/lib/services/simple-real-data-service';
@@ -64,15 +65,25 @@ export default function IssuedABSPage() {
 
   return (
     <MainLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold flex items-center">
-          <Briefcase className="mr-3 text-[#667eea]" />
-          已发行ABS项目
-        </h1>
-        <Button variant="outline" onClick={loadData} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          刷新数据
-        </Button>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="mr-4">
+                <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
+                返回
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold flex items-center">
+              <Briefcase className="mr-3 text-[#667eea]" />
+              已发行ABS项目
+            </h1>
+          </div>
+          <Button variant="outline" onClick={loadData} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            刷新数据
+          </Button>
+        </div>
       </div>
 
       {/* 统计卡片 */}

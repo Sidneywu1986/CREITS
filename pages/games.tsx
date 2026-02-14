@@ -1,15 +1,24 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Gamepad2 } from 'lucide-react';
+import { Gamepad2, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 export default function GamesPage() {
   return (
     <div className="container mx-auto px-6 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center">
-          <Gamepad2 className="mr-3 text-[#667eea]" />
-          休闲小游戏
-        </h1>
+        <div className="flex items-center">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="mr-4">
+              <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
+              返回
+            </Button>
+          </Link>
+          <h1 className="text-3xl font-bold flex items-center">
+            <Gamepad2 className="mr-3 text-[#667eea]" />
+            休闲小游戏
+          </h1>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

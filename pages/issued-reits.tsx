@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import MainLayout from '../src/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../src/components/ui/card';
 import { Badge } from '../src/components/ui/badge';
 import { ScrollArea } from '../src/components/ui/scroll-area';
 import ProjectBBS, { Comment } from '../src/components/ProjectBBS';
-import { Building, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Building, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
+import { Button } from '../src/components/ui/button';
 import { getREITsProducts } from '../src/lib/data/real-reits-products';
 
 export default function IssuedREITsPage() {
@@ -71,9 +73,17 @@ export default function IssuedREITsPage() {
     <MainLayout>
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            已发行REITs
-          </h1>
+          <div className="flex items-center">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="mr-4">
+                <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
+                返回
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              已发行REITs
+            </h1>
+          </div>
           <p className="text-gray-600 dark:text-gray-400">
             查看市场上已发行的REITs产品实时行情
           </p>

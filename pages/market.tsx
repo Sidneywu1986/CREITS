@@ -1,16 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, RefreshCw, Newspaper, BarChart3, Globe } from 'lucide-react';
+import { TrendingUp, TrendingDown, RefreshCw, Newspaper, BarChart3, Globe, ArrowRight } from 'lucide-react';
 import { MARKET_DATA } from '@/types';
+import Link from 'next/link';
 
 export default function MarketPage() {
   return (
     <div className="container mx-auto px-6 py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold flex items-center">
-          <Globe className="mr-3 text-[#667eea]" />
-          全球 REITs 市场行情
-        </h1>
+        <div className="flex items-center">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="mr-4">
+              <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
+              返回
+            </Button>
+          </Link>
+          <h1 className="text-3xl font-bold flex items-center">
+            <Globe className="mr-3 text-[#667eea]" />
+            全球 REITs 市场行情
+          </h1>
+        </div>
         <Button variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
           刷新
