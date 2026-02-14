@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AGENTS } from '@/types';
-import { ArrowRight, Bot, BookOpen } from 'lucide-react';
+import { ArrowRight, Bot, Sparkles, BookOpen } from 'lucide-react';
 
 export default function AgentsPage() {
   return (
@@ -36,7 +36,7 @@ export default function AgentsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {AGENTS.map((agent) => (
+        {AGENTS.filter(agent => agent.id !== 'collaboration').map((agent) => (
           <Card
             key={agent.id}
             className="h-full hover:shadow-2xl transition-all duration-300 border-2 hover:border-[#667eea] group"
@@ -89,6 +89,31 @@ export default function AgentsPage() {
           </Card>
         ))}
       </div>
+
+      <Card className="border-2 border-[#667eea] bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5">
+        <CardHeader>
+          <div>
+            <CardTitle className="text-2xl">智能协作模式</CardTitle>
+            <CardDescription className="text-base mt-1">
+              多 Agent 协同工作，复杂任务交给 AI
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            通过智能协作模式，系统会自动协调多个专业Agent共同处理复杂任务，为您提供更全面、更深入的解决方案。
+          </p>
+          <Link href="/chat/collaboration">
+            <Button
+              size="lg"
+              className="w-full bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90 transition-opacity"
+            >
+              <Sparkles className="mr-2 h-5 w-5" />
+              启动协作模式
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   );
 }
