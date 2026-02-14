@@ -1,4 +1,5 @@
 import MainLayout from '../src/components/layout/MainLayout';
+import HackerAnonymousBBS from '../src/components/bbs/HackerAnonymousBBS';
 
 export default function Home() {
   return (
@@ -24,7 +25,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border shadow-sm">
+        <div className="bg-white p-6 rounded-lg border shadow-sm mb-8">
           <h2 className="text-2xl font-bold mb-4">核心功能</h2>
           <ul className="space-y-3">
             <li className="flex items-start gap-2">
@@ -52,6 +53,11 @@ export default function Home() {
               <span>存续期管理 Agent - 提供REITs存续期管理建议</span>
             </li>
           </ul>
+        </div>
+
+        {/* 黑客风格匿名BBS */}
+        <div className="mt-12">
+          <HackerAnonymousBBS />
         </div>
       </div>
     </MainLayout>
