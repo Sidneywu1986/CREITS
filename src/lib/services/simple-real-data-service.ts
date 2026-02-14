@@ -253,3 +253,18 @@ export async function getMarketOverview() {
     updateTime: new Date().toISOString().split('T')[0],
   };
 }
+
+/**
+ * 根据ID获取REITs产品详情
+ */
+export async function getREITsProductById(id: string): Promise<REITsWithQuote | null> {
+  const product = REAL_REITS_PRODUCTS.find(p => p.id === id);
+  if (!product) return null;
+
+  const quote = await fetchSinaQuote(product.code);
+
+  return {
+    ...product,
+    quote: quote || undefined,
+  };
+}

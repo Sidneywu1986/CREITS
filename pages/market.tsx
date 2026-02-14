@@ -24,6 +24,7 @@ import {
   ArrowDown,
   BarChart3,
   Database,
+  ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
 import { getREITsWithQuotes } from '@/src/lib/services/simple-real-data-service';
@@ -490,19 +491,26 @@ export default function MarketPage() {
                   {filteredProducts.map((product) => (
                     <tr
                       key={product.id}
-                      className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      className="border-b border-gray-100 dark:border-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
                     >
-                      <td className="py-3 px-4 text-sm font-medium">{product.code}</td>
-                      <td className="py-3 px-4 text-sm">{product.name}</td>
-                      <td className="py-3 px-4 text-sm text-right font-medium">{product.price.toFixed(3)}</td>
-                      <td className={`py-3 px-4 text-sm text-right font-semibold ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {product.change >= 0 ? '+' : ''}{product.change.toFixed(2)}%
-                      </td>
-                      <td className={`py-3 px-4 text-sm text-right ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {product.change >= 0 ? '+' : ''}{((product.change / 100) * product.price).toFixed(3)}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-right">{formatVolume(product.volume || 0)}</td>
-                      <td className="py-3 px-4 text-sm text-right">{formatVolume(product.amount || 0)}</td>
+                      <Link href={`/issued-reits/${product.code}`} className="contents">
+                        <td className="py-3 px-4 text-sm font-medium">
+                          <span className="flex items-center">
+                            {product.code}
+                            <ExternalLink className="ml-2 h-3 w-3 text-gray-400" />
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm">{product.name}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">{product.price.toFixed(3)}</td>
+                        <td className={`py-3 px-4 text-sm text-right font-semibold ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {product.change >= 0 ? '+' : ''}{product.change.toFixed(2)}%
+                        </td>
+                        <td className={`py-3 px-4 text-sm text-right ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {product.change >= 0 ? '+' : ''}{((product.change / 100) * product.price).toFixed(3)}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">{formatVolume(product.volume || 0)}</td>
+                        <td className="py-3 px-4 text-sm text-right">{formatVolume(product.amount || 0)}</td>
+                      </Link>
                     </tr>
                   ))}
                 </tbody>
