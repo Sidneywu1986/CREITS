@@ -210,6 +210,34 @@ export default function ChatPage() {
     question: string,
     analysis: any
   ): string => {
+    // 问候语检测
+    const greetingResponses = [
+      '您好！很高兴为您服务。请问有什么我可以帮助您的？',
+      '您好！我是REITs智能助手，请问您有什么问题需要咨询？',
+      '您好！请问有什么我可以为您做的？',
+      '您好！请问您想了解哪方面的内容？'
+    ];
+
+    // 检查是否是问候语
+    const greetingPatterns = [
+      /^(你好|您好|hello|hi|哈喽|嗨|早上好|下午好|晚上好|晚安)/i,
+      /^(谢谢|感谢|拜拜|再见)/i,
+      /^(在吗|在不在|有人吗)/i
+    ];
+
+    const isGreeting = greetingPatterns.some(pattern => pattern.test(question.trim()));
+
+    if (isGreeting) {
+      // 随机返回一个问候回复
+      const randomResponse = greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
+      return randomResponse;
+    }
+
+    // 检查是否是简短的无意义输入
+    if (question.trim().length < 3) {
+      return '您好，请问您有什么具体的问题需要咨询吗？我可以为您解答关于REITs发行、法律合规、政策解读、尽调分析、定价发行、运营管理等各方面的问题。';
+    }
+
     const domain = getAgentDomain(currentAgent.id);
     const keyword = domain?.keywords[0] || '专业领域';
 
@@ -228,6 +256,19 @@ export default function ChatPage() {
     collaboratingAgent: Agent,
     originalQuestion: string
   ): string => {
+    // 问候语检测
+    const greetingPatterns = [
+      /^(你好|您好|hello|hi|哈喽|嗨|早上好|下午好|晚上好|晚安)/i,
+      /^(谢谢|感谢|拜拜|再见)/i,
+      /^(在吗|在不在|有人吗)/i
+    ];
+
+    const isGreeting = greetingPatterns.some(pattern => pattern.test(originalQuestion.trim()));
+
+    if (isGreeting) {
+      return `您好！很高兴参与协作。请问有什么我可以帮助您的？`;
+    }
+
     const domain = getAgentDomain(collaboratingAgent.id);
     const keyword = domain?.keywords[0] || '专业领域';
 
