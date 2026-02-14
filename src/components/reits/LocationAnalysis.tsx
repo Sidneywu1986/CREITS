@@ -44,7 +44,7 @@ import {
   Signal,
   CheckCircle,
 } from 'lucide-react';
-import MapLocationSelector from './MapLocationSelector';
+import MapLocationSelector from './MapLocationSelectorWrapper';
 import type {
   LocationAnalysisResult,
   PopulationData,
