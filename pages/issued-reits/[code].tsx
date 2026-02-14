@@ -407,26 +407,6 @@ export default function REITsDetailPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">快捷操作</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <Button variant="outline" className="w-full justify-start" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      下载招募说明书
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start" size="sm">
-                      <Share2 className="w-4 h-4 mr-2" />
-                      分享产品
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start" size="sm" onClick={loadData}>
-                      <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                      刷新数据
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <PieChart className="w-5 h-5 text-blue-600" />
                       底层资产
@@ -498,6 +478,26 @@ export default function REITsDetailPage() {
                         <Download className="w-4 h-4" />
                       </Button>
                     </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">快捷操作</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      下载招募说明书
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" size="sm">
+                      <Share2 className="w-4 h-4 mr-2" />
+                      分享产品
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" size="sm" onClick={loadData}>
+                      <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                      刷新数据
+                    </Button>
                   </CardContent>
                 </Card>
               </div>
