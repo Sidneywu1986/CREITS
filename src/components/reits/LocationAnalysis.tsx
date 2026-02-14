@@ -460,6 +460,12 @@ export default function LocationAnalysis({
                 <Star className="w-5 h-5 text-[#667eea]" />
                 综合评分
               </CardTitle>
+              {result.metadata && (
+                <CardDescription>
+                  分析范围：{result.metadata.analysisRadiusKm}公里半径（约{result.metadata.analysisAreaSqKm}平方公里）
+                  {' '}| 分析时间：{new Date(result.metadata.analysisDate).toLocaleString('zh-CN')}
+                </CardDescription>
+              )}
             </CardHeader>
             <CardContent>
               <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg">

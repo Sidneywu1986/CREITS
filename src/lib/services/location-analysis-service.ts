@@ -1,7 +1,14 @@
 /**
  * 地理位置分析服务
  * 通过地址或经纬度生成人口、人流量、商业数据
+ * 分析范围：以目标位置为中心，2公里范围内
  */
+
+// 分析范围半径（公里）
+const ANALYSIS_RADIUS_KM = 2;
+
+// 2公里范围内的面积（平方公里）
+const ANALYSIS_AREA_SQKM = Math.PI * ANALYSIS_RADIUS_KM * ANALYSIS_RADIUS_KM;
 
 export interface LocationData {
   address: string;
@@ -135,6 +142,11 @@ export interface LocationAnalysisResult {
     threats: string[]; // 威胁分析
     recommendation: string; // 投资建议
   };
+  metadata: {
+    analysisRadiusKm: number; // 分析半径（公里）
+    analysisAreaSqKm: number; // 分析面积（平方公里）
+    analysisDate: string; // 分析日期
+  };
 }
 
 /**
@@ -167,17 +179,20 @@ export async function geocodeAddress(address: string): Promise<LocationData> {
  * 注意：实际应用中应该调用人口数据API或使用政府开放数据
  */
 export function generatePopulationData(location: LocationData): PopulationData {
-  // 模拟实现 - 基于位置生成合理的人口数据
+  // 模拟实现 - 基于2公里范围内生成合理的人口数据
+  // 分析范围：2公里半径，面积约12.57平方公里
+  // 城市中心区域人口密度通常在1-5万人/平方公里
   // 实际应用中应该调用第三方人口数据服务
   
-  const basePopulation = 50000; // 基础人口数量
+  const densityPerSqKm = 10000 + Math.floor(Math.random() * 40000); // 1-5万人/平方公里
+  const totalPopulation = Math.floor(densityPerSqKm * ANALYSIS_AREA_SQKM); // 2公里范围内的总人口
   
   return {
-    totalPopulation: basePopulation + Math.floor(Math.random() * 30000),
-    populationDensity: basePopulation * 0.1 + Math.floor(Math.random() * 5000),
-    dayPopulation: basePopulation * 0.8 + Math.floor(Math.random() * 20000),
-    nightPopulation: basePopulation * 0.6 + Math.floor(Math.random() * 15000),
-    workingPopulation: basePopulation * 0.4 + Math.floor(Math.random() * 10000),
+    totalPopulation,
+    populationDensity: densityPerSqKm,
+    dayPopulation: Math.floor(totalPopulation * (0.7 + Math.random() * 0.2)), // 白天人口（工作+消费）
+    nightPopulation: Math.floor(totalPopulation * (0.4 + Math.random() * 0.15)), // 夜间人口（居住）
+    workingPopulation: Math.floor(totalPopulation * (0.25 + Math.random() * 0.1)), // 工作人口
     
     ageDistribution: {
       under18: Math.floor(Math.random() * 10 + 5), // 5-15%
@@ -263,41 +278,42 @@ export function generateFootTrafficData(location: LocationData, population: Popu
  * 注意：实际应用中应该调用POI查询API或商业数据API
  */
 export function generateCommercialData(location: LocationData): CommercialData {
-  // 模拟实现 - 基于位置生成合理的商业数据
+  // 模拟实现 - 基于2公里范围内生成合理的商业数据
+  // 分析范围：2公里半径
   // 实际应用中应该调用地图POI API或商业数据服务
   
   return {
-    totalCommercialFacilities: Math.floor(Math.random() * 200 + 100),
-    shoppingMalls: Math.floor(Math.random() * 10 + 3),
-    supermarkets: Math.floor(Math.random() * 20 + 10),
-    restaurants: Math.floor(Math.random() * 100 + 50),
-    hotels: Math.floor(Math.random() * 15 + 5),
-    banks: Math.floor(Math.random() * 10 + 5),
+    totalCommercialFacilities: Math.floor(Math.random() * 150 + 80), // 2公里范围内商业设施数量
+    shoppingMalls: Math.floor(Math.random() * 5 + 1), // 2公里范围内购物中心
+    supermarkets: Math.floor(Math.random() * 15 + 5), // 2公里范围内超市
+    restaurants: Math.floor(Math.random() * 80 + 30), // 2公里范围内餐饮
+    hotels: Math.floor(Math.random() * 8 + 2), // 2公里范围内酒店
+    banks: Math.floor(Math.random() * 8 + 3), // 2公里范围内银行网点
     
     commercialCircle: {
       name: `${location.district}核心商圈`,
       level: Math.floor(Math.random() * 2 + 3), // 3-5级商圈
-      radius: Math.floor(Math.random() * 3 + 2), // 2-5公里
-      totalArea: Math.floor(Math.random() * 50 + 20), // 20-70万平方米
+      radius: ANALYSIS_RADIUS_KM, // 2公里分析半径
+      totalArea: ANALYSIS_AREA_SQKM, // 约12.57平方公里
     },
     
     competitors: [
       {
         name: '竞品商业中心A',
         type: '购物中心',
-        distance: Math.floor(Math.random() * 1500 + 500),
+        distance: Math.floor(Math.random() * 2000 + 100), // 100-2100米
         openingDate: '2015-06-01',
       },
       {
         name: '竞品商业中心B',
         type: '购物中心',
-        distance: Math.floor(Math.random() * 1500 + 500),
+        distance: Math.floor(Math.random() * 2000 + 100),
         openingDate: '2018-09-01',
       },
       {
         name: '竞品商业中心C',
         type: '购物中心',
-        distance: Math.floor(Math.random() * 1500 + 500),
+        distance: Math.floor(Math.random() * 2000 + 100),
         openingDate: '2020-03-01',
       },
     ],
@@ -310,10 +326,10 @@ export function generateCommercialData(location: LocationData): CommercialData {
     },
     
     transportation: {
-      subwayStations: Math.floor(Math.random() * 5 + 2), // 2-7个地铁站
-      busStops: Math.floor(Math.random() * 20 + 10), // 10-30个公交站点
-      parkingSpaces: Math.floor(Math.random() * 500 + 200), // 200-700个停车位
-      trafficFlow: Math.floor(Math.random() * 500 + 200), // 200-700车次/小时
+      subwayStations: Math.floor(Math.random() * 3 + 1), // 2公里范围内1-4个地铁站
+      busStops: Math.floor(Math.random() * 15 + 5), // 2公里范围内5-20个公交站点
+      parkingSpaces: Math.floor(Math.random() * 400 + 100), // 2公里范围内100-500个停车位
+      trafficFlow: Math.floor(Math.random() * 400 + 150), // 2公里范围内交通流量（车次/小时）
     },
   };
 }
@@ -413,6 +429,11 @@ export async function analyzeLocationByAddress(
     footTraffic,
     commercial,
     analysis,
+    metadata: {
+      analysisRadiusKm: ANALYSIS_RADIUS_KM,
+      analysisAreaSqKm: ANALYSIS_AREA_SQKM,
+      analysisDate: new Date().toISOString(),
+    },
   };
 }
 
@@ -446,5 +467,10 @@ export async function analyzeLocationByCoordinates(
     footTraffic,
     commercial,
     analysis,
+    metadata: {
+      analysisRadiusKm: ANALYSIS_RADIUS_KM,
+      analysisAreaSqKm: ANALYSIS_AREA_SQKM,
+      analysisDate: new Date().toISOString(),
+    },
   };
 }
