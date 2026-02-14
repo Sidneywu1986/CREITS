@@ -2,9 +2,27 @@
  * 真实REITs产品数据
  * 数据来源：上海证券交易所、深圳证券交易所
  * 更新时间：2024年
+ * 产品数量：79只
  */
 
-export const REAL_REITS_PRODUCTS = [
+export interface REITsProduct {
+  id: string;
+  code: string;
+  name: string;
+  issuer: string;
+  assetType: string;
+  location: string;
+  issueDate: string;
+  listingDate: string;
+  issuePrice: number;
+  issueScale: number;
+  assets: string[];
+  description: string;
+  exchange?: 'SSE' | 'SZSE'; // 交易所
+  announcementUrl?: string; // 公告查询链接
+}
+
+export const REAL_REITS_PRODUCTS: REITsProduct[] = [
   {
     id: 'REIT001',
     code: '508000',
@@ -18,6 +36,8 @@ export const REAL_REITS_PRODUCTS = [
     issueScale: 58.22,
     assets: ['沪杭高速杭州段', '杭甬高速宁波段', '杭宁高速湖州段', '其他配套设施'],
     description: '主要资产为浙江省境内的高速公路资产，包括沪杭高速、杭甬高速等。',
+    exchange: 'SSE',
+    announcementUrl: 'https://www.sse.com.cn/disclosure/announcement/c/#!/announcementTypeQuery?isShow=true&securityCode=508000',
   },
   {
     id: 'REIT002',

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../src/components/u
 import ProjectBBS, { Comment } from '../../src/components/ProjectBBS';
 import DraggableFloatingWindow from '../../src/components/common/DraggableFloatingWindow';
 import FloatingValuationCalculator from '../../src/components/reits/FloatingValuationCalculator';
+import AnnouncementQuery from '../../src/components/reits/AnnouncementQuery';
 import { getREITsDetail } from '../../src/lib/services/simple-real-data-service';
 import {
   ArrowLeft,
@@ -758,6 +759,12 @@ export default function REITsDetailPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* 交易所公告查询 */}
+                <AnnouncementQuery
+                  code={projectData.code}
+                  name={projectData.name}
+                />
               </div>
             </div>
           </TabsContent>
