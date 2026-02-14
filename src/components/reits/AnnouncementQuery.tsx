@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -26,6 +26,9 @@ import {
   Filter,
   BookOpen,
   ChevronRight,
+  Trash2,
+  FolderOpen,
+  Loader2,
 } from 'lucide-react';
 import {
   getAnnouncementQueryLink,
@@ -35,6 +38,18 @@ import {
   ANNOUNCEMENT_TIMELINE,
   getFundListUrl,
 } from '@/lib/services/announcement-service';
+
+interface DownloadedPDF {
+  id: string;
+  code: string;
+  name: string;
+  title: string;
+  type: string;
+  publishDate: string;
+  filePath: string;
+  downloadDate: string;
+  fileSize: number;
+}
 
 interface AnnouncementQueryProps {
   code: string;
@@ -50,11 +65,108 @@ export default function AnnouncementQuery({
   const [selectedType, setSelectedType] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [downloads, setDownloads] = useState<DownloadedPDF[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   // 确定交易所
   const exchange = propExchange || (code.startsWith('50') ? 'SSE' : 'SZSE');
   const exchangeName = exchange === 'SSE' ? '上海证券交易所' : '深圳证券交易所';
   const announcementLink = getAnnouncementQueryLink(code, name);
+
+  // 加载下载记录
+  useEffect(() => {
+    loadDownloads();
+  }, [code]);
+
+  const loadDownloads = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/pdf-download?code=${code}`);
+      const data = await response.json();
+      setDownloads(data.data || []);
+    } catch (error) {
+      console.error('加载下载记录失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 下载PDF
+  const handleDownloadPDF = async (title: string, type: string, publishDate: string) => {
+    try {
+      setDownloading(title);
+      
+      // 注意：这里使用交易所公告页面URL作为示例
+      // 实际应用中需要获取具体的PDF下载URL
+      const downloadUrl = announcementLink.url;
+      
+      const response = await fetch('/api/pdf-download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: downloadUrl,
+          code,
+          name,
+          title,
+          type,
+          publishDate,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // 刷新下载列表
+        await loadDownloads();
+        // 直接下载文件
+        window.open(result.filePath, '_blank');
+      } else {
+        alert(`下载失败: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('下载PDF失败:', error);
+      alert('下载失败，请稍后重试');
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  // 删除下载的PDF
+  const handleDeletePDF = async (fileName: string) => {
+    if (!confirm('确定要删除这个文件吗？')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/pdf-download?fileName=${encodeURIComponent(fileName)}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // 刷新下载列表
+        await loadDownloads();
+      } else {
+        alert(`删除失败: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('删除PDF失败:', error);
+      alert('删除失败，请稍后重试');
+    }
+  };
+
+  // 格式化文件大小
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  };
 
   // 跳转到交易所公告页面
   const handleGoToAnnouncementPage = () => {
@@ -218,8 +330,7 @@ export default function AnnouncementQuery({
             {ANNOUNCEMENT_TIMELINE.map((type) => (
               <div
                 key={type}
-                className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer"
-                onClick={() => handleFilterByType(type)}
+                className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
               >
                 <div className="text-2xl flex-shrink-0">
                   {getAnnouncementTypeIcon(type)}
@@ -235,10 +346,99 @@ export default function AnnouncementQuery({
                     {getAnnouncementTypeDescription(type)}
                   </p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDownloadPDF(
+                    `${name}${type}`,
+                    type,
+                    new Date().toISOString().split('T')[0]
+                  )}
+                  disabled={downloading !== null}
+                  className="flex-shrink-0"
+                >
+                  {downloading === `${name}${type}` ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 已下载的PDF文件 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FolderOpen className="w-5 h-5 text-[#667eea]" />
+            已下载的PDF文件
+            <Badge variant="secondary">{downloads.length}</Badge>
+          </CardTitle>
+          <CardDescription>
+            系统内已下载的公告文件，支持预览和删除
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-[#667eea]" />
+            </div>
+          ) : downloads.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>暂无下载的文件</p>
+              <p className="text-sm mt-1">点击上方公告类型按钮开始下载</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {downloads.map((download) => (
+                <div
+                  key={download.id}
+                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+                >
+                  <div className="text-2xl flex-shrink-0">
+                    {getAnnouncementTypeIcon(download.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h5 className="font-semibold text-sm truncate">{download.title}</h5>
+                      <Badge variant="outline" className="text-xs flex-shrink-0">
+                        {download.type}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{download.publishDate}</span>
+                      <span>•</span>
+                      <span>{formatFileSize(download.fileSize)}</span>
+                      <span>•</span>
+                      <span>{new Date(download.downloadDate).toLocaleDateString('zh-CN')}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => window.open(download.filePath, '_blank')}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeletePDF(download.filePath.split('/').pop() || '')}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
