@@ -3,9 +3,11 @@
  * 通过地址或经纬度生成人口、人流量、商业数据
  * 分析范围：以目标位置为中心，2公里范围内
  * 支持集成运营商数据（中国联通/中国移动/中国电信）
+ * 支持集成开源数据（OpenStreetMap/高德/百度/国家统计局）
  */
 
 import { CarrierDataService, CarrierAnalysisData, CarrierDataSource } from './carrier-data-service';
+import { OpenDataService, OpenAnalysisData, OpenDataSource } from './open-data-service';
 
 // 分析范围半径（公里）
 const ANALYSIS_RADIUS_KM = 2;
@@ -14,13 +16,17 @@ const ANALYSIS_RADIUS_KM = 2;
 const ANALYSIS_AREA_SQKM = Math.PI * ANALYSIS_RADIUS_KM * ANALYSIS_RADIUS_KM;
 
 // 数据源类型
-export type DataSourceType = 'traditional' | 'carrier';
+export type DataSourceType = 'traditional' | 'carrier' | 'open';
 
 // 分析选项
 export interface AnalysisOptions {
   useCarrierData?: boolean; // 是否使用运营商数据
   carrierDataSource?: CarrierDataSource; // 运营商数据源
   includeRealtime?: boolean; // 是否包含实时数据
+  useOpenData?: boolean; // 是否使用开源数据
+  openDataSource?: OpenDataSource; // 开源数据源
+  amapKey?: string; // 高德地图API Key
+  baiduKey?: string; // 百度地图API Key
 }
 
 export interface LocationData {
@@ -156,6 +162,7 @@ export interface LocationAnalysisResult {
     recommendation: string; // 投资建议
   };
   carrierData?: CarrierAnalysisData; // 运营商数据（可选）
+  openData?: OpenAnalysisData; // 开源数据（可选）
   metadata: {
     analysisRadiusKm: number; // 分析半径（公里）
     analysisAreaSqKm: number; // 分析面积（平方公里）
@@ -424,7 +431,15 @@ export async function analyzeLocationByAddress(
   address: string,
   options: AnalysisOptions = {}
 ): Promise<LocationAnalysisResult> {
-  const { useCarrierData = false, carrierDataSource = CarrierDataSource.SIMULATED, includeRealtime = true } = options;
+  const { 
+    useCarrierData = false, 
+    carrierDataSource = CarrierDataSource.SIMULATED, 
+    includeRealtime = true,
+    useOpenData = false,
+    openDataSource = OpenDataSource.OSM,
+    amapKey,
+    baiduKey,
+  } = options;
   
   // 1. 地址解析
   const location = await geocodeAddress(address);
@@ -458,6 +473,34 @@ export async function analyzeLocationByAddress(
     }
   }
   
+  // 7. 获取开源数据（可选）
+  let openData: OpenAnalysisData | undefined;
+  if (useOpenData) {
+    try {
+      openData = await OpenDataService.getOpenAnalysis({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        radius: ANALYSIS_RADIUS_KM,
+        dataSource: openDataSource,
+        amapKey,
+        baiduKey,
+      });
+    } catch (error) {
+      console.error('获取开源数据失败:', error);
+      // 开源数据获取失败不影响整体分析
+    }
+  }
+  
+  // 确定数据源类型
+  let dataSourceType: DataSourceType = 'traditional';
+  if (useCarrierData && useOpenData) {
+    dataSourceType = 'carrier'; // 优先使用运营商数据
+  } else if (useCarrierData) {
+    dataSourceType = 'carrier';
+  } else if (useOpenData) {
+    dataSourceType = 'open';
+  }
+  
   return {
     location,
     population,
@@ -465,10 +508,11 @@ export async function analyzeLocationByAddress(
     commercial,
     analysis,
     carrierData,
+    openData,
     metadata: {
       analysisRadiusKm: ANALYSIS_RADIUS_KM,
       analysisAreaSqKm: ANALYSIS_AREA_SQKM,
-      dataSourceType: useCarrierData ? 'carrier' : 'traditional',
+      dataSourceType,
       analysisDate: new Date().toISOString(),
     },
   };
@@ -483,7 +527,15 @@ export async function analyzeLocationByCoordinates(
   address?: string,
   options: AnalysisOptions = {}
 ): Promise<LocationAnalysisResult> {
-  const { useCarrierData = false, carrierDataSource = CarrierDataSource.SIMULATED, includeRealtime = true } = options;
+  const { 
+    useCarrierData = false, 
+    carrierDataSource = CarrierDataSource.SIMULATED, 
+    includeRealtime = true,
+    useOpenData = false,
+    openDataSource = OpenDataSource.OSM,
+    amapKey,
+    baiduKey,
+  } = options;
   
   // 如果没有提供地址，可以通过反向地理编码获取
   const location: LocationData = {
@@ -517,6 +569,33 @@ export async function analyzeLocationByCoordinates(
     }
   }
   
+  // 获取开源数据（可选）
+  let openData: OpenAnalysisData | undefined;
+  if (useOpenData) {
+    try {
+      openData = await OpenDataService.getOpenAnalysis({
+        latitude,
+        longitude,
+        radius: ANALYSIS_RADIUS_KM,
+        dataSource: openDataSource,
+        amapKey,
+        baiduKey,
+      });
+    } catch (error) {
+      console.error('获取开源数据失败:', error);
+    }
+  }
+  
+  // 确定数据源类型
+  let dataSourceType: DataSourceType = 'traditional';
+  if (useCarrierData && useOpenData) {
+    dataSourceType = 'carrier'; // 优先使用运营商数据
+  } else if (useCarrierData) {
+    dataSourceType = 'carrier';
+  } else if (useOpenData) {
+    dataSourceType = 'open';
+  }
+  
   return {
     location,
     population,
@@ -524,10 +603,11 @@ export async function analyzeLocationByCoordinates(
     commercial,
     analysis,
     carrierData,
+    openData,
     metadata: {
       analysisRadiusKm: ANALYSIS_RADIUS_KM,
       analysisAreaSqKm: ANALYSIS_AREA_SQKM,
-      dataSourceType: useCarrierData ? 'carrier' : 'traditional',
+      dataSourceType,
       analysisDate: new Date().toISOString(),
     },
   };
