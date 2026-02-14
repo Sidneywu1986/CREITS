@@ -163,6 +163,7 @@ export default function MarketPage() {
         name: item.name,
         price: item.quote?.price || item.issuePrice,
         issuePrice: item.issuePrice,
+        issueDate: item.issueDate,
         change: item.quote?.changePercent || 0,
         volume: item.quote?.volume || 0,
         amount: item.quote?.volume * (item.quote?.price || item.issuePrice) || 0,
@@ -186,6 +187,7 @@ export default function MarketPage() {
       name: item.name,
       price: item.issuePrice * (1 + (Math.random() * 0.2 - 0.1)),
       issuePrice: item.issuePrice,
+      issueDate: item.issueDate,
       change: Math.random() * 10 - 5,
       volume: Math.floor(Math.random() * 10000000),
       amount: item.issueScale * 100000000,
@@ -493,6 +495,7 @@ export default function MarketPage() {
                     <th className="text-left py-3 px-4 font-semibold text-sm">名称</th>
                     <th className="text-right py-3 px-4 font-semibold text-sm">收盘价</th>
                     <th className="text-right py-3 px-4 font-semibold text-sm">首发价</th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm">发行时间</th>
                     <th className="text-right py-3 px-4 font-semibold text-sm">涨跌幅</th>
                     <th className="text-right py-3 px-4 font-semibold text-sm">涨跌额</th>
                     <th className="text-right py-3 px-4 font-semibold text-sm">成交量</th>
@@ -515,6 +518,7 @@ export default function MarketPage() {
                         <td className="py-3 px-4 text-sm">{product.name}</td>
                         <td className="py-3 px-4 text-sm text-right font-medium">{product.price.toFixed(3)}</td>
                         <td className="py-3 px-4 text-sm text-right">{product.issuePrice ? product.issuePrice.toFixed(3) : '-'}</td>
+                        <td className="py-3 px-4 text-sm text-center text-gray-600 dark:text-gray-400">{product.issueDate || '-'}</td>
                         <td className={`py-3 px-4 text-sm text-right font-semibold ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {product.change >= 0 ? '+' : ''}{product.change.toFixed(2)}%
                         </td>
