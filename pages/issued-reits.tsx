@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../sr
 import { Badge } from '../src/components/ui/badge';
 import { ScrollArea } from '../src/components/ui/scroll-area';
 import ProjectBBS, { Comment } from '../src/components/ProjectBBS';
-import { Building, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight, RefreshCw, Activity, Calendar } from 'lucide-react';
+import REITsValuationCalculator from '../src/components/reits/REITsValuationCalculator';
+import { Building, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight, RefreshCw, Activity, Calendar, Calculator } from 'lucide-react';
 import { Button } from '../src/components/ui/button';
 import { getREITsProducts } from '../src/lib/data/real-reits-products';
 
@@ -16,6 +17,13 @@ export default function IssuedREITsPage() {
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(60);
   const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [selectedREITs, setSelectedREITs] = useState<{
+    name: string;
+    code: string;
+    currentPrice: number;
+    annualDistribution: number;
+  } | null>(null);
 
   const loadRealData = async () => {
     try {
@@ -73,6 +81,17 @@ export default function IssuedREITsPage() {
 
   const handleLikeComment = (commentId: string) => {
     console.log('Like comment:', commentId);
+  };
+
+  const handleOpenCalculator = (product: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedREITs({
+      name: product.name,
+      code: product.code,
+      currentPrice: parseFloat(product.price.replace(/[^\d.]/g, '')) || 0,
+      annualDistribution: 0, // 数据源中没有年度分红，设为0，用户可在计算器中修改
+    });
+    setShowCalculator(true);
   };
 
   if (loading) {
@@ -162,6 +181,17 @@ export default function IssuedREITsPage() {
                       <span className="font-medium">{product.marketCap}亿</span>
                     </div>
                   </div>
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 hover:from-[#667eea]/20 hover:to-[#764ba2]/20"
+                      onClick={(e) => handleOpenCalculator(product, e)}
+                    >
+                      <Calculator className="w-4 h-4 mr-2" />
+                      估值计算
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
               <ProjectBBS
@@ -176,6 +206,18 @@ export default function IssuedREITsPage() {
             </div>
           ))}
         </div>
+
+        {/* 估值计算器 */}
+        {selectedREITs && (
+          <REITsValuationCalculator
+            isOpen={showCalculator}
+            onClose={() => setShowCalculator(false)}
+            reitsName={selectedREITs.name}
+            reitsCode={selectedREITs.code}
+            currentPrice={selectedREITs.currentPrice}
+            annualDistribution={selectedREITs.annualDistribution}
+          />
+        )}
       </div>
     </MainLayout>
   );
