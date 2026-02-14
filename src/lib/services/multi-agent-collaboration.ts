@@ -221,6 +221,26 @@ const AGENT_KNOWLEDGE_MATRIX: Record<string, {
  */
 export class QuestionAnalyzer {
   /**
+   * 问候语黑名单（简单问候语不应该触发协作）
+   */
+  private static readonly GREETING_BLACKLIST = [
+    '你好', '您好', 'hello', 'hi', '哈喽', '嗨',
+    '早上好', '下午好', '晚上好', '晚安',
+    '谢谢', '感谢', '拜拜', '再见',
+    '在吗', '在不在', '有人吗'
+  ];
+
+  /**
+   * 协作触发的配置参数
+   */
+  private static readonly COLLABORATION_CONFIG = {
+    MIN_QUESTION_LENGTH: 5,          // 最小问题长度（字符数）
+    MIN_KEYWORD_MATCH: 3,            // 最小关键词匹配数量
+    MIN_CONFIDENCE: 0.5,             // 最小置信度阈值
+    MIN_WORDS_FOR_ANALYSIS: 2        // 至少需要多少个词才进行分析
+  };
+
+  /**
    * 分析问题是否属于Agent的领域
    */
   static analyze(agentId: string, question: string): QuestionAnalysis {
@@ -235,21 +255,63 @@ export class QuestionAnalyzer {
       };
     }
 
+    // 1. 检查是否是简单问候语
+    if (this.isGreeting(question)) {
+      return {
+        isMyDomain: true,
+        confidence: 1.0,
+        matchedKeywords: [],
+        suggestedAgents: [],
+        reason: '简单问候，无需协作'
+      };
+    }
+
+    // 2. 检查问题长度是否足够
+    if (question.trim().length < this.COLLABORATION_CONFIG.MIN_QUESTION_LENGTH) {
+      return {
+        isMyDomain: true,
+        confidence: 1.0,
+        matchedKeywords: [],
+        suggestedAgents: [],
+        reason: '问题太短，无需协作'
+      };
+    }
+
     // 提取问题中的关键词
     const questionKeywords = this.extractKeywords(question);
+
+    // 3. 检查提取的关键词数量是否足够
+    if (questionKeywords.length < this.COLLABORATION_CONFIG.MIN_WORDS_FOR_ANALYSIS) {
+      return {
+        isMyDomain: true,
+        confidence: 0.8,
+        matchedKeywords: [],
+        suggestedAgents: [],
+        reason: '问题关键词不足，无需协作'
+      };
+    }
 
     // 匹配领域关键词
     const matchedKeywords = agentDomain.keywords.filter(kw =>
       questionKeywords.some(qk => qk.includes(kw) || kw.includes(qk))
     );
 
-    // 计算置信度
-    const confidence = matchedKeywords.length > 0
-      ? Math.min(matchedKeywords.length / questionKeywords.length * 2, 1)
-      : 0;
+    // 4. 检查匹配的关键词数量是否达到协作门槛
+    if (matchedKeywords.length < this.COLLABORATION_CONFIG.MIN_KEYWORD_MATCH) {
+      return {
+        isMyDomain: true,
+        confidence: 0.7,
+        matchedKeywords,
+        suggestedAgents: [],
+        reason: '问题与当前Agent高度相关，无需协作'
+      };
+    }
 
-    // 判断是否属于该领域
-    const isMyDomain = confidence >= 0.3 || matchedKeywords.length >= 2;
+    // 计算置信度（优化公式）
+    const confidence = this.calculateConfidence(matchedKeywords, questionKeywords);
+
+    // 判断是否属于该领域（使用更高的阈值）
+    const isMyDomain = confidence >= this.COLLABORATION_CONFIG.MIN_CONFIDENCE;
 
     // 如果不是，建议相关Agent
     let suggestedAgents: string[] = [];
@@ -257,11 +319,11 @@ export class QuestionAnalyzer {
 
     if (!isMyDomain) {
       // 分析问题，找到最相关的Agent
-      const analysis = this.findRelevantAgents(question);
+      const analysis = this.findRelevantAgents(question, matchedKeywords);
       suggestedAgents = analysis.agentIds;
       reason = analysis.reason;
     } else {
-      // 即使是自己的领域，也可能需要协作
+      // 即使是自己的领域，也可能需要协作（更严格的条件）
       const collaborationNeeds = this.assessCollaborationNeed(agentId, question, matchedKeywords);
       if (collaborationNeeds.needsCollaboration) {
         suggestedAgents = collaborationNeeds.suggestedAgents;
@@ -279,12 +341,45 @@ export class QuestionAnalyzer {
   }
 
   /**
+   * 检查是否是问候语
+   */
+  private static isGreeting(question: string): boolean {
+    const trimmed = question.trim().toLowerCase();
+    return this.GREETING_BLACKLIST.some(greeting =>
+      trimmed === greeting || trimmed.startsWith(greeting)
+    );
+  }
+
+  /**
+   * 计算置信度（优化公式）
+   */
+  private static calculateConfidence(
+    matchedKeywords: string[],
+    questionKeywords: string[]
+  ): number {
+    if (matchedKeywords.length === 0 || questionKeywords.length === 0) {
+      return 0;
+    }
+
+    // 基础分数：匹配关键词占比
+    const baseScore = matchedKeywords.length / questionKeywords.length;
+
+    // 重量分数：匹配关键词越多，置信度越高
+    const weightScore = Math.min(matchedKeywords.length / 5, 1);
+
+    // 综合置信度
+    const confidence = (baseScore * 0.4) + (weightScore * 0.6);
+
+    return Math.min(confidence, 1.0);
+  }
+
+  /**
    * 提取问题中的关键词
    */
   private static extractKeywords(question: string): string[] {
     // 移除标点符号和停用词
     const cleaned = question
-      .replace(/[。，！？？、；：""''（）【】《》]/g, ' ')
+      .replace(/[。，！？？、；：""''（）【】《》\n\r\t]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -295,7 +390,10 @@ export class QuestionAnalyzer {
   /**
    * 找到最相关的Agent
    */
-  private static findRelevantAgents(question: string): {
+  private static findRelevantAgents(
+    question: string,
+    matchedKeywords: string[]
+  ): {
     agentIds: string[];
     reason: string;
   } {
@@ -309,20 +407,20 @@ export class QuestionAnalyzer {
       scores[domain.agentId] = matched.length;
     });
 
-    // 按分数排序
+    // 按分数排序，且分数必须大于等于配置的最小值
     const sorted = Object.entries(scores)
       .sort((a, b) => b[1] - a[1])
-      .filter(([_, score]) => score > 0);
+      .filter(([_, score]) => score >= this.COLLABORATION_CONFIG.MIN_KEYWORD_MATCH);
 
     if (sorted.length === 0) {
       return {
-        agentIds: ['collaboration'],
-        reason: '问题复杂，建议由智能协作Agent协调多位专家共同解答'
+        agentIds: [],
+        reason: '未找到相关Agent'
       };
     }
 
     const topAgents = sorted.slice(0, 2).map(([id]) => id);
-    const reason = `问题涉及${sorted[0][1]}个关键词，建议由相关领域Agent协同解答`;
+    const reason = `问题涉及${sorted[0][1]}个专业关键词，建议由相关领域Agent协同解答`;
 
     return {
       agentIds: topAgents,
@@ -359,7 +457,8 @@ export class QuestionAnalyzer {
           questionKeywords.some(qk => qk.includes(overlap) || overlap.includes(qk))
         );
 
-        if (matchedOverlaps.length > 0) {
+        // 至少需要匹配2个重叠点才建议协作
+        if (matchedOverlaps.length >= 2) {
           collaborationAgents.push(relatedId);
         }
       }
