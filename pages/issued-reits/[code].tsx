@@ -7,6 +7,8 @@ import { Button } from '../../src/components/ui/button';
 import { Badge } from '../../src/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../src/components/ui/tabs';
 import ProjectBBS, { Comment } from '../../src/components/ProjectBBS';
+import DraggableFloatingWindow from '../../src/components/common/DraggableFloatingWindow';
+import FloatingValuationCalculator from '../../src/components/reits/FloatingValuationCalculator';
 import { getREITsDetail } from '../../src/lib/services/simple-real-data-service';
 import {
   ArrowLeft,
@@ -26,6 +28,7 @@ import {
   RefreshCw,
   ArrowUpRight,
   Activity,
+  Calculator,
 } from 'lucide-react';
 
 export default function REITsDetailPage() {
@@ -38,6 +41,7 @@ export default function REITsDetailPage() {
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [comments, setComments] = useState<Comment[]>([]);
   const [countdown, setCountdown] = useState(60);
+  const [showValuationCalculator, setShowValuationCalculator] = useState(false);
 
   // 加载真实数据
   const loadData = async () => {
@@ -344,6 +348,19 @@ export default function REITsDetailPage() {
                           {projectData.issuePrice.toFixed(2)}元
                         </p>
                       </div>
+                    </div>
+                    {/* 估值计算器按钮 */}
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <Button
+                        onClick={() => setShowValuationCalculator(true)}
+                        className="w-full bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:from-[#667eea]/90 hover:to-[#764ba2]/90"
+                      >
+                        <Calculator className="w-4 h-4 mr-2" />
+                        REITs估值计算器
+                      </Button>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 text-center">
+                        点击打开独立浮窗估值计算器，进行综合估值分析
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -770,6 +787,26 @@ export default function REITsDetailPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* 浮窗估值计算器 */}
+        {showValuationCalculator && (
+          <DraggableFloatingWindow
+            isOpen={showValuationCalculator}
+            onClose={() => setShowValuationCalculator(false)}
+            title="REITs估值计算器"
+            initialPosition={{ x: 100, y: 100 }}
+            initialSize={{ width: 500, height: 600 }}
+            minSize={{ width: 400, height: 500 }}
+            maxSize={{ width: 800, height: 800 }}
+          >
+            <FloatingValuationCalculator
+              reitsName={projectData.name}
+              reitsCode={projectData.code}
+              currentPrice={quote?.price || projectData.issuePrice}
+              annualDistribution={0}
+            />
+          </DraggableFloatingWindow>
+        )}
       </div>
     </div>
   );
