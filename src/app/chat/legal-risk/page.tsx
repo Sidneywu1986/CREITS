@@ -22,6 +22,79 @@ import {
   Shield,
 } from 'lucide-react';
 
+// 简单的 Markdown 渲染器
+const SimpleMarkdownRenderer = ({ content }: { content: string }) => {
+  if (!content) return null;
+
+  // 处理表格
+  const tableRegex = /\|.*\|[\s\S]*?\|.*\|/g;
+  const tables = content.match(tableRegex);
+  let processedContent = content;
+
+  if (tables) {
+    tables.forEach((table, idx) => {
+      const tableId = `table-${idx}`;
+      const rows = table.trim().split('\n').filter(row => row.trim().startsWith('|'));
+      const tableRows = rows.map(row => {
+        const cells = row.split('|').filter((_, i, arr) => i > 0 && i < arr.length);
+        const isHeader = row.includes('---');
+        return {
+          cells: cells.map(cell => cell.trim()),
+          isHeader
+        };
+      });
+      
+      const tableHtml = `
+        <div className="overflow-x-auto my-2">
+          <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-700 text-sm">
+            <thead className="bg-gray-100 dark:bg-gray-800">
+              ${tableRows.filter(r => r.isHeader).map(row => `
+                <tr>
+                  ${row.cells.map(cell => `<th className="border border-gray-300 dark:border-gray-700 px-2 py-1 text-left">${cell}</th>`).join('')}
+                </tr>
+              `).join('')}
+            </thead>
+            <tbody>
+              ${tableRows.filter(r => !r.isHeader).map(row => `
+                <tr>
+                  ${row.cells.map(cell => `<td className="border border-gray-300 dark:border-gray-700 px-2 py-1">${cell}</td>`).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      processedContent = processedContent.replace(table, tableHtml);
+    });
+  }
+
+  // 处理列表
+  processedContent = processedContent.replace(/^\s*[-*]\s+(.+)$/gm, '<li>$1</li>');
+  processedContent = processedContent.replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>');
+  
+  // 将连续的 li 包裹在 ul 中
+  processedContent = processedContent.replace(/(<li>.*<\/li>\s*)+/g, '<ul className="list-disc list-inside my-2 space-y-1 ml-4">$&</ul>');
+
+  // 处理标题
+  processedContent = processedContent.replace(/^###\s+(.+)$/gm, '<h4 className="text-xs font-bold mt-2 mb-1">$1</h4>');
+  processedContent = processedContent.replace(/^##\s+(.+)$/gm, '<h3 className="text-sm font-bold mt-2 mb-1">$1</h3>');
+  processedContent = processedContent.replace(/^#\s+(.+)$/gm, '<h2 className="text-base font-bold mt-2 mb-1">$1</h2>');
+
+  // 处理粗体和斜体
+  processedContent = processedContent.replace(/\*\*(.+?)\*\*/g, '<strong className="font-bold">$1</strong>');
+  processedContent = processedContent.replace(/\*(.+?)\*/g, '<em className="italic">$1</em>');
+
+  // 处理段落（非标签开头的行）
+  const lines = processedContent.split('\n');
+  const processedLines = lines.map(line => {
+    if (line.trim() === '') return '';
+    if (line.trim().startsWith('<')) return line;
+    return `<p className="text-sm my-1 leading-relaxed">${line}</p>`;
+  });
+
+  return <div dangerouslySetInnerHTML={{ __html: processedLines.join('\n') }} />;
+};
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -579,10 +652,14 @@ export default function LegalRiskChatPage() {
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
                             }`}
                           >
-                            <p className="text-sm whitespace-pre-wrap">
-                              {message.content}
-                            </p>
-                            <p className="text-xs mt-1 opacity-70">
+                            {message.role === 'assistant' ? (
+                              <SimpleMarkdownRenderer content={message.content} />
+                            ) : (
+                              <p className="text-sm whitespace-pre-wrap">
+                                {message.content}
+                              </p>
+                            )}
+                            <p className="text-xs mt-2 opacity-70">
                               {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
                                 hour: '2-digit',
                                 minute: '2-digit',
