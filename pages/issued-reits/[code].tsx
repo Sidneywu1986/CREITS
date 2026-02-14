@@ -256,10 +256,9 @@ export default function REITsDetailPage() {
 
         {/* 主要内容 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="overview">项目概况</TabsTrigger>
             <TabsTrigger value="assets">底层资产</TabsTrigger>
-            <TabsTrigger value="documents">相关文档</TabsTrigger>
             <TabsTrigger value="discussion">讨论交流</TabsTrigger>
           </TabsList>
 
@@ -404,6 +403,82 @@ export default function REITsDetailPage() {
                     </Button>
                   </CardContent>
                 </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <PieChart className="w-5 h-5 text-blue-600" />
+                      底层资产
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {projectData.assets.map((asset: string, index: number) => (
+                      <div key={index} className="p-3 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">
+                          {asset}
+                        </h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          该项目的基础资产之一
+                        </p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                      相关文档
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                          <FileText className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">招募说明书</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">PDF文档</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">法律意见书</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">PDF文档</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                          <FileText className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">年度报告</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">PDF文档</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </TabsContent>
@@ -413,80 +488,21 @@ export default function REITsDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="w-5 h-5 text-blue-600" />
-                  底层资产详情
+                  底层资产
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {projectData.assets.map((asset: string, index: number) => (
-                    <div key={index} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                        {asset}
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        该项目的基础资产之一
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="documents">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                  相关文档
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded bg-red-100 dark:bg-red-900 flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">招募说明书</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">PDF文档</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">法律意见书</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">PDF文档</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">年度报告</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">PDF文档</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
+                <div className="text-center py-8">
+                  <PieChart className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    底层资产已移至项目概况页面
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    请切换到"项目概况"标签页，在右侧边栏查看底层资产详情
+                  </p>
+                  <Button onClick={() => setActiveTab('overview')}>
+                    查看项目概况
+                  </Button>
                 </div>
               </CardContent>
             </Card>
