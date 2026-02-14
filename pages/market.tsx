@@ -422,9 +422,9 @@ export default function MarketPage() {
                   <th className="text-left py-3 px-4 font-semibold text-sm">类型</th>
                   <th className="text-left py-3 px-4 font-semibold text-sm">发布方/代码</th>
                   <th className="text-left py-3 px-4 font-semibold text-sm">主要特点</th>
-                  <th className="text-right py-3 px-4 font-semibold text-sm">指数值</th>
-                  <th className="text-right py-3 px-4 font-semibold text-sm">最高值/时间</th>
-                  <th className="text-right py-3 px-4 font-semibold text-sm">最低值/时间</th>
+                  <th className="text-right py-3 px-4 font-semibold text-sm">指数</th>
+                  <th className="text-right py-3 px-4 font-semibold text-sm">最高值</th>
+                  <th className="text-right py-3 px-4 font-semibold text-sm">最低值</th>
                   <th className="text-right py-3 px-4 font-semibold text-sm">涨跌幅</th>
                 </tr>
               </thead>
