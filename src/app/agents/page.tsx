@@ -25,6 +25,7 @@ import {
   User,
   CheckCircle,
   Copy,
+  BookOpen,
 } from 'lucide-react';
 
 interface Message {
@@ -308,13 +309,24 @@ export default function AgentsPage() {
                     </Button>
                   </Link>
                 </div>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => openAnalysisModal(agent.id)}
-                >
-                  文档分析
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => openAnalysisModal(agent.id)}
+                  >
+                    文档分析
+                  </Button>
+                  <Link href={'/knowledge/' + agent.id} className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                    >
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      知识库
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
