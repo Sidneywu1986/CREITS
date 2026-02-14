@@ -48,18 +48,18 @@ const SimpleMarkdownRenderer = ({ content }: { content: string }) => {
       
       const tableHtml = `
         <div style="overflow-x: auto; margin: 8px 0;">
-          <table style="min-width: 100%; border-collapse: collapse; border: 2px solid #000000; font-size: 14px;">
+          <table style="min-width: 100%; border-collapse: collapse; border: 2px solid #000000; font-size: 14px; line-height: 1.5;">
             <thead style="background-color: #f3f4f6;">
               ${tableRows.filter(r => r.isHeader).map(row => `
-                <tr>
-                  ${row.cells.map(cell => `<th style="border: 1px solid #000000; padding: 8px 12px; text-align: left; font-weight: 600;">${cell}</th>`).join('')}
+                <tr style="border: 1px solid #000000;">
+                  ${row.cells.map(cell => `<th style="border: 1px solid #000000; padding: 10px 14px; text-align: left; font-weight: 600; font-size: 14px;">${cell}</th>`).join('')}
                 </tr>
               `).join('')}
             </thead>
             <tbody>
               ${tableRows.filter(r => !r.isHeader).map(row => `
-                <tr>
-                  ${row.cells.map(cell => `<td style="border: 1px solid #000000; padding: 8px 12px;">${cell}</td>`).join('')}
+                <tr style="border: 1px solid #000000;">
+                  ${row.cells.map(cell => `<td style="border: 1px solid #000000; padding: 10px 14px; text-align: left; font-size: 14px;">${cell}</td>`).join('')}
                 </tr>
               `).join('')}
             </tbody>
