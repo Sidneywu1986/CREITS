@@ -391,22 +391,6 @@ export default function REITsDetailPage() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">数据来源</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Building className="w-4 h-4 text-blue-600" />
-                      <span className="text-gray-600 dark:text-gray-400">上海/深圳证券交易所</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <BarChart3 className="w-4 h-4 text-green-600" />
-                      <span className="text-gray-600 dark:text-gray-400">新浪财经API（免费）</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <PieChart className="w-5 h-5 text-blue-600" />
                       底层资产
@@ -498,6 +482,22 @@ export default function REITsDetailPage() {
                       <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                       刷新数据
                     </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">数据来源</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Building className="w-4 h-4 text-blue-600" />
+                      <span className="text-gray-600 dark:text-gray-400">上海/深圳证券交易所</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <BarChart3 className="w-4 h-4 text-green-600" />
+                      <span className="text-gray-600 dark:text-gray-400">新浪财经API（免费）</span>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
