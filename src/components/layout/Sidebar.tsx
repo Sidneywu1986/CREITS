@@ -13,7 +13,7 @@ import {
   Building,
   Briefcase,
   Gamepad2,
-  CheckCircle,
+  MessageSquare,
   Calculator,
   Clock,
 } from 'lucide-react';
@@ -29,7 +29,7 @@ const navigation = [
   { name: '已发行ABS项目', href: '/issued-abs', icon: Briefcase },
   { name: 'REITs估值计算器', href: '/valuation-calculator', icon: Calculator },
   { name: '休闲小游戏', href: '/games', icon: Gamepad2 },
-  { name: '飞书集成', href: '/feishu', icon: CheckCircle },
+  { name: '匿名BBS', href: '/bbs', icon: MessageSquare },
 ];
 
 export default function Sidebar() {
