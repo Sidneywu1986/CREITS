@@ -49,6 +49,7 @@ interface DiscussionTopic {
   lastActiveTime: Date;
   tags: string[];
   isActive: boolean;
+  inviteCode: string; // 6位字母邀请码
 }
 
 // 聊天消息
@@ -85,6 +86,8 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
   const [newTopicDesc, setNewTopicDesc] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [inviteCodeInput, setInviteCodeInput] = useState(''); // 邀请码输入
+  const [showJoinForm, setShowJoinForm] = useState(false); // 显示加入表单
 
   // 生成匿名ID
   const generateAnonymousId = useCallback((): string => {
@@ -102,6 +105,16 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
   const generateAvatarColor = useCallback((): string => {
     const colors = ['#00ff00', '#00cc00', '#009900', '#33ff33', '#66ff66', '#33cc33'];
     return colors[Math.floor(Math.random() * colors.length)];
+  }, []);
+
+  // 生成6位字母邀请码
+  const generateInviteCode = useCallback((): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
   }, []);
 
   // 初始化当前用户
@@ -147,6 +160,7 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
       lastActiveTime: new Date(),
       tags: ['匿名', '隐私保护', '临时讨论'],
       isActive: true,
+      inviteCode: generateInviteCode(), // 生成6位字母邀请码
     };
 
     // 创建临时聊天室
@@ -224,6 +238,41 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
     setShowTopics(true);
   };
 
+  // 通过邀请码加入聊天室
+  const handleJoinRoomByInviteCode = () => {
+    if (!inviteCodeInput.trim() || !currentUser) return;
+
+    const code = inviteCodeInput.trim().toUpperCase();
+    const targetTopic = topics.find(t => t.inviteCode === code);
+
+    if (!targetTopic) {
+      alert('邀请码无效或聊天室不存在');
+      return;
+    }
+
+    const room = rooms.get(targetTopic.id);
+    if (!room) {
+      alert('聊天室不存在');
+      return;
+    }
+
+    // 检查用户是否已经在参与者中
+    if (!room.participants.some(p => p.id === currentUser.id)) {
+      const updatedRoom: TemporaryChatRoom = {
+        ...room,
+        participants: [...room.participants, currentUser],
+      };
+      rooms.set(updatedRoom.id, updatedRoom);
+      setSelectedRoom(updatedRoom);
+    } else {
+      setSelectedRoom(room);
+    }
+
+    setInviteCodeInput('');
+    setShowJoinForm(false);
+    setShowTopics(false);
+  };
+
   // 格式化时间
   const formatTime = (date: Date): string => {
     const now = new Date();
@@ -284,6 +333,15 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
                 <Plus className="w-3 h-3 mr-1" />
                 新建主题
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowJoinForm(!showJoinForm)}
+                className="border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-300 font-mono text-xs"
+              >
+                <MessageSquare className="w-3 h-3 mr-1" />
+                加入聊天室
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -334,6 +392,51 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
                     创建讨论
                   </Button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* 加入聊天室表单 */}
+          {showJoinForm && (
+            <div className="p-6 border-b border-green-500/20 bg-green-950/20">
+              <div className="flex items-start gap-3 mb-4">
+                <MessageSquare className="w-5 h-5 text-green-500 mt-1" />
+                <div className="flex-1">
+                  <h3 className="text-green-400 font-mono text-sm mb-1">通过邀请码加入聊天室</h3>
+                  <p className="text-green-600/50 text-xs mb-3">
+                    输入6位字母邀请码，加入现有的匿名讨论
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowJoinForm(false)}
+                  className="text-green-600 hover:text-green-400 hover:bg-green-500/10"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <Input
+                    placeholder="输入6位字母邀请码 (例如: ABCDEF)"
+                    value={inviteCodeInput}
+                    onChange={(e) => setInviteCodeInput(e.target.value.toUpperCase())}
+                    className="flex-1 bg-black/50 border-green-500/30 text-green-400 placeholder-green-600/50 font-mono text-sm focus:border-green-500 uppercase"
+                    maxLength={6}
+                  />
+                  <Button
+                    onClick={handleJoinRoomByInviteCode}
+                    disabled={!inviteCodeInput.trim() || inviteCodeInput.length !== 6}
+                    className="bg-green-600 hover:bg-green-700 text-black font-mono text-xs"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    加入
+                  </Button>
+                </div>
+                <p className="text-green-600/30 text-xs font-mono">
+                  邀请码由6位大写字母组成
+                </p>
               </div>
             </div>
           )}
@@ -429,16 +532,22 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
                                 </span>
                               </div>
                             </div>
-                            <div className="flex flex-wrap gap-1">
-                              {topic.tags.slice(0, 3).map((tag) => (
-                                <Badge
-                                  key={tag}
-                                  variant="outline"
-                                  className="border-green-500/20 text-green-600/60 font-mono text-xs"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
+                            <div className="flex flex-col items-end gap-2">
+                              <Badge className="bg-green-500/10 border-green-500/30 text-green-400 font-mono text-xs">
+                                <Lock className="w-3 h-3 mr-1" />
+                                {topic.inviteCode}
+                              </Badge>
+                              <div className="flex flex-wrap gap-1 justify-end">
+                                {topic.tags.slice(0, 3).map((tag) => (
+                                  <Badge
+                                    key={tag}
+                                    variant="outline"
+                                    className="border-green-500/20 text-green-600/60 font-mono text-xs"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
                           </div>
                         </CardContent>
@@ -479,6 +588,10 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
                     <Badge variant="outline" className="border-green-500/30 text-green-500 font-mono text-xs">
                       <Sparkles className="w-3 h-3 mr-1" />
                       临时聊天室
+                    </Badge>
+                    <Badge className="bg-green-500/10 border-green-500/30 text-green-400 font-mono text-xs">
+                      <Lock className="w-3 h-3 mr-1" />
+                      {selectedRoom.topic.inviteCode}
                     </Badge>
                     <Button
                       variant="ghost"
