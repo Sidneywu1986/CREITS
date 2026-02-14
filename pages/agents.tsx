@@ -93,16 +93,11 @@ export default function AgentsPage() {
 
       <Card className="border-2 border-[#667eea] bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5">
         <CardHeader>
-          <div className="flex items-center mb-2">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center text-3xl shadow-lg mr-4">
-              AI
-            </div>
-            <div>
-              <CardTitle className="text-2xl">智能协作模式</CardTitle>
-              <CardDescription className="text-base mt-1">
-                多 Agent 协同工作，复杂任务交给 AI
-              </CardDescription>
-            </div>
+          <div>
+            <CardTitle className="text-2xl">智能协作模式</CardTitle>
+            <CardDescription className="text-base mt-1">
+              多 Agent 协同工作，复杂任务交给 AI
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
