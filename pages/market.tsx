@@ -177,7 +177,7 @@ export default function MarketPage() {
   const [sortBy, setSortBy] = useState<'change' | 'price' | 'volume'>('change');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [searchTerm, setSearchTerm] = useState('');
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(60);
   const [lastUpdate, setLastUpdate] = useState<string>('');
 
   // 加载数据函数
@@ -198,7 +198,7 @@ export default function MarketPage() {
       }));
       setProducts(realProducts);
       setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
-      setCountdown(30); // 重置倒计时
+      setCountdown(60); // 重置倒计时为1分钟
     } catch (error) {
       console.error('获取真实数据失败，继续使用模拟数据:', error);
       // 不重新设置products，保持当前数据
@@ -227,12 +227,12 @@ export default function MarketPage() {
     // 尝试获取真实数据
     loadMarketData();
 
-    // 设置30秒自动刷新
+    // 设置1分钟自动刷新
     const interval = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
           loadMarketData();
-          return 30;
+          return 60;
         }
         return prev - 1;
       });
@@ -289,6 +289,9 @@ export default function MarketPage() {
             <Badge variant="outline" className="text-sm">
               <Activity className="w-3 h-3 mr-1" />
               {countdown}s 后自动刷新
+            </Badge>
+            <Badge variant="outline" className="text-xs text-muted-foreground">
+              1分钟/次
             </Badge>
             {lastUpdate && (
               <span className="text-sm text-gray-500 dark:text-gray-400">

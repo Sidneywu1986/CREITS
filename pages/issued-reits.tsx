@@ -14,7 +14,7 @@ import { getREITsProducts } from '../src/lib/data/real-reits-products';
 export default function IssuedREITsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(60);
   const [lastUpdate, setLastUpdate] = useState<string>('');
 
   const loadRealData = async () => {
@@ -23,7 +23,7 @@ export default function IssuedREITsPage() {
       const data = await getREITsProducts();
       setProducts(data.map((p: any) => ({ ...p, comments: [] })));
       setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
-      setCountdown(30);
+      setCountdown(60);
     } catch (error) {
       console.error('加载REITs数据失败:', error);
     } finally {
@@ -39,7 +39,7 @@ export default function IssuedREITsPage() {
       setCountdown(prev => {
         if (prev <= 1) {
           loadRealData();
-          return 30;
+          return 60;
         }
         return prev - 1;
       });
@@ -113,6 +113,9 @@ export default function IssuedREITsPage() {
               <Badge variant="outline">
                 <Activity className="w-3 h-3 mr-1" />
                 {countdown}s 后自动刷新
+              </Badge>
+              <Badge variant="outline" className="text-xs text-muted-foreground">
+                1分钟/次
               </Badge>
               <Badge variant="outline">
                 <Calendar className="w-3 h-3 mr-1" />

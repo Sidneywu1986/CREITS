@@ -37,7 +37,7 @@ export default function REITsDetailPage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [comments, setComments] = useState<Comment[]>([]);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(60);
 
   // 加载真实数据
   const loadData = async () => {
@@ -64,12 +64,12 @@ export default function REITsDetailPage() {
     if (code) {
       loadData();
 
-      // 设置30秒自动刷新
+      // 设置1分钟自动刷新
       const interval = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
             loadData();
-            return 30;
+            return 60;
           }
           return prev - 1;
         });
@@ -208,6 +208,9 @@ export default function REITsDetailPage() {
             <Badge variant="outline" className="text-xs">
               <Activity className="w-3 h-3 mr-1" />
               {countdown}s 后自动刷新
+            </Badge>
+            <Badge variant="outline" className="text-xs text-muted-foreground">
+              1分钟/次
             </Badge>
             <Badge variant="outline" className="text-xs">
               <Calendar className="w-3 h-3 mr-1" />

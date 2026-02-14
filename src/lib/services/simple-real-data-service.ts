@@ -74,7 +74,7 @@ async function fetchSinaQuote(code: string): Promise<Quote | null> {
         'User-Agent': 'Mozilla/5.0',
       },
       signal: controller.signal,
-      next: { revalidate: 30 }, // 30秒缓存
+      next: { revalidate: 60 }, // 60秒缓存
     });
 
     clearTimeout(timeoutId);
