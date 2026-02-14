@@ -138,6 +138,7 @@ export default function MarketPage() {
     code: item.code,
     name: item.name,
     price: item.issuePrice * (1 + (Math.random() * 0.2 - 0.1)),
+    issuePrice: item.issuePrice,
     change: Math.random() * 10 - 5,
     volume: Math.floor(Math.random() * 10000000),
     amount: item.issueScale * 100000000,
@@ -513,7 +514,7 @@ export default function MarketPage() {
                         </td>
                         <td className="py-3 px-4 text-sm">{product.name}</td>
                         <td className="py-3 px-4 text-sm text-right font-medium">{product.price.toFixed(3)}</td>
-                        <td className="py-3 px-4 text-sm text-right">{product.issuePrice.toFixed(3)}</td>
+                        <td className="py-3 px-4 text-sm text-right">{product.issuePrice ? product.issuePrice.toFixed(3) : '-'}</td>
                         <td className={`py-3 px-4 text-sm text-right font-semibold ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {product.change >= 0 ? '+' : ''}{product.change.toFixed(2)}%
                         </td>
