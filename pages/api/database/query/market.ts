@@ -17,7 +17,7 @@ export default async function handler(
     });
   }
 
-  // 返回测试数据
+  // 市场表现数据（时间序列）
   const mockMarketStats = [
     {
       reit_code: reit_code,
@@ -32,6 +32,10 @@ export default async function handler(
       market_cap: 1000000000,
       institutional_holding_pct: 60.5,
       retail_holding_pct: 39.5,
+      top10_holder_names: '["机构A", "机构B", "机构C", "机构D", "机构E"]', // JSON格式
+      top10_holder_ratios: '[15.2, 12.5, 10.8, 9.5, 8.2]', // JSON格式
+      top10_holder_total_pct: 56.2,
+      original_holder_holding_pct: 30.0,
     },
     {
       reit_code: reit_code,
@@ -46,12 +50,75 @@ export default async function handler(
       market_cap: 995000000,
       institutional_holding_pct: 60.3,
       retail_holding_pct: 39.7,
+      top10_holder_names: '["机构A", "机构B", "机构C", "机构D", "机构E"]',
+      top10_holder_ratios: '[15.2, 12.5, 10.8, 9.5, 8.2]',
+      top10_holder_total_pct: 56.2,
+      original_holder_holding_pct: 30.0,
+    },
+    {
+      reit_code: reit_code,
+      trade_date: '2025-01-13',
+      open_price: 5.15,
+      close_price: 5.18,
+      high_price: 5.20,
+      low_price: 5.12,
+      daily_volume: 52000,
+      daily_turnover: 269000,
+      turnover_rate: 0.52,
+      market_cap: 990000000,
+      institutional_holding_pct: 60.1,
+      retail_holding_pct: 39.9,
+      top10_holder_names: '["机构A", "机构B", "机构C", "机构D", "机构E"]',
+      top10_holder_ratios: '[15.2, 12.5, 10.8, 9.5, 8.2]',
+      top10_holder_total_pct: 56.2,
+      original_holder_holding_pct: 30.0,
+    },
+    {
+      reit_code: reit_code,
+      trade_date: '2025-01-10',
+      open_price: 5.10,
+      close_price: 5.15,
+      high_price: 5.18,
+      low_price: 5.08,
+      daily_volume: 48000,
+      daily_turnover: 247000,
+      turnover_rate: 0.48,
+      market_cap: 985000000,
+      institutional_holding_pct: 60.0,
+      retail_holding_pct: 40.0,
+      top10_holder_names: '["机构A", "机构B", "机构C", "机构D", "机构E"]',
+      top10_holder_ratios: '[15.2, 12.5, 10.8, 9.5, 8.2]',
+      top10_holder_total_pct: 56.2,
+      original_holder_holding_pct: 30.0,
+    },
+    {
+      reit_code: reit_code,
+      trade_date: '2025-01-09',
+      open_price: 5.08,
+      close_price: 5.10,
+      high_price: 5.13,
+      low_price: 5.05,
+      daily_volume: 55000,
+      daily_turnover: 280000,
+      turnover_rate: 0.55,
+      market_cap: 980000000,
+      institutional_holding_pct: 59.8,
+      retail_holding_pct: 40.2,
+      top10_holder_names: '["机构A", "机构B", "机构C", "机构D", "机构E"]',
+      top10_holder_ratios: '[15.2, 12.5, 10.8, 9.5, 8.2]',
+      top10_holder_total_pct: 56.2,
+      original_holder_holding_pct: 30.0,
     },
   ];
 
+  // 按交易日期排序（时间序列）
+  const sortedData = [...mockMarketStats].sort((a, b) =>
+    new Date(a.trade_date).getTime() - new Date(b.trade_date).getTime()
+  );
+
   return res.status(200).json({
     success: true,
-    data: mockMarketStats,
-    count: mockMarketStats.length,
+    data: sortedData,
+    count: sortedData.length,
   });
 }
