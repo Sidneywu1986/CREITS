@@ -471,10 +471,6 @@ export default function REITsDetailPage() {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <Button variant="outline" className="w-full justify-start" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      下载招募说明书
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start" size="sm">
                       <Share2 className="w-4 h-4 mr-2" />
                       分享产品
                     </Button>
