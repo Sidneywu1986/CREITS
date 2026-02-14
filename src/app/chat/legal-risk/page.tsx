@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AGENTS } from '@/types';
 import { 
   Search,
@@ -20,6 +21,8 @@ import {
   ArrowRight,
   Scale,
   Shield,
+  Maximize2,
+  X,
 } from 'lucide-react';
 
 // 简单的 Markdown 渲染器
@@ -132,6 +135,9 @@ export default function LegalRiskChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // 展开消息状态
+  const [expandedMessage, setExpandedMessage] = useState<Message | null>(null);
   
   // 法规检索状态
   const [regulationQuery, setRegulationQuery] = useState('');
@@ -645,26 +651,41 @@ export default function LegalRiskChatPage() {
                             message.role === 'user' ? 'justify-end' : 'justify-start'
                           }`}
                         >
-                          <div
-                            className={`max-w-[80%] rounded-lg p-3 ${
-                              message.role === 'user'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
-                            }`}
-                          >
-                            {message.role === 'assistant' ? (
-                              <SimpleMarkdownRenderer content={message.content} />
-                            ) : (
-                              <p className="text-sm whitespace-pre-wrap">
-                                {message.content}
-                              </p>
+                          <div className="flex flex-col gap-1 max-w-[85%]">
+                            {message.role === 'assistant' && (
+                              <div className="flex justify-start">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                  onClick={() => setExpandedMessage(message)}
+                                >
+                                  <Maximize2 className="w-3 h-3 mr-1" />
+                                  展开
+                                </Button>
+                              </div>
                             )}
-                            <p className="text-xs mt-2 opacity-70">
-                              {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </p>
+                            <div
+                              className={`rounded-lg p-3 ${
+                                message.role === 'user'
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                              }`}
+                            >
+                              {message.role === 'assistant' ? (
+                                <SimpleMarkdownRenderer content={message.content} />
+                              ) : (
+                                <p className="text-sm whitespace-pre-wrap">
+                                  {message.content}
+                                </p>
+                              )}
+                              <p className="text-xs mt-2 opacity-70">
+                                {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -718,6 +739,36 @@ export default function LegalRiskChatPage() {
           </Card>
         </div>
       </div>
+
+      {/* 展开消息的对话框 */}
+      <Dialog open={!!expandedMessage} onOpenChange={(open) => !open && setExpandedMessage(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <div className="flex items-center gap-2">
+              <Scale className="w-5 h-5" />
+              <DialogTitle>法务风控专家回复</DialogTitle>
+            </div>
+            <DialogDescription>
+              {expandedMessage && new Date(expandedMessage.timestamp).toLocaleString('zh-CN')}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="pr-4">
+              {expandedMessage && (
+                <div className="markdown-content text-base">
+                  <SimpleMarkdownRenderer content={expandedMessage.content} />
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+          <div className="flex justify-end pt-4 border-t">
+            <Button variant="outline" onClick={() => setExpandedMessage(null)}>
+              <X className="w-4 h-4 mr-2" />
+              关闭
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
