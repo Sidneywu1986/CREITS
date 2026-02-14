@@ -310,7 +310,7 @@ export default function IssuedREITsPage() {
                         </td>
                         <td className={`py-3 px-4 text-sm text-right ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {(() => {
-                            const price = parseFloat(product.price.replace(/[^\d.]/g, '')) || 0;
+                            const price = product.price ? parseFloat(String(product.price).replace(/[^\d.]/g, '')) || 0 : 0;
                             const changeAmount = (product.change / 100) * price;
                             return `${product.change >= 0 ? '+' : ''}${changeAmount.toFixed(3)}`;
                           })()}
@@ -319,7 +319,10 @@ export default function IssuedREITsPage() {
                           {formatVolume(product.volume || 0)}
                         </td>
                         <td className="py-3 px-4 text-sm text-right">
-                          {formatVolume((product.volume || 0) * (parseFloat(product.price.replace(/[^\d.]/g, '')) || 0))}
+                          {(() => {
+                            const price = product.price ? parseFloat(String(product.price).replace(/[^\d.]/g, '')) || 0 : 0;
+                            return formatVolume((product.volume || 0) * price);
+                          })()}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <Button
