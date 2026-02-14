@@ -3,7 +3,7 @@
  * 使用Supabase作为数据库后端
  */
 
-import { supabase } from '@/lib/services/supabase';
+import { supabase } from '../services/supabase';
 import type {
   REITProductInfo,
   REITPropertyBase,
@@ -28,26 +28,27 @@ export class REITsDatabaseService {
    * 获取所有REITs产品
    */
   async getAllProducts(query?: REITProductQuery): Promise<REITProductInfo[]> {
-    let dbQuery = supabase.from('reit_product_info').select('*');
+    try {
+      let dbQuery = supabase.from('reit_product_info').select('*');
 
-    // 添加查询条件
-    if (query?.reit_code) {
-      dbQuery = dbQuery.eq('reit_code', query.reit_code);
-    }
-    if (query?.asset_type_national) {
-      dbQuery = dbQuery.eq('asset_type_national', query.asset_type_national);
-    }
-    if (query?.asset_type_csrc) {
-      dbQuery = dbQuery.eq('asset_type_csrc', query.asset_type_csrc);
-    }
+      // 添加查询条件
+      if (query?.reit_code) {
+        dbQuery = dbQuery.eq('reit_code', query.reit_code);
+      }
+      if (query?.asset_type_national) {
+        dbQuery = dbQuery.eq('asset_type_national', query.asset_type_national);
+      }
+      if (query?.asset_type_csrc) {
+        dbQuery = dbQuery.eq('asset_type_csrc', query.asset_type_csrc);
+      }
 
-    // 分页
-    if (query?.limit) {
-      dbQuery = dbQuery.limit(query.limit);
-    }
-    if (query?.offset) {
-      dbQuery = dbQuery.range(query.offset, query.offset + (query.limit || 10) - 1);
-    }
+      // 分页
+      if (query?.limit) {
+        dbQuery = dbQuery.limit(query.limit);
+      }
+      if (query?.offset) {
+        dbQuery = dbQuery.range(query.offset, query.offset + (query.limit || 10) - 1);
+      }
 
     const { data, error } = await dbQuery.order('listing_date', { ascending: false });
 

@@ -11,6 +11,7 @@ import DraggableFloatingWindow from '../../src/components/common/DraggableFloati
 import FloatingValuationCalculator from '../../src/components/reits/FloatingValuationCalculator';
 import AnnouncementQuery from '../../src/components/reits/AnnouncementQuery';
 import LocationAnalysis from '../../src/components/reits/LocationAnalysis';
+import REITsEightTables from '../../src/components/reits/REITsEightTables';
 import { getREITsDetail } from '../../src/lib/services/simple-real-data-service';
 import {
   ArrowLeft,
@@ -301,7 +302,7 @@ export default function REITsDetailPage({ code, initialData }: PageProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="overview">项目概况</TabsTrigger>
-            <TabsTrigger value="assets">底层资产</TabsTrigger>
+            <TabsTrigger value="assets">REITs八张表</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -789,28 +790,10 @@ export default function REITsDetailPage({ code, initialData }: PageProps) {
           </TabsContent>
 
           <TabsContent value="assets">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="w-5 h-5 text-blue-600" />
-                  底层资产
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <PieChart className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    底层资产已移至项目概况页面
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    请切换到"项目概况"标签页，在右侧边栏查看底层资产详情
-                  </p>
-                  <Button onClick={() => setActiveTab('overview')}>
-                    查看项目概况
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <REITsEightTables
+              reitCode={projectData.code}
+              reitName={projectData.name}
+            />
           </TabsContent>
         </Tabs>
 
