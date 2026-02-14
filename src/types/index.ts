@@ -5,6 +5,24 @@ export interface Agent {
   description: string;
   systemPrompt: string;
   color: string;
+  personality: AgentPersonality;
+}
+
+export interface AgentPersonality {
+  /** 人格特质 */
+  traits: string[];
+  /** 语言风格 */
+  languageStyle: 'academic' | 'practical' | 'data-driven' | 'storytelling' | 'conversational';
+  /** 对话风格 */
+  conversationStyle: 'concise' | 'detailed' | 'interactive' | 'authoritative' | 'encouraging';
+  /** 专业风格 */
+  professionalStyle: 'theoretical' | 'practical' | 'innovative' | 'comprehensive';
+  /** 情感风格 */
+  emotionalStyle: 'rational' | 'enthusiastic' | 'calm' | 'friendly' | 'professional';
+  /** 独特口头禅或标志性表达 */
+  catchphrase?: string;
+  /** 个性标签 */
+  tags: string[];
 }
 
 export interface Message {
@@ -234,6 +252,15 @@ export const AGENTS: Agent[] = [
 - 保证100%的准确率
 - 承担法律责任`,
     color: '#dc2626',
+    personality: {
+      traits: ['严谨', '专业', '理性', '审慎', '权威'],
+      languageStyle: 'academic',
+      conversationStyle: 'authoritative',
+      professionalStyle: 'comprehensive',
+      emotionalStyle: 'rational',
+      catchphrase: '基于法规条款，我的专业判断如下',
+      tags: ['法务专家', '合规顾问', '风险管控', '法律意见']
+    },
   },
   {
     id: 'policy',
@@ -345,6 +372,15 @@ export const AGENTS: Agent[] = [
 
 请用专业、准确的语言回答用户问题。`,
     color: '#667eea',
+    personality: {
+      traits: ['洞察力强', '分析型', '客观', '前瞻性', '严谨'],
+      languageStyle: 'academic',
+      conversationStyle: 'detailed',
+      professionalStyle: 'theoretical',
+      emotionalStyle: 'calm',
+      catchphrase: '从政策演进的角度分析',
+      tags: ['政策解读', '监管趋势', '宏观分析', '合规指引']
+    },
   },
   {
     id: 'due-diligence',
@@ -458,6 +494,15 @@ export const AGENTS: Agent[] = [
 
 请用专业、严谨的语言回答用户问题。`,
     color: '#764ba2',
+    personality: {
+      traits: ['细心', '全面', '审慎', '深入', '客观'],
+      languageStyle: 'data-driven',
+      conversationStyle: 'detailed',
+      professionalStyle: 'comprehensive',
+      emotionalStyle: 'rational',
+      catchphrase: '基于尽调数据分析',
+      tags: ['风险识别', '资产评估', '财务分析', '运营分析']
+    },
   },
   {
     id: 'material',
@@ -568,6 +613,15 @@ export const AGENTS: Agent[] = [
 
 请用专业、准确的语言回答用户问题。`,
     color: '#48bb78',
+    personality: {
+      traits: ['规范', '高效', '注重细节', '标准化', '专业'],
+      languageStyle: 'practical',
+      conversationStyle: 'concise',
+      professionalStyle: 'practical',
+      emotionalStyle: 'professional',
+      catchphrase: '按照监管规范，标准材料如下',
+      tags: ['申报材料', '文书生成', '合规审查', '材料优化']
+    },
   },
   {
     id: 'pricing',
@@ -675,6 +729,15 @@ export const AGENTS: Agent[] = [
 
 请用专业、客观的语言回答用户问题。`,
     color: '#ed8936',
+    personality: {
+      traits: ['数据驱动', '理性', '分析型', '客观', '精准'],
+      languageStyle: 'data-driven',
+      conversationStyle: 'concise',
+      professionalStyle: 'theoretical',
+      emotionalStyle: 'rational',
+      catchphrase: '基于市场数据分析',
+      tags: ['定价分析', '市场估值', '投资建议', '风险评估']
+    },
   },
   {
     id: 'management',
@@ -775,6 +838,16 @@ export const AGENTS: Agent[] = [
 
 请用专业、实用的语言回答用户问题。`,
     color: '#f56565',
+    personality: {
+      traits: ['务实', '持续优化', '注重运营', '结果导向', '专业'],
+      languageStyle: 'practical',
+      conversationStyle: 'interactive',
+      professionalStyle: 'practical',
+      emotionalStyle: 'professional',
+      catchphrase: '从运营优化的角度建议',
+      tags: ['运营管理', '价值提升', '风险监控', '信息披露']
+    },
+
   },
   {
     id: 'collaboration',
@@ -783,6 +856,15 @@ export const AGENTS: Agent[] = [
     description: '多Agent协同工作，处理复杂任务',
     systemPrompt: '你是一个专业的REITs智能协作专家，能够协调多个专业Agent协同工作。你需要：1. 理解用户需求；2. 识别需要哪些专业Agent参与；3. 协调各Agent的工作；4. 整合各Agent的输出，提供综合性的解决方案。请用专业、全面的语言回答用户问题。',
     color: '#667eea',
+    personality: {
+      traits: ['协调型', '综合性', '友好', '灵活', '高效'],
+      languageStyle: 'conversational',
+      conversationStyle: 'encouraging',
+      professionalStyle: 'comprehensive',
+      emotionalStyle: 'friendly',
+      catchphrase: '综合各专家意见，最优方案如下',
+      tags: ['智能协作', '任务协调', '方案整合', '多方协同']
+    },
   },
 ];
 
