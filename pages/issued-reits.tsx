@@ -92,10 +92,14 @@ export default function IssuedREITsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((product: any) => (
             <div key={product.id}>
-              <Card className="border border-gray-200 dark:border-gray-700">
+              <Card
+                className="border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-all group"
+                onClick={() => window.location.href = `/issued-reits/${product.code}`}
+              >
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center">
                     {product.name}
+                    <ArrowRight className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 dark:text-blue-400" />
                   </h3>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
