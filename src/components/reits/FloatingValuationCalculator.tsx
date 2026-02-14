@@ -204,13 +204,13 @@ export default function FloatingValuationCalculator({
         <TabsContent value="inputs" className="flex-1 overflow-y-auto space-y-1.5">
           {/* 基础参数 */}
           <Card>
-            <CardHeader className="pb-1 pt-2 px-3">
+            <CardHeader className="pb-0.5 pt-1 px-3">
               <CardTitle className="text-xs flex items-center">
                 <DollarSign className="mr-1 h-3 w-3 text-[#667eea]" />
                 基础参数
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1.5 px-3 pb-2">
+            <CardContent className="space-y-0.5 px-3 pb-1">
               <div className="grid grid-cols-2 gap-1.5">
                 <div>
                   <Label htmlFor="currentPrice" className="text-xs">当前价格(元)</Label>
@@ -251,13 +251,13 @@ export default function FloatingValuationCalculator({
 
           {/* DCF参数 */}
           <Card>
-            <CardHeader className="pb-1 pt-2 px-3">
+            <CardHeader className="pb-0.5 pt-1 px-3">
               <CardTitle className="text-xs flex items-center">
                 <TrendingUp className="mr-1 h-3 w-3 text-[#667eea]" />
                 DCF参数
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1.5 px-3 pb-2">
+            <CardContent className="space-y-0.5 px-3 pb-1">
               <div className="grid grid-cols-2 gap-1.5">
                 <div>
                   <Label htmlFor="growthRate" className="text-xs">
@@ -299,13 +299,13 @@ export default function FloatingValuationCalculator({
 
           {/* 相对估值参数 */}
           <Card>
-            <CardHeader className="pb-1 pt-2 px-3">
+            <CardHeader className="pb-0.5 pt-1 px-3">
               <CardTitle className="text-xs flex items-center">
                 <PieChart className="mr-1 h-3 w-3 text-[#667eea]" />
                 相对估值参数
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1.5 px-3 pb-2">
+            <CardContent className="space-y-0.5 px-3 pb-1">
               <div className="grid grid-cols-2 gap-1.5">
                 <div>
                   <Label htmlFor="peerAveragePE" className="text-xs">同业PE</Label>
