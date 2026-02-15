@@ -13,12 +13,11 @@ export async function getServerSideProps() {
       ...p,
       issuePrice: p.issuePrice,
       price: p.quote?.price || p.issuePrice,
+      open: p.quote?.open || 0,
       change: p.quote?.change || 0,
       changePercent: p.quote?.changePercent || 0,
       volume: p.quote?.volume || 0,
-      open: p.quote?.open || 0,
-      high: p.quote?.high || 0,
-      low: p.quote?.low || 0,
+      turnoverRate: p.quote?.turnoverRate || 0,
     }));
     
     return {
@@ -44,6 +43,16 @@ interface PageProps {
 }
 
 export default function IssuedREITsPage({ products, lastUpdate }: PageProps) {
+  // 格式化成交量
+  const formatVolume = (volume: number) => {
+    if (volume >= 100000000) {
+      return `${(volume / 100000000).toFixed(2)}亿手`;
+    } else if (volume >= 10000) {
+      return `${(volume / 10000).toFixed(2)}万手`;
+    }
+    return `${volume}手`;
+  };
+
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto">
@@ -99,11 +108,13 @@ export default function IssuedREITsPage({ products, lastUpdate }: PageProps) {
                     <tr className="border-b border-gray-200 dark:border-gray-700">
                       <th className="text-left py-3 px-4 font-semibold text-sm">代码</th>
                       <th className="text-left py-3 px-4 font-semibold text-sm">名称</th>
-                      <th className="text-right py-3 px-4 font-semibold text-sm">收盘价</th>
-                      <th className="text-right py-3 px-4 font-semibold text-sm">首发价</th>
-                      <th className="text-center py-3 px-4 font-semibold text-sm">发行时间</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">开盘价</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">最新价</th>
                       <th className="text-right py-3 px-4 font-semibold text-sm">涨跌幅</th>
                       <th className="text-right py-3 px-4 font-semibold text-sm">涨跌额</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">成交量</th>
+                      <th className="text-right py-3 px-4 font-semibold text-sm">换手率</th>
+                      <th className="text-center py-3 px-4 font-semibold text-sm">发行时间</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -123,20 +134,26 @@ export default function IssuedREITsPage({ products, lastUpdate }: PageProps) {
                             {product.name}
                           </Link>
                         </td>
-                        <td className="py-3 px-4 text-sm text-right">
+                        <td className="py-3 px-4 text-sm text-right text-gray-600 dark:text-gray-400">
+                          {product.open > 0 ? product.open.toFixed(2) : '-'}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
                           {product.price ? product.price.toFixed(2) : '0.00'}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-right">
-                          {product.issuePrice ? product.issuePrice.toFixed(2) : '-'}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-center text-gray-600 dark:text-gray-400">
-                          {product.issueDate || '-'}
                         </td>
                         <td className={`py-3 px-4 text-sm text-right font-semibold ${product.changePercent >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {product.changePercent >= 0 ? '+' : ''}{product.changePercent.toFixed(2)}%
                         </td>
                         <td className={`py-3 px-4 text-sm text-right font-semibold ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {product.change >= 0 ? '+' : ''}{product.change.toFixed(2)}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right text-gray-600 dark:text-gray-400">
+                          {product.volume > 0 ? formatVolume(product.volume) : '-'}
+                        </td>
+                        <td className={`py-3 px-4 text-sm text-right font-semibold ${product.turnoverRate >= 0 ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
+                          {product.turnoverRate > 0 ? product.turnoverRate.toFixed(2) + '%' : '-'}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-center text-gray-600 dark:text-gray-400">
+                          {product.issueDate || '-'}
                         </td>
                       </tr>
                     ))}

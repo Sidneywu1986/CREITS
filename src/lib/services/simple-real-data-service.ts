@@ -17,6 +17,7 @@ export interface Quote {
   high: number;
   low: number;
   volume: number;
+  turnoverRate: number;
   updateTime: string;
 }
 
@@ -110,6 +111,9 @@ async function fetchSinaQuote(code: string): Promise<Quote | null> {
     const change = close - preClose;
     const changePercent = (change / preClose) * 100;
 
+    // 估算换手率（如果API不提供）
+    const turnoverRate = volume > 0 ? parseFloat(((volume / 10000000) * 0.1).toFixed(2)) : 0;
+
     return {
       code,
       name,
@@ -120,6 +124,7 @@ async function fetchSinaQuote(code: string): Promise<Quote | null> {
       high,
       low,
       volume,
+      turnoverRate,
       updateTime: date,
     };
   } catch (error) {
@@ -138,6 +143,9 @@ export async function getREITsWithQuotes(): Promise<REITsWithQuote[]> {
   // 直接使用模拟数据，避免外部API调用超时问题
   const results = products.map((product) => {
     const mockChange = (Math.random() - 0.5) * 2; // -1% 到 +1%
+    const mockVolume = Math.floor(Math.random() * 10000000); // 随机成交量
+    const mockTurnoverRate = (Math.random() * 2).toFixed(2); // 随机换手率 0-2%
+    
     const mockQuote: Quote = {
       code: product.code,
       name: product.name,
@@ -147,7 +155,8 @@ export async function getREITsWithQuotes(): Promise<REITsWithQuote[]> {
       open: product.issuePrice * (0.98 + Math.random() * 0.02),
       high: product.issuePrice * (1.0 + Math.random() * 0.1),
       low: product.issuePrice * (0.9 + Math.random() * 0.08),
-      volume: Math.floor(Math.random() * 10000000), // 随机成交量
+      volume: mockVolume,
+      turnoverRate: parseFloat(mockTurnoverRate),
       updateTime: new Date().toISOString(),
     };
     return { product, quote: mockQuote };
@@ -168,16 +177,21 @@ export async function getREITsDetail(code: string): Promise<REITsWithQuote | nul
   if (!product) return null;
 
   // 直接使用模拟数据，避免外部API调用超时问题
+  const mockChange = (Math.random() - 0.5) * 2; // -1% 到 +1%
+  const mockVolume = Math.floor(Math.random() * 10000000); // 随机成交量
+  const mockTurnoverRate = (Math.random() * 2).toFixed(2); // 随机换手率 0-2%
+  
   const quote: Quote = {
     code: product.code,
     name: product.name,
     price: product.issuePrice * (0.95 + Math.random() * 0.1), // 在发行价上下浮动
-    change: (Math.random() - 0.5) * 2, // -1% 到 +1%
-    changePercent: (Math.random() - 0.5) * 2,
+    change: parseFloat(mockChange.toFixed(2)), // 保留两位小数
+    changePercent: parseFloat(mockChange.toFixed(2)), // 保留两位小数
     open: product.issuePrice * (0.98 + Math.random() * 0.02),
     high: product.issuePrice * (1.0 + Math.random() * 0.1),
     low: product.issuePrice * (0.9 + Math.random() * 0.08),
-    volume: Math.floor(Math.random() * 10000000), // 随机成交量
+    volume: mockVolume,
+    turnoverRate: parseFloat(mockTurnoverRate),
     updateTime: new Date().toISOString(),
   };
 
