@@ -26,7 +26,7 @@ const navigation = [
   { name: '资产证券化新闻', href: '/news', icon: FileText },
   { name: '发行状态', href: '/issuance-status', icon: Clock },
   { name: '已发行REITs项目', href: '/issued-reits', icon: Building },
-  { name: '已发行ABS项目', href: '/abs-products', icon: Briefcase },
+  { name: '已发行ABS项目', href: '/abs-dashboard', icon: Briefcase },
   { name: 'REITs估值计算器', href: '/valuation-calculator', icon: Calculator },
   { name: '休闲小游戏', href: '/games', icon: Gamepad2 },
   { name: '匿名BBS', href: '/bbs', icon: MessageSquare },
