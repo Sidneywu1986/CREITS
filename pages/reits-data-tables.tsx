@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Head from 'next/head';
-import { reitDatabase, type REITProduct } from '@/lib/database/reit-db';
 import { Card } from '@/components/ui/card';
 import { CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,27 +41,158 @@ const REIT_TABLES = [
   { id: 'risk', name: '风险指标', icon: Shield },
 ];
 
+// 模拟REITs产品数据
+const MOCK_REIT_PRODUCTS = [
+  {
+    fund_code: '508000',
+    fund_name: '华安张江光大园封闭式基础设施证券投资基金',
+    fund_short_name: '张江REIT',
+    fund_type: '产权类',
+    asset_type: '产业园',
+    manager_name: '华安基金管理有限公司',
+    custodian_name: '招商银行股份有限公司',
+    operating_manager: '上海张江高科技园区开发股份有限公司',
+    issue_date: '2021-06-21',
+    listing_date: '2021-06-21',
+    issue_price: 3.000,
+    issue_amount: 15.0000,
+    fund_shares: 5.0000,
+    management_fee_rate: 0.0045,
+    custody_fee_rate: 0.0001,
+    investment_scope: '基础设施项目支持证券投资',
+  },
+  {
+    fund_code: '508001',
+    fund_name: '浙江杭徽高速公路封闭式基础设施证券投资基金',
+    fund_short_name: '杭徽高速REIT',
+    fund_type: '经营权类',
+    asset_type: '高速公路',
+    manager_name: '鹏华基金管理有限公司',
+    custodian_name: '中国工商银行股份有限公司',
+    operating_manager: '浙江杭徽高速公路有限公司',
+    issue_date: '2021-06-21',
+    listing_date: '2021-06-21',
+    issue_price: 5.000,
+    issue_amount: 30.0000,
+    fund_shares: 6.0000,
+    management_fee_rate: 0.0040,
+    custody_fee_rate: 0.0001,
+    investment_scope: '高速公路基础设施项目投资',
+  },
+  {
+    fund_code: '508002',
+    fund_name: '东吴苏州工业园区产业园封闭式基础设施证券投资基金',
+    fund_short_name: '苏州工业园REIT',
+    fund_type: '产权类',
+    asset_type: '产业园',
+    manager_name: '东吴基金管理有限公司',
+    custodian_name: '中国建设银行股份有限公司',
+    operating_manager: '苏州工业园区国有资产控股发展有限公司',
+    issue_date: '2021-12-30',
+    listing_date: '2021-12-30',
+    issue_price: 3.000,
+    issue_amount: 34.9200,
+    fund_shares: 9.0000,
+    management_fee_rate: 0.0050,
+    custody_fee_rate: 0.0001,
+    investment_scope: '产业园基础设施项目投资',
+  },
+  {
+    fund_code: '508003',
+    fund_name: '富国首创水务封闭式基础设施证券投资基金',
+    fund_short_name: '首创水务REIT',
+    fund_type: '经营权类',
+    asset_type: '污水处理',
+    manager_name: '富国基金管理有限公司',
+    custodian_name: '中国农业银行股份有限公司',
+    operating_manager: '北京首创生态环保集团股份有限公司',
+    issue_date: '2021-06-21',
+    listing_date: '2021-06-21',
+    issue_price: 3.700,
+    issue_amount: 18.5000,
+    fund_shares: 5.0000,
+    management_fee_rate: 0.0038,
+    custody_fee_rate: 0.0001,
+    investment_scope: '水务基础设施项目投资',
+  },
+  {
+    fund_code: '508004',
+    fund_name: '红土创新盐田港仓储物流封闭式基础设施证券投资基金',
+    fund_short_name: '盐田港REIT',
+    fund_type: '产权类',
+    asset_type: '仓储物流',
+    manager_name: '红土创新基金管理有限公司',
+    custodian_name: '上海浦东发展银行股份有限公司',
+    operating_manager: '深圳市盐田港集团有限公司',
+    issue_date: '2021-06-07',
+    listing_date: '2021-06-07',
+    issue_price: 2.300,
+    issue_amount: 18.4000,
+    fund_shares: 8.0000,
+    management_fee_rate: 0.0042,
+    custody_fee_rate: 0.0001,
+    investment_scope: '仓储物流基础设施项目投资',
+  },
+  {
+    fund_code: '508005',
+    fund_name: '博时招商蛇口产业园封闭式基础设施证券投资基金',
+    fund_short_name: '蛇口产园REIT',
+    fund_type: '产权类',
+    asset_type: '产业园',
+    manager_name: '博时基金管理有限公司',
+    custodian_name: '中国银行股份有限公司',
+    operating_manager: '招商局蛇口工业区控股股份有限公司',
+    issue_date: '2021-06-21',
+    listing_date: '2021-06-21',
+    issue_price: 2.310,
+    issue_amount: 20.0000,
+    fund_shares: 9.0000,
+    management_fee_rate: 0.0048,
+    custody_fee_rate: 0.0001,
+    investment_scope: '产业园基础设施项目投资',
+  },
+  {
+    fund_code: '508006',
+    fund_name: '平安广州交投广河高速公路封闭式基础设施证券投资基金',
+    fund_short_name: '广河高速REIT',
+    fund_type: '经营权类',
+    asset_type: '高速公路',
+    manager_name: '平安基金管理有限公司',
+    custodian_name: '中国建设银行股份有限公司',
+    operating_manager: '广州交通投资集团有限公司',
+    issue_date: '2021-12-14',
+    listing_date: '2021-12-14',
+    issue_price: 13.020,
+    issue_amount: 91.1400,
+    fund_shares: 7.0000,
+    management_fee_rate: 0.0043,
+    custody_fee_rate: 0.0001,
+    investment_scope: '高速公路基础设施项目投资',
+  },
+  {
+    fund_code: '508007',
+    fund_name: '中金普洛斯仓储物流封闭式基础设施证券投资基金',
+    fund_short_name: '普洛斯REIT',
+    fund_type: '产权类',
+    asset_type: '仓储物流',
+    manager_name: '中金基金管理有限公司',
+    custodian_name: '中国工商银行股份有限公司',
+    operating_manager: '普洛斯（中国）投资有限公司',
+    issue_date: '2021-06-21',
+    listing_date: '2021-06-21',
+    issue_price: 3.890,
+    issue_amount: 58.3500,
+    fund_shares: 15.0000,
+    management_fee_rate: 0.0055,
+    custody_fee_rate: 0.0001,
+    investment_scope: '仓储物流基础设施项目投资',
+  },
+];
+
 export default function REITsDataTablesPage() {
-  const [products, setProducts] = useState<REITProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products] = useState(MOCK_REIT_PRODUCTS);
   const [selectedTable, setSelectedTable] = useState('product');
   const [searchKeyword, setSearchKeyword] = useState('');
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const productsData = await reitDatabase.getAllProducts();
-      setProducts(productsData);
-    } catch (error) {
-      console.error('加载数据失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatAmount = (amount: number) => {
     return `${amount.toFixed(2)}亿元`;
@@ -108,8 +238,8 @@ export default function REITsDataTablesPage() {
                   <p className="text-sm text-gray-600 mt-1">公募REITs全维度数据展示</p>
                 </div>
               </div>
-              <Button variant="outline" onClick={loadData} disabled={loading}>
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <Button variant="outline">
+                <RefreshCw className="w-4 h-4 mr-2" />
                 刷新
               </Button>
             </div>
@@ -197,6 +327,7 @@ export default function REITsDataTablesPage() {
                   <strong>数据来源：</strong>
                   REITs产品信息来自中国证监会、沪深交易所、基金公司公告。
                   数据包含产品信息、资产信息、财务指标、运营数据、市场表现、投资者结构、分红历史、风险指标等八张表。
+                  当前显示的是演示数据，如需使用真实数据，请按照 <strong>REITS_DATABASE_SETUP.md</strong> 文档初始化数据库。
                 </span>
               </div>
             </CardContent>
@@ -255,7 +386,7 @@ export default function REITsDataTablesPage() {
 
                 {/* 产品信息表 */}
                 <TabsContent value="product" className="p-6">
-                  <REITProductTable products={filteredProducts} loading={loading} />
+                  <REITProductTable products={filteredProducts} />
                 </TabsContent>
 
                 {/* 其他表格占位 */}
@@ -280,18 +411,7 @@ export default function REITsDataTablesPage() {
 }
 
 // 产品信息表格组件
-function REITProductTable({ products, loading }: { products: REITProduct[], loading: boolean }) {
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#667eea] mx-auto mb-4"></div>
-          <p className="text-gray-600">加载数据中...</p>
-        </div>
-      </div>
-    );
-  }
-
+function REITProductTable({ products }: { products: any[] }) {
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -309,29 +429,29 @@ function REITProductTable({ products, loading }: { products: REITProduct[], load
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50 dark:bg-gray-800">
-            <TableHead className="font-bold">基金代码</TableHead>
-            <TableHead className="font-bold">产品名称</TableHead>
-            <TableHead className="font-bold">产品类型</TableHead>
-            <TableHead className="font-bold">资产类型</TableHead>
-            <TableHead className="font-bold">基金管理人</TableHead>
-            <TableHead className="font-bold">发行日期</TableHead>
-            <TableHead className="font-bold">发行价格</TableHead>
-            <TableHead className="font-bold">发行规模</TableHead>
-            <TableHead className="font-bold">基金份额</TableHead>
-            <TableHead className="font-bold">管理费率</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">基金代码</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">产品名称</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">产品类型</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">资产类型</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">基金管理人</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">发行日期</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">发行价格</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">发行规模</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">基金份额</TableHead>
+            <TableHead className="font-bold whitespace-nowrap">管理费率</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.map((product) => (
             <TableRow key={product.fund_code} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-              <TableCell className="font-medium">{product.fund_code}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium whitespace-nowrap">{product.fund_code}</TableCell>
+              <TableCell className="min-w-[200px]">
                 <div>
                   <div className="font-medium">{product.fund_short_name || product.fund_name}</div>
-                  <div className="text-xs text-gray-500">{product.fund_name}</div>
+                  <div className="text-xs text-gray-500 line-clamp-2">{product.fund_name}</div>
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="whitespace-nowrap">
                 <Badge 
                   variant={product.fund_type === '产权类' ? 'default' : 'secondary'}
                   className={product.fund_type === '产权类' ? 'bg-[#667eea] text-white' : ''}
@@ -339,13 +459,13 @@ function REITProductTable({ products, loading }: { products: REITProduct[], load
                   {product.fund_type}
                 </Badge>
               </TableCell>
-              <TableCell>{product.asset_type}</TableCell>
-              <TableCell>{product.manager_name}</TableCell>
-              <TableCell>{formatDate(product.issue_date)}</TableCell>
-              <TableCell className="font-medium">{product.issue_price.toFixed(2)}元</TableCell>
-              <TableCell className="font-medium text-[#667eea]">{formatAmount(product.issue_amount)}</TableCell>
-              <TableCell className="font-medium">{product.fund_shares.toFixed(2)}亿份</TableCell>
-              <TableCell>{formatRate(product.management_fee_rate)}</TableCell>
+              <TableCell className="whitespace-nowrap">{product.asset_type}</TableCell>
+              <TableCell className="whitespace-nowrap">{product.manager_name}</TableCell>
+              <TableCell className="whitespace-nowrap">{formatDate(product.issue_date)}</TableCell>
+              <TableCell className="font-medium whitespace-nowrap">{product.issue_price.toFixed(2)}元</TableCell>
+              <TableCell className="font-medium text-[#667eea] whitespace-nowrap">{formatAmount(product.issue_amount)}</TableCell>
+              <TableCell className="font-medium whitespace-nowrap">{product.fund_shares.toFixed(2)}亿份</TableCell>
+              <TableCell className="whitespace-nowrap">{formatRate(product.management_fee_rate)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
