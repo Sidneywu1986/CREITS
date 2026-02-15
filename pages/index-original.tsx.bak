@@ -1,9 +1,10 @@
-import './globals.css';
+import MainLayout from '../src/components/layout/MainLayout';
+import HackerAnonymousBBS from '../src/components/bbs/HackerAnonymousBBS';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-6 py-8">
+    <MainLayout>
+      <div className="p-8">
         <h1 className="text-3xl font-bold mb-4">REITs 智能助手</h1>
         <p className="text-lg text-gray-700 mb-8">
           欢迎使用 REITs 智能助手系统
@@ -24,7 +25,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border shadow-sm">
+        <div className="bg-white p-6 rounded-lg border shadow-sm mb-8">
           <h2 className="text-2xl font-bold mb-4">核心功能</h2>
           <ul className="space-y-3">
             <li className="flex items-start gap-2">
@@ -39,15 +40,26 @@ export default function Home() {
               <span className="text-green-600 font-bold">3.</span>
               <span>尽职调查 Agent - 全面分析 REITs 项目风险</span>
             </li>
+            <li className="flex items-start gap-2">
+              <span className="text-orange-600 font-bold">4.</span>
+              <span>申报材料生成 Agent - 协助生成REITs发行申报材料</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-red-600 font-bold">5.</span>
+              <span>定价发行建议 Agent - 提供REITs定价分析和发行建议</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-teal-600 font-bold">6.</span>
+              <span>存续期管理 Agent - 提供REITs存续期管理建议</span>
+            </li>
           </ul>
         </div>
 
-        <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            <strong>提示：</strong> 系统正在优化中，部分功能可能暂时不可用。请稍后再试。
-          </p>
+        {/* 黑客风格匿名BBS */}
+        <div className="mt-12">
+          <HackerAnonymousBBS />
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }
