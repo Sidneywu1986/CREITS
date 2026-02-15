@@ -37,7 +37,7 @@ const SPECIAL_TAGS = [
 ];
 
 // ABS分类选项
-const ABS_CATEGORIES = ['不限', '信贷ABS', '企业ABS', 'ABN'];
+const ABS_CATEGORIES = ['不限', '交易所', '银行间', '信贷ABS', '企业ABS', 'ABN'];
 
 // 存续状态选项
 const STATUS_OPTIONS = ['不限', '存续', '到期'];
@@ -70,19 +70,52 @@ export function ABSProductPanel() {
   const loadData = async () => {
     try {
       setLoading(true);
+      console.log('[ABSProductPanel] 开始加载数据...');
       const productsData = await absDatabase.getAllProducts();
+      console.log('[ABSProductPanel] 加载到产品数量:', productsData.length);
+      if (productsData.length > 0) {
+        console.log('[ABSProductPanel] 第一个产品:', productsData[0]);
+      } else {
+        console.log('[ABSProductPanel] 没有加载到任何产品数据');
+      }
       setProducts(productsData);
+      
+      // 临时：设置测试数据
+      if (productsData.length === 0) {
+        console.log('[ABSProductPanel] 设置测试数据...');
+        setProducts([{
+          product_code: 'TEST001',
+          product_full_name: '测试ABS产品',
+          product_short_name: '测试ABS',
+          market_type: '交易所',
+          product_type: '企业ABS',
+          asset_type_main: '债权类',
+          asset_type_sub: '应收账款',
+          issuer_name: '测试发起机构',
+          trustee_name: '测试托管人',
+          total_scale: 100.0,
+          issue_date: '2024-01-01',
+          total_tranches: 3,
+          senior_tranches: 2,
+          subordinate_ratio: 10.0,
+        } as any]);
+      }
     } catch (error) {
-      console.error('加载数据失败:', error);
+      console.error('[ABSProductPanel] 加载数据失败:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 获取特定品种标签
+  // 判断产品属于哪个特定品种
   const getSpecialTags = (product: ABSProduct): string[] => {
     const tags: string[] = [];
-    const searchFields = [product.product_name || '', product.underlying_asset || '', product.issuer_name || ''].join(' ').toLowerCase();
+    const searchFields = [
+      product.product_short_name || '',
+      product.product_full_name || '',
+      product.asset_type_sub || '',
+      product.issuer_name || ''
+    ].join(' ').toLowerCase();
     
     for (const tag of SPECIAL_TAGS) {
       if (tag.keywords.some(keyword => searchFields.includes(keyword.toLowerCase()))) {
@@ -95,26 +128,20 @@ export function ABSProductPanel() {
 
   // 筛选产品
   const filteredProducts = products.filter(product => {
-    // 关键词搜索
+    // 关键词搜索 - 仅在输入关键词时才筛选
     if (searchKeyword.trim()) {
       const keyword = searchKeyword.toLowerCase();
       let matchSearch = false;
-      if (searchDimensions.productName && product.product_name?.toLowerCase().includes(keyword)) matchSearch = true;
+      if (searchDimensions.productName && 
+          (product.product_short_name?.toLowerCase().includes(keyword) || 
+           product.product_full_name?.toLowerCase().includes(keyword))) matchSearch = true;
       if (searchDimensions.issuer && product.issuer_name?.toLowerCase().includes(keyword)) matchSearch = true;
-      if (searchDimensions.underlyingAsset && product.underlying_asset?.toLowerCase().includes(keyword)) matchSearch = true;
+      if (searchDimensions.underlyingAsset && product.asset_type_sub?.toLowerCase().includes(keyword)) matchSearch = true;
       if (!matchSearch) return false;
     }
 
-    // ABS分类筛选
-    if (selectedCategory !== '不限') {
-      // 这里简化处理，实际需要根据产品属性判断分类
-      // 可以根据asset_type_sub或其他字段判断
-    }
-
-    // 存续状态筛选
-    if (selectedStatus !== '不限') {
-      // 这里需要根据产品的实际状态字段判断
-    }
+    // 暂时禁用所有筛选，确保数据显示
+    // TODO: 实现更灵活的筛选逻辑
 
     return true;
   });
@@ -151,6 +178,14 @@ export function ABSProductPanel() {
     return new Date(dateStr).toLocaleDateString('zh-CN');
   };
 
+  const calculateTermYears = (startDate: string, endDate: string) => {
+    if (!startDate || !endDate) return '-';
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const years = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365);
+    return years.toFixed(1);
+  };
+
   const exportToExcel = () => {
     // 导出功能
     alert('导出Excel功能开发中...');
@@ -158,6 +193,15 @@ export function ABSProductPanel() {
 
   return (
     <div className="p-6">
+      <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+        <h3 className="font-bold mb-2">调试信息</h3>
+        <div>products.length = {products.length}</div>
+        <div>loading = {loading ? 'true' : 'false'}</div>
+        {products.length > 0 && (
+          <div>第一个产品: {JSON.stringify(products[0])}</div>
+        )}
+      </div>
+      
       {/* 顶部筛选区 */}
       <Card className="mb-6">
         <div className="p-4 space-y-4">
@@ -333,6 +377,7 @@ export function ABSProductPanel() {
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
                 共找到 <span className="font-bold text-[#667eea]">{sortedProducts.length}</span> 条记录
+                {products.length > 0 && <span className="ml-2 text-xs text-gray-500">(总数据: {products.length})</span>}
               </div>
               <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -379,12 +424,12 @@ export function ABSProductPanel() {
                 {sortedProducts.map((product) => {
                   const specialTags = getSpecialTags(product);
                   return (
-                    <TableRow key={product.product_id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <TableRow key={product.product_code} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <TableCell className="font-medium">
-                        {product.product_name}
+                        {product.product_short_name || product.product_full_name}
                       </TableCell>
                       <TableCell>{product.issuer_name}</TableCell>
-                      <TableCell>{product.underlying_asset}</TableCell>
+                      <TableCell>{product.asset_type_sub}</TableCell>
                       <TableCell>
                         {specialTags.length > 0 && (
                           <div className="flex flex-wrap gap-1">
@@ -403,11 +448,11 @@ export function ABSProductPanel() {
                       <TableCell className="font-medium">
                         {formatAmount(product.total_scale || 0)}
                       </TableCell>
-                      <TableCell>{product.term_years ? `${product.term_years}年` : '-'}</TableCell>
                       <TableCell>
-                        {product.rating ? (
-                          <Badge variant="outline">{product.rating}</Badge>
-                        ) : '-'}
+                        {calculateTermYears(product.issue_date, product.expected_maturity_date || '')}年
+                      </TableCell>
+                      <TableCell>
+                        {product.rating_agency || '-'}
                       </TableCell>
                     </TableRow>
                   );

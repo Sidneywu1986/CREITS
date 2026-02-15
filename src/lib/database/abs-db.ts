@@ -27,6 +27,11 @@ export interface ABSProduct {
   total_tranches: number;
   senior_tranches: number;
   subordinate_ratio: number;
+  rating_agency?: string;
+  lead_underwriter?: string;
+  rating_agency?: string;
+  expected_maturity_date?: string;
+  establishment_date?: string;
 }
 
 export interface ABSTranche {
