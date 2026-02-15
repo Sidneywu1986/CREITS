@@ -3,7 +3,7 @@
  * 避免路径别名问题
  */
 
-import { supabase } from '../../../src/lib/services/supabase';
+import { supabase } from '../../src/lib/services/supabase';
 
 export class SimpleREITsService {
   /**

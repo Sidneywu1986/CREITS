@@ -1,188 +1,182 @@
+/**
+ * 积分系统主页面
+ *
+ * 展示积分余额、历史记录，提供充值和提现入口
+ */
+
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Gift, History, ArrowRight } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default function PointsIndexPage() {
+import { Wallet, ArrowUpRight, ArrowDownLeft, History, RefreshCw } from 'lucide-react';
+
+import { getPointsBalance, getPointsHistory, type PointsTransaction } from '@/lib/api/points';
+import { useUserStore } from '@/stores/userStore';
+import { QUERY_KEYS } from '@/lib/api';
+
+export default function PointsPage() {
+  const { points: localPoints } = useUserStore();
+
+  // 获取积分余额
+  const { data: balanceData, isLoading: balanceLoading } = useQuery({
+    queryKey: QUERY_KEYS.userPoints,
+    queryFn: getPointsBalance,
+  });
+
+  // 获取积分历史记录
+  const { data: historyData, isLoading: historyLoading } = useQuery({
+    queryKey: QUERY_KEYS.userPointsHistory,
+    queryFn: () => getPointsHistory({ pageSize: 50 }),
+  });
+
+  const balance = balanceData?.data?.balance ?? localPoints;
+  const history = historyData?.data?.data || [];
+
+  const getTransactionTypeText = (type: PointsTransaction['type']) => {
+    const types: Record<PointsTransaction['type'], { text: string; color: string }> = {
+      deposit: { text: '充值', color: 'text-green-600' },
+      withdraw: { text: '提现', color: 'text-red-600' },
+      tip: { text: '打赏', color: 'text-red-600' },
+      receive_tip: { text: '收到打赏', color: 'text-green-600' },
+      reward: { text: '奖励', color: 'text-green-600' },
+      penalty: { text: '扣罚', color: 'text-red-600' },
+    };
+    return types[type] || { text: type, color: 'text-gray-600' };
+  };
+
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">积分中心</h1>
-        <p className="text-gray-600">管理您的积分，兑换奖励和增值服务</p>
+    <div className="container mx-auto py-6 px-4 max-w-5xl">
+      {/* 页面头部 */}
+      <div className="mb-6">
+        <h1 className="text-4xl font-bold mb-2">积分中心</h1>
+        <p className="text-muted-foreground">
+          管理您的积分，支持充值和提现
+        </p>
       </div>
 
-      {/* 积分余额 */}
-      <Card className="mb-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+      {/* 积分余额卡片 */}
+      <Card className="mb-6 bg-gradient-to-br from-primary/10 to-primary/5">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wallet className="w-6 h-6" />
-            我的积分
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardDescription>积分余额</CardDescription>
+              {balanceLoading ? (
+                <Skeleton className="h-12 w-48 mt-2" />
+              ) : (
+                <CardTitle className="text-4xl mt-2">{balance} 积分</CardTitle>
+              )}
+            </div>
+            <Wallet className="h-16 w-16 text-primary opacity-20" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="text-4xl font-bold mb-2">1,250</div>
-              <div className="text-blue-100">当前积分余额</div>
-            </div>
-            <div className="text-right">
-              <Badge variant="outline" className="bg-white/20 text-white border-white/30">
-                VIP 会员
-              </Badge>
-              <div className="text-sm text-blue-100 mt-2">
-                有效期至 2025-12-31
-              </div>
-            </div>
+          <div className="flex gap-3">
+            <Link href="/points/recharge" className="flex-1">
+              <Button className="w-full" size="lg">
+                <ArrowUpRight className="h-5 w-5 mr-2" />
+                充值
+              </Button>
+            </Link>
+            <Link href="/points/withdraw" className="flex-1">
+              <Button variant="outline" size="lg" className="w-full">
+                <ArrowDownLeft className="h-5 w-5 mr-2" />
+                提现
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* 积分充值 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wallet className="w-5 h-5" />
-              积分充值
-            </CardTitle>
-            <CardDescription>快速充值，享受更多服务</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <span>100 积分</span>
-                <span className="font-bold">¥10</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <span>500 积分</span>
-                <span className="font-bold">¥45</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <span>1000 积分</span>
-                <span className="font-bold">¥80</span>
-              </div>
-            </div>
-            <Button className="w-full mt-4">
-              立即充值
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </CardContent>
-        </Card>
+      {/* 积分规则 */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg">积分规则</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span>充值获得积分</span>
+            <span className="text-green-600">1 元 = 10 积分</span>
+          </div>
+          <div className="flex justify-between">
+            <span>打赏消耗积分</span>
+            <span className="text-red-600">1 积分 = 1 积分</span>
+          </div>
+          <div className="flex justify-between">
+            <span>提现兑换比例</span>
+            <span>10 积分 = 1 元</span>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* 积分兑换 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gift className="w-5 h-5" />
-              积分兑换
-            </CardTitle>
-            <CardDescription>用积分兑换礼品和服务</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <span>专家咨询券</span>
-                <Badge variant="secondary">500 积分</Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <span>月度会员</span>
-                <Badge variant="secondary">1000 积分</Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <span>年度会员</span>
-                <Badge variant="secondary">10000 积分</Badge>
-              </div>
-            </div>
-            <Button className="w-full mt-4" variant="outline">
-              查看更多
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* 积分明细 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <History className="w-5 h-5" />
-              积分明细
-            </CardTitle>
-            <CardDescription>查看积分获取和使用记录</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <div>
-                  <div className="font-medium">登录奖励</div>
-                  <div className="text-xs text-gray-500">2025-02-15</div>
-                </div>
-                <Badge variant="outline" className="text-green-600 border-green-600">
-                  +10
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <div>
-                  <div className="font-medium">专家咨询</div>
-                  <div className="text-xs text-gray-500">2025-02-14</div>
-                </div>
-                <Badge variant="outline" className="text-red-600 border-red-600">
-                  -200
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <div>
-                  <div className="font-medium">签到奖励</div>
-                  <div className="text-xs text-gray-500">2025-02-13</div>
-                </div>
-                <Badge variant="outline" className="text-green-600 border-green-600">
-                  +20
-                </Badge>
-              </div>
-            </div>
-            <Button className="w-full mt-4" variant="outline">
-              查看全部
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 获取积分 */}
+      {/* 积分历史 */}
       <Card>
         <CardHeader>
-          <CardTitle>如何获取积分？</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>积分历史</CardTitle>
+            <Button variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              刷新
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🎁</div>
-              <div>
-                <div className="font-medium">每日登录</div>
-                <div className="text-sm text-gray-500">+10 积分/天</div>
-              </div>
+          {historyLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <Skeleton className="h-16 w-64" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              ))}
             </div>
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">📝</div>
-              <div>
-                <div className="font-medium">发布内容</div>
-                <div className="text-sm text-gray-500">+20 积分/篇</div>
-              </div>
+          ) : history.length > 0 ? (
+            <div className="space-y-3">
+              {history.map((transaction) => {
+                const { text, color } = getTransactionTypeText(transaction.type);
+                const isPositive = ['deposit', 'receive_tip', 'reward'].includes(transaction.type);
+
+                return (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <History className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{text}</Badge>
+                          <span className="text-sm font-medium">{transaction.description}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(transaction.createdAt).toLocaleString('zh-CN')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-2xl font-bold ${color}`}>
+                        {isPositive ? '+' : '-'}{Math.abs(transaction.amount)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        余额: {transaction.balance}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">💬</div>
-              <div>
-                <div className="font-medium">参与讨论</div>
-                <div className="text-sm text-gray-500">+5 积分/条</div>
-              </div>
+          ) : (
+            <div className="text-center py-12">
+              <History className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">暂无积分记录</p>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🎯</div>
-              <div>
-                <div className="font-medium">完成任务</div>
-                <div className="text-sm text-gray-500">+50 积分/任务</div>
-              </div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
