@@ -262,7 +262,7 @@ export default function ABSProductsPage() {
                     placeholder="搜索产品名称、发起机构..."
                     className="pl-10"
                     value={searchKeyword}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
                   />
                 </div>
                 <div className="min-w-[180px]">
@@ -285,16 +285,21 @@ export default function ABSProductsPage() {
                   </Select>
                 </div>
                 <div className="min-w-[180px]">
-                  <Select value={assetSubFilter} onValueChange={setAssetSubFilter} disabled={assetMainFilter === 'all'}>
+                  <Select value={assetSubFilter} onValueChange={setAssetSubFilter}>
                     <SelectTrigger>
                       <Filter className="mr-2 h-4 w-4" />
                       <SelectValue placeholder="细分资产类型" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部类型</SelectItem>
-                      {assetMainFilter !== 'all' && ASSET_SUB_MAPPING[assetMainFilter as keyof typeof ASSET_SUB_MAPPING]?.map(sub => (
-                        <SelectItem key={sub} value={sub}>{sub}</SelectItem>
-                      ))}
+                      {assetMainFilter === 'all' 
+                        ? Object.values(ASSET_SUB_MAPPING).flat().map(sub => (
+                            <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                          ))
+                        : ASSET_SUB_MAPPING[assetMainFilter as keyof typeof ASSET_SUB_MAPPING]?.map(sub => (
+                            <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                          ))
+                      }
                     </SelectContent>
                   </Select>
                 </div>
