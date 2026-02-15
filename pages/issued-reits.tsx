@@ -123,22 +123,20 @@ export default function IssuedREITsPage({ products, lastUpdate }: PageProps) {
                             {product.name}
                           </Link>
                         </td>
-                        <td className="py-3 px-4 text-sm text-right font-medium">
-                          {product.price ? String(product.price) : '0.00'}
+                        <td className="py-3 px-4 text-sm text-right">
+                          {product.price ? product.price.toFixed(2) : '0.00'}
                         </td>
                         <td className="py-3 px-4 text-sm text-right">
-                          {product.issuePrice ? product.issuePrice : '-'}
+                          {product.issuePrice ? product.issuePrice.toFixed(2) : '-'}
                         </td>
                         <td className="py-3 px-4 text-sm text-center text-gray-600 dark:text-gray-400">
                           {product.issueDate || '-'}
                         </td>
-                        <td className={`py-3 px-4 text-sm text-right font-semibold ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {product.change >= 0 ? '+' : ''}{product.change}%
+                        <td className={`py-3 px-4 text-sm text-right font-semibold ${product.changePercent >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {product.changePercent >= 0 ? '+' : ''}{product.changePercent.toFixed(2)}%
                         </td>
-                        <td className="py-3 px-4 text-sm text-right">
-                          {product.price && product.issuePrice 
-                            ? ((product.price - product.issuePrice) / product.issuePrice * 100).toFixed(2) + '%'
-                            : '-'}
+                        <td className={`py-3 px-4 text-sm text-right font-semibold ${product.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {product.change >= 0 ? '+' : ''}{product.change.toFixed(2)}
                         </td>
                       </tr>
                     ))}

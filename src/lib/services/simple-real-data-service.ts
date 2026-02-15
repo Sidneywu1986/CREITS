@@ -114,8 +114,8 @@ async function fetchSinaQuote(code: string): Promise<Quote | null> {
       code,
       name,
       price: close,
-      change,
-      changePercent,
+      change: parseFloat(change.toFixed(2)), // 保留两位小数
+      changePercent: parseFloat(changePercent.toFixed(2)), // 保留两位小数
       open,
       high,
       low,
@@ -137,12 +137,13 @@ export async function getREITsWithQuotes(): Promise<REITsWithQuote[]> {
 
   // 直接使用模拟数据，避免外部API调用超时问题
   const results = products.map((product) => {
+    const mockChange = (Math.random() - 0.5) * 2; // -1% 到 +1%
     const mockQuote: Quote = {
       code: product.code,
       name: product.name,
       price: product.issuePrice * (0.95 + Math.random() * 0.1), // 在发行价上下浮动
-      change: (Math.random() - 0.5) * 2, // -1% 到 +1%
-      changePercent: (Math.random() - 0.5) * 2,
+      change: parseFloat(mockChange.toFixed(2)), // 保留两位小数
+      changePercent: parseFloat(mockChange.toFixed(2)), // 保留两位小数
       open: product.issuePrice * (0.98 + Math.random() * 0.02),
       high: product.issuePrice * (1.0 + Math.random() * 0.1),
       low: product.issuePrice * (0.9 + Math.random() * 0.08),
