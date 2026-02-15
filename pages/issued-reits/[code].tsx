@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../src/components/ui/card';
 import { Button } from '../../src/components/ui/button';
 import { Badge } from '../../src/components/ui/badge';
@@ -34,25 +35,18 @@ import {
   Calculator,
 } from 'lucide-react';
 
-interface PageProps {
-  code: string;
-  initialData: any;
-}
-
-export default function REITsDetailPage({ code, initialData }: PageProps) {
+export default function REITsDetailPage() {
   const router = useRouter();
+  const code = router.query.code as string;
 
   console.log('=== Component rendered ===');
-  console.log('Server-side code prop:', code);
-  console.log('Server-side initialData:', initialData);
   console.log('Router query:', router.query);
+  console.log('Code from query:', code);
 
   const [activeTab, setActiveTab] = useState('overview');
-  const [projectData, setProjectData] = useState<any>(initialData);
-  const [loading, setLoading] = useState(!initialData);
-  const [lastUpdate, setLastUpdate] = useState<string>(
-    initialData ? new Date().toLocaleTimeString('zh-CN') : ''
-  );
+  const [projectData, setProjectData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
   const [comments, setComments] = useState<Comment[]>([]);
   const [countdown, setCountdown] = useState(60);
   const [showValuationCalculator, setShowValuationCalculator] = useState(false);
@@ -85,20 +79,13 @@ export default function REITsDetailPage({ code, initialData }: PageProps) {
   useEffect(() => {
     console.log('=== useEffect triggered ===');
     console.log('code value:', code);
-    console.log('initialData:', initialData);
     
-    // 如果初始数据存在，不需要再次加载
-    if (initialData) {
-      console.log('Initial data already loaded, skipping data fetch');
-      return;
-    }
-
-    console.log('About to call loadData, code exists:', !!code);
+    // 从 URL 参数获取 code 后加载的数据
     if (code) {
       console.log('开始加载数据，code:', code);
       loadData();
     }
-  }, [code, initialData, loadData]);
+  }, [code, loadData]);
 
   // 处理添加评论
   const handleAddComment = (projectId: string, content: string) => {
@@ -819,19 +806,4 @@ export default function REITsDetailPage({ code, initialData }: PageProps) {
       </div>
     </div>
   );
-}
-
-export async function getServerSideProps(context: any) {
-  const { code } = context.params;
-  
-  // 在服务端加载数据
-  const { getREITsDetail } = await import('../../src/lib/services/simple-real-data-service');
-  const initialData = await getREITsDetail(code);
-  
-  return {
-    props: {
-      code,
-      initialData: initialData || null,
-    },
-  };
 }

@@ -1,12 +1,11 @@
 [project]
-requires = ["nodejs-24"]
+entrypoint = "index.html"
+requires = ["python-3.12"]
 
 [dev]
-build = ["bash", "./scripts/prepare.sh"]
-run = ["bash", "./scripts/dev.sh"]
-deps = ["git"] # -> apt install git
+build = []
+run = ["python3", "-m", "http.server", "5000", "--bind", "0.0.0.0"]
 
 [deploy]
-build = ["bash","./scripts/build.sh"]
-run = ["bash","./scripts/start.sh"]
-deps = ["git"] # -> apt install git
+build = []
+run = ["python3", "-m", "http.server", "5000", "--bind", "0.0.0.0"]

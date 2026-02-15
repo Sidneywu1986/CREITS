@@ -1,14 +1,13 @@
+'use client';
+
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
-interface PageProps {
-  code: string;
-}
-
-export default function TestServerSidePage({ code }: PageProps) {
+export default function TestServerSidePage() {
   const router = useRouter();
+  const code = router.query.code as string;
   const [logs, setLogs] = useState<string[]>([
-    `Server-side code: ${code}`,
+    `Code from router: ${code}`,
   ]);
 
   const addLog = (message: string) => {
@@ -42,14 +41,4 @@ export default function TestServerSidePage({ code }: PageProps) {
       </div>
     </div>
   );
-}
-
-export async function getServerSideProps(context: any) {
-  const { code } = context.params;
-  
-  return {
-    props: {
-      code,
-    },
-  };
 }
