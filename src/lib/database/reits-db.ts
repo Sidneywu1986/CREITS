@@ -427,6 +427,314 @@ export class REITsDatabaseService {
       throw new Error('获取完整产品信息失败');
     }
   }
+
+  // =====================================================
+  // 8. 批量操作
+  // =====================================================
+
+  /**
+   * 批量创建产品信息
+   */
+  async batchCreateProducts(
+    products: REITProductInfo[]
+  ): Promise<REITProductInfo[]> {
+    const { data, error } = await supabase
+      .from('reit_product_info')
+      .insert(products)
+      .select();
+
+    if (error) {
+      console.error('批量创建产品信息失败:', error);
+      throw new Error(`批量创建产品信息失败: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  /**
+   * 批量创建财务指标
+   */
+  async batchCreateFinancialMetrics(
+    metrics: REITFinancialMetrics[]
+  ): Promise<REITFinancialMetrics[]> {
+    const { data, error } = await supabase
+      .from('reit_financial_metrics')
+      .insert(metrics)
+      .select();
+
+    if (error) {
+      console.error('批量创建财务指标失败:', error);
+      throw new Error(`批量创建财务指标失败: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  /**
+   * 批量创建市场数据
+   */
+  async batchCreateMarketStats(
+    stats: REITMarketStats[]
+  ): Promise<REITMarketStats[]> {
+    const { data, error } = await supabase
+      .from('reit_market_stats')
+      .insert(stats)
+      .select();
+
+    if (error) {
+      console.error('批量创建市场数据失败:', error);
+      throw new Error(`批量创建市场数据失败: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  // =====================================================
+  // 9. 统计查询
+  // =====================================================
+
+  /**
+   * 获取REITs产品统计
+   */
+  async getProductStats(): Promise<{
+    total: number;
+    byAssetType: Record<string, number>;
+    byManager: Record<string, number>;
+  }> {
+    // 获取所有产品
+    const products = await this.getAllProducts();
+
+    // 按资产类型统计
+    const byAssetType: Record<string, number> = {};
+    products.forEach((p) => {
+      const type = p.asset_type_national || '未知';
+      byAssetType[type] = (byAssetType[type] || 0) + 1;
+    });
+
+    // 按管理人统计
+    const byManager: Record<string, number> = {};
+    products.forEach((p) => {
+      const manager = p.fund_manager || '未知';
+      byManager[manager] = (byManager[manager] || 0) + 1;
+    });
+
+    return {
+      total: products.length,
+      byAssetType,
+      byManager,
+    };
+  }
+
+  /**
+   * 获取市场规模统计
+   */
+  async getMarketSizeStats(): Promise<{
+    totalFundSize: number;
+    totalMarketCap: number;
+    avgDistributionYield: number;
+    totalProducts: number;
+  }> {
+    // 获取所有产品
+    const products = await this.getAllProducts();
+
+    // 获取最新市场数据
+    const allMarketStats = await this.getAllLatestMarketStats();
+
+    let totalFundSize = 0;
+    let totalMarketCap = 0;
+    let totalYield = 0;
+    let yieldCount = 0;
+
+    products.forEach((p) => {
+      if (p.fund_size) {
+        totalFundSize += p.fund_size;
+      }
+
+      const marketStat = allMarketStats.get(p.reit_code);
+      if (marketStat) {
+        if (marketStat.market_cap) {
+          totalMarketCap += marketStat.market_cap;
+        }
+        if (marketStat.turnover_rate) {
+          totalYield += marketStat.turnover_rate;
+          yieldCount++;
+        }
+      }
+    });
+
+    return {
+      totalFundSize,
+      totalMarketCap,
+      avgDistributionYield: yieldCount > 0 ? totalYield / yieldCount : 0,
+      totalProducts: products.length,
+    };
+  }
+
+  /**
+   * 获取市场表现Top 10
+   */
+  async getTopPerformers(metric: 'market_cap' | 'daily_volume' | 'turnover_rate' | 'distribution_yield') {
+    const allMarketStats = await this.getAllLatestMarketStats();
+
+    // 转换为数组并排序
+    const sorted = Array.from(allMarketStats.values()).sort((a, b) => {
+      const valA = (a as any)[metric] || 0;
+      const valB = (b as any)[metric] || 0;
+      return valB - valA;
+    });
+
+    return sorted.slice(0, 10);
+  }
+
+  // =====================================================
+  // 10. 搜索功能
+  // =====================================================
+
+  /**
+   * 搜索产品
+   */
+  async searchProducts(keyword: string): Promise<REITProductInfo[]> {
+    const { data, error } = await supabase
+      .from('reit_product_info')
+      .select('*')
+      .or(`reit_code.ilike.%${keyword}%,reit_short_name.ilike.%${keyword}%,fund_manager.ilike.%${keyword}%`);
+
+    if (error) {
+      console.error('搜索产品失败:', error);
+      throw new Error(`搜索产品失败: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  /**
+   * 搜索资产
+   */
+  async searchProperties(keyword: string): Promise<REITPropertyBase[]> {
+    const { data, error } = await supabase
+      .from('reit_property_base')
+      .select('*')
+      .or(`property_name.ilike.%${keyword}%,asset_address.ilike.%${keyword}%,location_city.ilike.%${keyword}%`)
+      .order('effective_date', { ascending: false });
+
+    if (error) {
+      console.error('搜索资产失败:', error);
+      throw new Error(`搜索资产失败: ${error.message}`);
+    }
+
+    // 去重，保留最新的记录
+    const uniqueProperties = new Map<string, REITPropertyBase>();
+    data?.forEach((property) => {
+      if (!uniqueProperties.has(property.property_id)) {
+        uniqueProperties.set(property.property_id, property);
+      }
+    });
+
+    return Array.from(uniqueProperties.values());
+  }
+
+  // =====================================================
+  // 11. 数据导出
+  // =====================================================
+
+  /**
+   * 导出所有产品信息为CSV
+   */
+  async exportProductsToCSV(): Promise<string> {
+    const products = await this.getAllProducts();
+
+    if (products.length === 0) {
+      return '';
+    }
+
+    // CSV头部
+    const headers = Object.keys(products[0]).join(',');
+
+    // CSV数据行
+    const rows = products.map((p) =>
+      Object.values(p)
+        .map((v) => {
+          // 转义引号和逗号
+          const str = String(v ?? '');
+          return `"${str.replace(/"/g, '""')}"`;
+        })
+        .join(',')
+    );
+
+    return [headers, ...rows].join('\n');
+  }
+
+  /**
+   * 导出市场数据为CSV
+   */
+  async exportMarketStatsToCSV(reitCode?: string): Promise<string> {
+    let stats: REITMarketStats[];
+
+    if (reitCode) {
+      stats = await this.getMarketStats({ reit_code: reitCode });
+    } else {
+      const allStats = await this.getAllLatestMarketStats();
+      stats = Array.from(allStats.values());
+    }
+
+    if (stats.length === 0) {
+      return '';
+    }
+
+    // CSV头部
+    const headers = Object.keys(stats[0]).join(',');
+
+    // CSV数据行
+    const rows = stats.map((s) =>
+      Object.values(s)
+        .map((v) => {
+          const str = String(v ?? '');
+          return `"${str.replace(/"/g, '""')}"`;
+        })
+        .join(',')
+    );
+
+    return [headers, ...rows].join('\n');
+  }
+
+  // =====================================================
+  // 12. 数据清理
+  // =====================================================
+
+  /**
+   * 删除产品及其相关数据
+   */
+  async deleteProduct(reitCode: string): Promise<boolean> {
+    try {
+      // 删除市场数据
+      await supabase.from('reit_market_stats').delete().eq('reit_code', reitCode);
+
+      // 删除财务数据
+      await supabase.from('reit_financial_metrics').delete().eq('reit_code', reitCode);
+
+      // 删除估值数据
+      await supabase.from('reit_valuation').delete().eq('reit_code', reitCode);
+
+      // 删除风险合规数据
+      await supabase.from('reit_risk_compliance').delete().eq('reit_code', reitCode);
+
+      // 删除资产数据
+      const properties = await this.getPropertiesByCode(reitCode);
+      for (const prop of properties) {
+        await supabase.from('reit_property_equity_ops').delete().eq('property_id', prop.property_id);
+        await supabase.from('reit_property_concession_ops').delete().eq('property_id', prop.property_id);
+      }
+      await supabase.from('reit_property_base').delete().eq('reit_code', reitCode);
+
+      // 删除产品信息
+      await supabase.from('reit_product_info').delete().eq('reit_code', reitCode);
+
+      return true;
+    } catch (error) {
+      console.error('删除产品失败:', error);
+      return false;
+    }
+  }
 }
 
 // 导出单例实例
