@@ -168,7 +168,7 @@ importers:
         specifier: 3.11.174
         version: 3.11.174
       pg:
-        specifier: ^8.16.3
+        specifier: ^8.17.2
         version: 8.17.2
       react:
         specifier: 19.2.3
