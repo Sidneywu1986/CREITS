@@ -38,11 +38,6 @@ const nextConfig = {
       },
     ],
   },
-
-  // 实验性功能
-  experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-  },
 };
 
 module.exports = nextConfig;
