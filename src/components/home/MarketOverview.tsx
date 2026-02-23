@@ -63,7 +63,7 @@ function Sparkline({ data }: { data: number[] }) {
 
 export default function MarketOverview() {
   return (
-    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-4 h-full">
+    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-4 h-full hover:bg-white/20 transition">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-white">更多行情指标</h3>
         <Link href="/market">

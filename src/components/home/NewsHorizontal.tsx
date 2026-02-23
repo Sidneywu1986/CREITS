@@ -44,7 +44,7 @@ const newsItems: NewsItem[] = [
 
 export default function NewsHorizontal() {
   return (
-    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5">
+    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/20 transition">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-white">资产证券化新闻</h3>
         <Link href="/news">

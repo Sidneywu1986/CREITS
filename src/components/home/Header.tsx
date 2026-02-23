@@ -7,7 +7,7 @@ export default function Header() {
     <div className="py-8 border-b border-white/10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">REITs 智能助手</h1>
+          <h1 className="text-4xl font-bold text-white">REITs 智能助手</h1>
           <p className="text-white/60 mt-1">
             多Agent协作系统 · 专业的REITs发行服务平台
           </p>

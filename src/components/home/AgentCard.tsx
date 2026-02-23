@@ -21,7 +21,7 @@ export default function AgentCard({
 }: AgentCardProps) {
   return (
     <Link href={href} className="block">
-      <div className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 hover:border-white/20 transition-colors duration-200 cursor-pointer h-full group">
+      <div className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/20 transition cursor-pointer h-full group min-h-[140px]">
         <div className="flex justify-between items-start mb-2">
           <div className="text-3xl">{icon}</div>
           <div className="flex gap-1">

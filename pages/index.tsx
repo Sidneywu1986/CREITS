@@ -62,34 +62,36 @@ export default function Home() {
           <DataMetrics />
 
           {/* 核心内容区 */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* 中间核心区 - 全宽 (12列) */}
-            <div className="col-span-1 lg:col-span-12 space-y-6">
-              {/* 核心 Agent 卡片墙 */}
-              <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  核心 Agent
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {agents.map((agent, index) => (
-                    <AgentCard key={index} {...agent} />
-                  ))}
+          <div className="mt-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* 中间核心区 - 全宽 (12列) */}
+              <div className="col-span-1 lg:col-span-12 space-y-6">
+                {/* 核心 Agent 卡片墙 */}
+                <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/20 transition">
+                  <h2 className="text-lg font-semibold text-white mb-4">
+                    核心 Agent
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {agents.map((agent, index) => (
+                      <AgentCard key={index} {...agent} />
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* 估值计算器入口卡片 */}
-              <CalculatorEntrance />
+                {/* 估值计算器入口卡片 */}
+                <CalculatorEntrance />
 
-              {/* 资产证券化新闻 */}
-              <NewsHorizontal />
+                {/* 资产证券化新闻 */}
+                <NewsHorizontal />
 
-              {/* REITs 八张表数据预览 */}
-              <REITsTablePreview />
+                {/* REITs 八张表数据预览 */}
+                <REITsTablePreview />
 
-              {/* 待发行项目 + 匿名BBS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <MarketOverview />
-                <BBSTopics />
+                {/* 待发行项目 + 匿名BBS */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <MarketOverview />
+                  <BBSTopics />
+                </div>
               </div>
             </div>
           </div>

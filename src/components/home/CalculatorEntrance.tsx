@@ -5,7 +5,7 @@ import Link from 'next/link';
 export default function CalculatorEntrance() {
   return (
     <Link href="/calculator">
-      <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/15 hover:border-white/20 transition-all duration-200 cursor-pointer group">
+      <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/20 transition cursor-pointer group">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <h3 className="text-xl font-semibold text-white mb-2">
