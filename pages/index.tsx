@@ -59,7 +59,7 @@ export default function Home() {
             {/* 欢迎 banner */}
             <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-xl p-6 text-white shadow-lg">
               <h1 className="text-2xl font-bold mb-2">欢迎来到 REITs 智能助手</h1>
-              <p className="opacity-90">
+              <p className="opacity-90 leading-relaxed">
                 多Agent协作系统 · 专业的REITs发行服务平台 · 全流程智能辅助
               </p>
             </div>

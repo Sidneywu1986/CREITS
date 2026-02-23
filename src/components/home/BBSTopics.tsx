@@ -38,25 +38,27 @@ export default function BBSTopics() {
             <Link key={index} href="/bbs" className="block">
               <div className="p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
                 <div className="flex items-start gap-2">
-                  {topic.isHot && <Flame className="h-4 w-4 text-orange-600 mt-0.5" />}
+                  <div className="w-1.5 h-1.5 bg-orange-400 rounded-full mt-2 flex-shrink-0" />
                   <p className="text-sm text-gray-800 group-hover:text-blue-600 transition-colors flex-1">
                     {topic.title}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <Shield className="h-3 w-3 text-green-600" />
-                  <span className="text-xs text-gray-500">{topic.replies} 回复</span>
+                <div className="flex items-center gap-2 mt-1 ml-3.5">
+                  <MessageSquare className="h-3 w-3 text-gray-400" />
+                  <span className="text-xs text-gray-400">{topic.replies} 回复</span>
                 </div>
               </div>
             </Link>
           ))}
         </div>
-        <Link href="/bbs" className="block mt-4">
-          <Button variant="outline" className="w-full text-sm" size="sm">
-            匿名参与
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="flex justify-end pt-3">
+          <Link href="/bbs">
+            <Button variant="outline" className="text-sm border-gray-300 hover:border-gray-400" size="sm">
+              匿名参与
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );

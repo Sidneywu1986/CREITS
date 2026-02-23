@@ -107,12 +107,16 @@ export default function Sidebar() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group',
+                      'flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group hover:bg-gray-50 dark:hover:bg-gray-800',
                       isActive
                         ? 'bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-md'
-                        : 'text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-800'
+                        : 'text-gray-700 dark:text-gray-300'
                     )}
                   >
+                    <div
+                      className={cn('w-0.5 h-3 mr-2 rounded-full', group.color)}
+                      style={{ backgroundColor: isActive ? 'rgba(255,255,255,0.3)' : '' }}
+                    />
                     <item.icon
                       className={cn('mr-3 h-4 w-4', isActive ? 'text-white' : group.color)}
                     />

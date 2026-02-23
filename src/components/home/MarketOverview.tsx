@@ -28,16 +28,16 @@ export default function MarketOverview() {
           市场行情速览
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="space-y-3">
+        <div className="space-y-2">
           {marketData.map((item, index) => (
             <div
               key={index}
-              className="flex items-center justify-between py-2 border-b last:border-0 border-gray-100"
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <span className="text-xs sm:text-sm text-gray-600 min-w-[70px]">{item.label}</span>
               <div className="flex items-center gap-2 sm:gap-3">
-                <span className="text-xs sm:text-sm font-semibold text-gray-800">{item.value}</span>
+                <span className="text-sm sm:text-xl font-bold text-gray-800">{item.value}</span>
                 <span
                   className={`text-xs font-medium flex items-center whitespace-nowrap ${
                     item.isPositive === true
@@ -56,12 +56,14 @@ export default function MarketOverview() {
             </div>
           ))}
         </div>
-        <Link href="/market" className="block mt-4">
-          <Button variant="ghost" className="w-full text-sm" size="sm">
-            更多行情
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="flex justify-end pt-2">
+          <Link href="/market">
+            <Button variant="ghost" className="text-sm text-blue-600 hover:text-blue-700" size="sm">
+              更多行情
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );

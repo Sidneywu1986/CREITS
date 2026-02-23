@@ -31,28 +31,28 @@ export default function REITsTablePreview() {
         <div className="overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   项目
                 </th>
-                <th className="text-right py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="text-right py-3 px-4 text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   数值
                 </th>
-                <th className="text-right py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="text-right py-3 px-4 text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   环比
                 </th>
               </tr>
             </thead>
             <tbody>
               {tablePreviewData.map((item, index) => (
-                <tr key={index} className="border-b border-gray-100 last:border-0">
-                  <td className="py-3 text-sm text-gray-700 font-medium">{item.label}</td>
-                  <td className="py-3 text-sm text-gray-800 text-right font-semibold">
+                <tr key={index} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                  <td className="py-3 px-4 text-sm text-gray-700 font-medium">{item.label}</td>
+                  <td className="py-3 px-4 text-sm text-gray-800 text-right font-semibold">
                     {item.value}
                   </td>
-                  <td className="py-3 text-sm text-right">
+                  <td className="py-3 px-4 text-sm text-right">
                     <span
-                      className={`inline-flex items-center font-medium ${
+                      className={`inline-flex items-center font-semibold ${
                         item.isPositive ? 'text-green-600' : 'text-red-600'
                       }`}
                     >
@@ -69,12 +69,14 @@ export default function REITsTablePreview() {
             </tbody>
           </table>
         </div>
-        <Link href="/reits-data-tables" className="block mt-4">
-          <Button variant="ghost" className="w-full text-sm" size="sm">
-            查看完整八张表
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="flex justify-end pt-3">
+          <Link href="/reits-data-tables">
+            <Button variant="ghost" className="text-sm text-blue-600 hover:text-blue-700" size="sm">
+              查看完整八张表
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );

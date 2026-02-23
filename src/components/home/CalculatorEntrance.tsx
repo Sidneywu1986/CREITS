@@ -16,7 +16,7 @@ export default function CalculatorEntrance() {
                 <Calculator className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1 flex items-center gap-2">
+                <h3 className="text-xl font-bold text-gray-800 mb-1">
                   REITs 估值计算器
                 </h3>
                 <p className="text-sm text-gray-600 flex items-center gap-2">
@@ -25,7 +25,7 @@ export default function CalculatorEntrance() {
                 </p>
               </div>
             </div>
-            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg group-hover:scale-105 transition-transform duration-200">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg group-hover:scale-105 transition-transform duration-200">
               开始计算
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
