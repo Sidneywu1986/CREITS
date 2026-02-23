@@ -44,11 +44,11 @@ const newsItems: NewsItem[] = [
 
 export default function NewsHorizontal() {
   return (
-    <div className="border border-gray-200 rounded-lg p-4">
+    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-800">资产证券化新闻</h3>
+        <h3 className="text-sm font-semibold text-white">资产证券化新闻</h3>
         <Link href="/news">
-          <span className="text-sm text-blue-600 hover:underline">更多</span>
+          <span className="text-sm text-blue-400 hover:underline">更多</span>
         </Link>
       </div>
 
@@ -59,14 +59,14 @@ export default function NewsHorizontal() {
             href={item.url}
             className="block group"
           >
-            <div className="py-3 hover:bg-gray-50 transition-colors duration-200 relative pl-3 last:pb-0">
+            <div className="py-3 hover:bg-white/5 transition-colors duration-200 relative pl-3 last:pb-0 border-b border-white/10 last:border-0">
               {/* 左侧蓝色竖线 */}
-              <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              
-              <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
+              <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+
+              <p className="text-sm font-medium text-white/80 group-hover:text-blue-400 transition-colors">
                 {item.title}
               </p>
-              <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+              <div className="flex items-center gap-2 text-xs text-white/40 mt-1">
                 <span>{item.source}</span>
                 <span>·</span>
                 <span>{item.time}</span>

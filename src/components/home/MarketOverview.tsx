@@ -63,29 +63,29 @@ function Sparkline({ data }: { data: number[] }) {
 
 export default function MarketOverview() {
   return (
-    <div className="border border-gray-200 rounded-lg p-4 h-full">
+    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5 h-full">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-800">市场行情速览</h3>
+        <h3 className="text-sm font-semibold text-white">更多行情指标</h3>
         <Link href="/market">
-          <span className="text-sm text-gray-400 hover:text-gray-600">···</span>
+          <span className="text-sm text-white/40 hover:text-white/60">···</span>
         </Link>
       </div>
 
       <div className="space-y-4">
-        {marketData.map((item, index) => (
+        {marketData.slice(1).map((item, index) => (
           <div
             key={index}
-            className="border border-gray-100 rounded-lg p-3 hover:border-gray-300 transition-colors duration-200"
+            className="border border-white/10 rounded-lg p-3 hover:bg-white/5 transition-colors duration-200"
           >
-            <div className="text-sm text-gray-500 mb-1">{item.label}</div>
+            <div className="text-sm text-white/60 mb-1">{item.label}</div>
             <div className="flex items-end justify-between">
-              <span className="text-xl font-semibold text-gray-800">{item.value}</span>
+              <span className="text-lg font-semibold text-white">{item.value}</span>
               <span className={`text-sm font-medium ${
                 item.isPositive === true
-                  ? 'text-green-600'
+                  ? 'text-green-400'
                   : item.isPositive === false
-                  ? 'text-red-600'
-                  : 'text-gray-400'
+                  ? 'text-red-400'
+                  : 'text-white/40'
               }`}>
                 {item.isPositive === true && '↑'}
                 {item.isPositive === false && '↓'}

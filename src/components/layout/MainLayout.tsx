@@ -11,14 +11,12 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gradient-to-b from-[#0B1E33] to-[#1A3B5E]">
       <Header />
       <div className="flex">
         <Sidebar />
         <main className="flex-1 overflow-auto">
-          <div className="container mx-auto px-6 py-8">
-            {children}
-          </div>
+          {children}
         </main>
       </div>
       <Footer />

@@ -87,17 +87,14 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-72 border-r bg-gray-50/50 dark:bg-gray-900/50 flex flex-col h-[calc(100vh-4rem)] overflow-y-auto">
+    <aside className="w-72 border-r border-white/10 bg-gradient-to-b from-[#0B1E33] to-[#1A3B5E] flex flex-col h-[calc(100vh-4rem)] overflow-y-auto">
       <nav className="flex-1 px-4 py-6 space-y-6">
         {navigation.map((group, groupIndex) => (
           <div key={group.title}>
             {/* 组标题 */}
-            <div className="flex items-center gap-2 mb-3">
-              <group.icon className={cn('h-4 w-4', group.color)} />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                {group.title}
-              </h3>
-            </div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-3">
+              {group.title}
+            </h3>
 
             {/* 导航项 */}
             <div className="space-y-1">
@@ -108,31 +105,21 @@ export default function Sidebar() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group hover:bg-gray-50 dark:hover:bg-gray-800',
+                      'flex items-center py-1.5 text-sm transition-colors duration-200 group hover:text-white',
                       isActive
-                        ? 'bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-md'
-                        : 'text-gray-700 dark:text-gray-300'
+                        ? 'text-white font-medium border-l-2 border-white pl-2'
+                        : 'text-white/70 pl-3'
                     )}
                   >
-                    <div
-                      className={cn('w-0.5 h-3 mr-2 rounded-full', group.color)}
-                      style={{ backgroundColor: isActive ? 'rgba(255,255,255,0.3)' : '' }}
-                    />
                     <item.icon
-                      className={cn('mr-3 h-4 w-4', isActive ? 'text-white' : group.color)}
+                      className={cn('mr-3 h-4 w-4', isActive ? '' : group.color)}
                     />
                     <span className="flex-1">{item.name}</span>
                     {item.badge && (
-                      <span
-                        className={cn(
-                          'text-xs px-2 py-0.5 rounded-full font-medium',
-                          isActive ? 'bg-white/20' : 'bg-red-100 text-red-600'
-                        )}
-                      >
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-white/20 text-white/80">
                         {item.badge}
                       </span>
                     )}
-                    {isActive && <ChevronRight className="h-4 w-4 ml-2" />}
                   </Link>
                 );
               })}
@@ -142,19 +129,19 @@ export default function Sidebar() {
       </nav>
 
       {/* 用户信息卡片 */}
-      <div className="p-4 border-t bg-gray-50/50">
-        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center text-white font-semibold">
+      <div className="p-4 border-t border-white/10">
+        <div className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur-sm rounded-lg border border-white/10">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
             <User className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-800 truncate">用户名称</p>
-            <p className="text-xs text-gray-500 truncate">user@example.com</p>
+            <p className="text-sm font-medium text-white truncate">用户名称</p>
+            <p className="text-xs text-white/40 truncate">user@example.com</p>
           </div>
         </div>
         <Link
           href="/settings"
-          className="flex items-center justify-center px-3 py-2 mt-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-all duration-200"
+          className="flex items-center justify-center px-3 py-2 mt-2 text-sm font-medium text-white/70 rounded-lg hover:bg-white/10 transition-all duration-200"
         >
           <Settings className="mr-2 h-4 w-4" />
           设置

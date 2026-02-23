@@ -21,26 +21,26 @@ export default function AgentCard({
 }: AgentCardProps) {
   return (
     <Link href={href} className="block">
-      <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-400 transition-colors duration-200 cursor-pointer h-full group relative">
+      <div className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 hover:border-white/20 transition-colors duration-200 cursor-pointer h-full group">
         <div className="flex justify-between items-start mb-2">
           <div className="text-3xl">{icon}</div>
           <div className="flex gap-1">
             {isHot && (
-              <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded">
+              <span className="bg-white/20 text-white/80 text-xs font-medium px-2 py-0.5 rounded">
                 热门
               </span>
             )}
             {isNew && (
-              <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded">
+              <span className="bg-white/20 text-white/80 text-xs font-medium px-2 py-0.5 rounded">
                 新
               </span>
             )}
           </div>
         </div>
-        <h3 className="text-base font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+        <h3 className="text-base font-semibold text-white group-hover:text-blue-400 transition-colors">
           {title}
         </h3>
-        <p className="text-sm text-gray-500 mt-1">{description}</p>
+        <p className="text-sm text-white/60 mt-1">{description}</p>
       </div>
     </Link>
   );

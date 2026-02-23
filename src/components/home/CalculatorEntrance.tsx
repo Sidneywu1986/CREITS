@@ -5,17 +5,17 @@ import Link from 'next/link';
 export default function CalculatorEntrance() {
   return (
     <Link href="/calculator">
-      <div className="border border-gray-200 rounded-lg p-5 bg-gray-50 hover:border-gray-400 transition-colors duration-200 cursor-pointer group">
+      <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/15 hover:border-white/20 transition-all duration-200 cursor-pointer group">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-800 mb-1">
+            <h3 className="text-xl font-semibold text-white mb-2">
               REITs 估值计算器
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-white/60">
               DCF/相对估值综合分析
             </p>
           </div>
-          <button className="ml-4 border border-blue-600 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200 active:bg-blue-100 whitespace-nowrap">
+          <button className="ml-4 bg-white text-[#0B1E33] px-5 py-2 rounded-lg font-medium hover:bg-white/90 transition-colors active:scale-95 whitespace-nowrap">
             开始计算
           </button>
         </div>
