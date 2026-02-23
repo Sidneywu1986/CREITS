@@ -20,8 +20,6 @@ import {
   ChevronRight,
   Dot,
   User,
-  ShieldCheck,
-  FileSearch,
 } from 'lucide-react';
 
 interface NavGroup {
@@ -35,18 +33,6 @@ interface NavGroup {
     badge?: string;
   }[];
 }
-
-interface QuickAgent {
-  name: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href: string;
-  color: string;
-}
-
-const quickAgents: QuickAgent[] = [
-  { name: '法务', icon: ShieldCheck, href: '/agents/legal', color: 'text-blue-600' },
-  { name: '尽调', icon: FileSearch, href: '/agents/due-diligence', color: 'text-green-600' },
-];
 
 const navigation: NavGroup[] = [
   {
@@ -112,24 +98,6 @@ export default function Sidebar() {
                 {group.title}
               </h3>
             </div>
-
-            {/* Agent快捷入口（仅Agent中心下显示） */}
-            {group.title === 'Agent 中心' && (
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                {quickAgents.map((agent) => (
-                  <Link
-                    key={agent.name}
-                    href={agent.href}
-                    className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
-                  >
-                    <div className={cn('p-2 bg-gray-50 rounded-lg', agent.color)}>
-                      <agent.icon className="h-4 w-4" />
-                    </div>
-                    <span className="text-xs font-medium text-gray-700">{agent.name}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
 
             {/* 导航项 */}
             <div className="space-y-1">
