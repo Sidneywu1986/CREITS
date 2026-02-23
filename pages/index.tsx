@@ -51,24 +51,11 @@ const agents = [
 export default function Home() {
   return (
     <MainLayout>
-      {/* 三栏布局 */}
+      {/* 两栏布局：中间核心区 + 右侧信息区 */}
       <div className="min-h-[calc(100vh-4rem)]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
-          {/* 左侧导航区 - 约21% (2.5列) */}
-          <div className="hidden lg:block lg:col-span-2.5">
-            {/* 侧边栏在MainLayout中已经渲染，这里留空或可以添加快捷入口 */}
-            <div className="sticky top-6">
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-4 text-white mb-4 shadow-lg">
-                <h3 className="font-bold text-lg mb-2">🚀 快速开始</h3>
-                <p className="text-sm opacity-90 mb-3">
-                  选择一个Agent开始您的REITs之旅
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* 中间核心区 - 约46% (5.5列) */}
-          <div className="col-span-1 lg:col-span-5.5 space-y-6">
+          {/* 中间核心区 - 约58% (7列) */}
+          <div className="col-span-1 lg:col-span-7 space-y-6">
             {/* 欢迎 banner */}
             <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-xl p-6 text-white shadow-lg">
               <h1 className="text-2xl font-bold mb-2">欢迎来到 REITs 智能助手</h1>
@@ -97,8 +84,8 @@ export default function Home() {
             <REITsTablePreview />
           </div>
 
-          {/* 右侧信息区 - 约33% (4列) */}
-          <div className="col-span-1 lg:col-span-4 space-y-6">
+          {/* 右侧信息区 - 约42% (5列) */}
+          <div className="col-span-1 lg:col-span-5 space-y-6">
             {/* 市场行情速览 */}
             <MarketOverview />
 
