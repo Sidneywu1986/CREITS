@@ -141,11 +141,11 @@ export default function CalculatorPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleReset} className="border-white/30 text-white hover:bg-white/10">
+              <Button variant="ghost" onClick={handleReset} className="border border-white/30 text-white hover:bg-white/10 hover:border-white/40">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 重置
               </Button>
-              <Button onClick={handleExport} disabled={!result} className="bg-blue-500 hover:bg-blue-600">
+              <Button onClick={handleExport} disabled={!result} className="bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed">
                 <Download className="mr-2 h-4 w-4" />
                 导出估值报告
               </Button>
