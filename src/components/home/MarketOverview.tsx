@@ -20,7 +20,7 @@ const marketData: MarketData[] = [
 
 export default function MarketOverview() {
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm h-full">
       <CardHeader className="p-4 pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center">

@@ -17,7 +17,7 @@ const topics: Topic[] = [
 
 export default function BBSTopics() {
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm h-full">
       <CardHeader className="p-4 pb-3">
         <CardTitle className="text-base font-semibold flex items-center">
           <MessageSquare className="mr-2 h-4 w-4 text-orange-600" />

@@ -51,48 +51,42 @@ const agents = [
 export default function Home() {
   return (
     <MainLayout>
-      {/* 两栏布局：中间核心区 + 右侧信息区 */}
+      {/* 单栏布局：左侧导航 + 中间主内容区 */}
       <div className="min-h-[calc(100vh-4rem)]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
-          {/* 中间核心区 - 约58% (7列) */}
-          <div className="col-span-1 lg:col-span-7 space-y-6">
-            {/* 欢迎 banner */}
-            <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-xl p-6 text-white shadow-lg">
-              <h1 className="text-2xl font-bold mb-2">欢迎来到 REITs 智能助手</h1>
-              <p className="opacity-90 leading-relaxed">
-                多Agent协作系统 · 专业的REITs发行服务平台 · 全流程智能辅助
-              </p>
-            </div>
-
-            {/* 核心 Agent 卡片墙 */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-                <span className="w-1 h-6 bg-blue-600 rounded mr-2" />
-                核心 Agent
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {agents.map((agent, index) => (
-                  <AgentCard key={index} {...agent} />
-                ))}
-              </div>
-            </div>
-
-            {/* 估值计算器入口卡片 */}
-            <CalculatorEntrance />
-
-            {/* 资产证券化新闻（横向滚动） */}
-            <NewsHorizontal />
-
-            {/* REITs 八张表数据预览 */}
-            <REITsTablePreview />
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          {/* 欢迎 banner */}
+          <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-xl p-6 text-white shadow-lg">
+            <h1 className="text-2xl font-bold mb-2">欢迎来到 REITs 智能助手</h1>
+            <p className="opacity-90 leading-relaxed">
+              多Agent协作系统 · 专业的REITs发行服务平台 · 全流程智能辅助
+            </p>
           </div>
 
-          {/* 右侧信息区 - 约42% (5列) */}
-          <div className="col-span-1 lg:col-span-5 space-y-6">
-            {/* 市场行情速览 */}
-            <MarketOverview />
+          {/* 核心 Agent 卡片墙 */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+              <span className="w-1 h-6 bg-blue-600 rounded mr-2" />
+              核心 Agent
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {agents.map((agent, index) => (
+                <AgentCard key={index} {...agent} />
+              ))}
+            </div>
+          </div>
 
-            {/* 匿名 BBS 话题 */}
+          {/* 估值计算器入口卡片 */}
+          <CalculatorEntrance />
+
+          {/* 资产证券化新闻（横向滚动） */}
+          <NewsHorizontal />
+
+          {/* REITs 八张表数据预览 */}
+          <REITsTablePreview />
+
+          {/* 市场行情 + BBS话题（并排） */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <MarketOverview />
             <BBSTopics />
           </div>
         </div>
