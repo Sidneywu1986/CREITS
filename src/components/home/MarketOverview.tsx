@@ -49,7 +49,7 @@ function Sparkline({ data }: { data: number[] }) {
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
-      className="stroke-gray-400 fill-none"
+      className="stroke-white/40 fill-none"
     >
       <polyline
         points={points}
@@ -63,15 +63,15 @@ function Sparkline({ data }: { data: number[] }) {
 
 export default function MarketOverview() {
   return (
-    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5 h-full">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-4 h-full">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-white">更多行情指标</h3>
         <Link href="/market">
           <span className="text-sm text-white/40 hover:text-white/60">···</span>
         </Link>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {marketData.slice(1).map((item, index) => (
           <div
             key={index}

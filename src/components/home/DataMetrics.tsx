@@ -36,8 +36,8 @@ function Sparkline({ data }: { data: number[] }) {
 
 function MetricCard({ label, value, change, isPositive, sparklineData }: MetricCardProps) {
   return (
-    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/15 transition-colors">
-      <div className="text-white/60 text-sm mb-2">{label}</div>
+    <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/15 transition-colors">
+      <div className="text-white/60 text-sm mb-1.5">{label}</div>
       <div className="flex items-end justify-between">
         <span className="text-2xl font-bold text-white">{value}</span>
         <span className={`text-sm font-medium ${
@@ -53,7 +53,7 @@ function MetricCard({ label, value, change, isPositive, sparklineData }: MetricC
         </span>
       </div>
       {sparklineData && (
-        <div className="mt-3">
+        <div className="mt-2">
           <Sparkline data={sparklineData} />
         </div>
       )}
