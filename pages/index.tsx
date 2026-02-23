@@ -63,8 +63,8 @@ export default function Home() {
 
           {/* 核心内容区 */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* 中间核心区 - 约75% (9列) */}
-            <div className="col-span-1 lg:col-span-9 space-y-6">
+            {/* 中间核心区 - 全宽 (12列) */}
+            <div className="col-span-1 lg:col-span-12 space-y-6">
               {/* 核心 Agent 卡片墙 */}
               <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5">
                 <h2 className="text-lg font-semibold text-white mb-4">
@@ -90,28 +90,6 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <MarketOverview />
                 <BBSTopics />
-              </div>
-            </div>
-
-            {/* 右侧信息区 - 约25% (3列) */}
-            <div className="col-span-1 lg:col-span-3 space-y-6">
-              {/* 更多行情指标 */}
-              <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-white mb-2">更多行情指标</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-1.5 border-b border-white/10">
-                    <span className="text-xs text-white/70">市盈率中位数</span>
-                    <span className="text-xs text-white">28.5x</span>
-                  </div>
-                  <div className="flex justify-between items-center py-1.5 border-b border-white/10">
-                    <span className="text-xs text-white/70">PB中位数</span>
-                    <span className="text-xs text-white">1.2x</span>
-                  </div>
-                  <div className="flex justify-between items-center py-1.5 border-b border-white/10">
-                    <span className="text-xs text-white/70">换手率</span>
-                    <span className="text-xs text-white">2.3%</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
