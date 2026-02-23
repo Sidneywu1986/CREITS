@@ -9,14 +9,14 @@ export default function CalculatorEntrance() {
   return (
     <Link href="/calculator">
       <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
-                <Calculator className="h-7 w-7 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                <Calculator className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1">
+                <h3 className="text-lg font-bold text-gray-800 mb-1">
                   REITs 估值计算器
                 </h3>
                 <p className="text-sm text-gray-600 flex items-center gap-2">

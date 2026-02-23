@@ -3,7 +3,7 @@ import AgentCard from '@/src/components/home/AgentCard';
 import CalculatorEntrance from '@/src/components/home/CalculatorEntrance';
 import REITsTablePreview from '@/src/components/home/REITsTablePreview';
 import MarketOverview from '@/src/components/home/MarketOverview';
-import NewsFeed from '@/src/components/home/NewsFeed';
+import NewsHorizontal from '@/src/components/home/NewsHorizontal';
 import BBSTopics from '@/src/components/home/BBSTopics';
 
 const agents = [
@@ -80,6 +80,9 @@ export default function Home() {
             {/* 估值计算器入口卡片 */}
             <CalculatorEntrance />
 
+            {/* 资产证券化新闻（横向滚动） */}
+            <NewsHorizontal />
+
             {/* REITs 八张表数据预览 */}
             <REITsTablePreview />
           </div>
@@ -88,9 +91,6 @@ export default function Home() {
           <div className="col-span-1 lg:col-span-5 space-y-6">
             {/* 市场行情速览 */}
             <MarketOverview />
-
-            {/* 资产证券化新闻 */}
-            <NewsFeed />
 
             {/* 匿名 BBS 话题 */}
             <BBSTopics />

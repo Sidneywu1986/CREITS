@@ -19,6 +19,9 @@ import {
   Settings,
   ChevronRight,
   Dot,
+  User,
+  ShieldCheck,
+  FileSearch,
 } from 'lucide-react';
 
 interface NavGroup {
@@ -32,6 +35,18 @@ interface NavGroup {
     badge?: string;
   }[];
 }
+
+interface QuickAgent {
+  name: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href: string;
+  color: string;
+}
+
+const quickAgents: QuickAgent[] = [
+  { name: '法务', icon: ShieldCheck, href: '/agents/legal', color: 'text-blue-600' },
+  { name: '尽调', icon: FileSearch, href: '/agents/due-diligence', color: 'text-green-600' },
+];
 
 const navigation: NavGroup[] = [
   {
@@ -88,7 +103,7 @@ export default function Sidebar() {
   return (
     <aside className="w-72 border-r bg-gray-50/50 dark:bg-gray-900/50 flex flex-col h-[calc(100vh-4rem)] overflow-y-auto">
       <nav className="flex-1 px-4 py-6 space-y-6">
-        {navigation.map((group) => (
+        {navigation.map((group, groupIndex) => (
           <div key={group.title}>
             {/* 组标题 */}
             <div className="flex items-center gap-2 mb-3">
@@ -97,6 +112,24 @@ export default function Sidebar() {
                 {group.title}
               </h3>
             </div>
+
+            {/* Agent快捷入口（仅Agent中心下显示） */}
+            {group.title === 'Agent 中心' && (
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {quickAgents.map((agent) => (
+                  <Link
+                    key={agent.name}
+                    href={agent.href}
+                    className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
+                  >
+                    <div className={cn('p-2 bg-gray-50 rounded-lg', agent.color)}>
+                      <agent.icon className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">{agent.name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
 
             {/* 导航项 */}
             <div className="space-y-1">
@@ -140,13 +173,23 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t">
+      {/* 用户信息卡片 */}
+      <div className="p-4 border-t bg-gray-50/50">
+        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center text-white font-semibold">
+            <User className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-800 truncate">用户名称</p>
+            <p className="text-xs text-gray-500 truncate">user@example.com</p>
+          </div>
+        </div>
         <Link
           href="/settings"
-          className="flex items-center px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-800 transition-all duration-200"
+          className="flex items-center justify-center px-3 py-2 mt-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-all duration-200"
         >
-          <Settings className="mr-3 h-4 w-4 text-gray-500" />
-          <span>设置</span>
+          <Settings className="mr-2 h-4 w-4" />
+          设置
         </Link>
       </div>
     </aside>
