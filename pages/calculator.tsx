@@ -11,7 +11,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -19,208 +18,102 @@ import {
   DollarSign,
   TrendingUp,
   PieChart,
-  BarChart,
   Download,
   RefreshCw,
   Info,
   ArrowRight,
+  Building2,
+  Percent,
 } from 'lucide-react';
 import Link from 'next/link';
-
-interface ValuationInput {
-  // 基础参数
-  currentPrice: number;
-  totalShares: number;
-  annualDistribution: number;
-  distributionYield: number;
-
-  // DCF参数
-  growthRate: number;
-  discountRate: number;
-  terminalGrowthRate: number;
-  projectionYears: number;
-
-  // 相对估值参数
-  peerAveragePE: number;
-  peerAveragePB: number;
-  peerAverageYield: number;
-  marketPE: number;
-  marketPB: number;
-}
-
-interface ValuationResult {
-  // DCF估值
-  dcfValue: number;
-  dcfPrice: number;
-  dcfUpsideDownside: number;
-
-  // 相对估值
-  peBasedPrice: number;
-  pbBasedPrice: number;
-  yieldBasedPrice: number;
-
-  // 综合估值
-  averagePrice: number;
-  impliedCapRate: number;
-
-  // 财务指标
-  nav: number;
-  ffoPerShare: number;
-  adjustedFfoPerShare: number;
-}
+import {
+  ValuationInput,
+  calculateDistributionYield,
+  calculateComprehensiveValuation,
+  downloadValuationReport,
+} from '@/lib/utils/valuation';
 
 export default function CalculatorPage() {
   const [inputs, setInputs] = useState<ValuationInput>({
-    currentPrice: 10,
+    currentPrice: 10.5,
     totalShares: 100000,
-    annualDistribution: 0.5,
-    distributionYield: 5,
+    annualDistribution: 0.52,
+    distributionYield: 4.95,
 
-    growthRate: 3,
-    discountRate: 8,
-    terminalGrowthRate: 2,
-    projectionYears: 10,
+    growthRate: 3.5,
+    discountRate: 8.0,
+    terminalGrowthRate: 2.0,
+    projectionYears: 5,
 
-    peerAveragePE: 15,
+    peerAveragePE: 15.0,
     peerAveragePB: 1.2,
     peerAverageYield: 4.5,
-    marketPE: 20,
-    marketPB: 1.5,
+    marketPE: 18.0,
+    marketPB: 1.4,
   });
 
-  const [result, setResult] = useState<ValuationResult | null>(null);
+  const [result, setResult] = useState<ReturnType<typeof calculateComprehensiveValuation> | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
   // 自动计算分红率
   useEffect(() => {
     if (inputs.currentPrice > 0 && inputs.annualDistribution > 0) {
-      const yieldRate = (inputs.annualDistribution / inputs.currentPrice) * 100;
-      setInputs(prev => ({ ...prev, distributionYield: Number(yieldRate.toFixed(2)) }));
+      const yieldRate = calculateDistributionYield(inputs.annualDistribution, inputs.currentPrice);
+      setInputs(prev => ({ ...prev, distributionYield: yieldRate }));
     }
   }, [inputs.currentPrice, inputs.annualDistribution]);
 
-  // DCF估值计算
-  const calculateDCF = () => {
-    const { currentPrice, annualDistribution, growthRate, discountRate, terminalGrowthRate, projectionYears } = inputs;
-    const growthRateDecimal = growthRate / 100;
-    const discountRateDecimal = discountRate / 100;
-    const terminalGrowthDecimal = terminalGrowthRate / 100;
+  // 监听参数变化，自动重新计算
+  useEffect(() => {
+    if (inputs.currentPrice > 0) {
+      setIsCalculating(true);
+      const timeoutId = setTimeout(() => {
+        const valuationResult = calculateComprehensiveValuation(inputs);
+        setResult(valuationResult);
+        setIsCalculating(false);
+      }, 300); // 防抖300ms
 
-    let presentValue = 0;
-
-    // 计算未来现金流的现值
-    for (let year = 1; year <= projectionYears; year++) {
-      const projectedCashFlow = annualDistribution * Math.pow(1 + growthRateDecimal, year);
-      const discountedCashFlow = projectedCashFlow / Math.pow(1 + discountRateDecimal, year);
-      presentValue += discountedCashFlow;
+      return () => clearTimeout(timeoutId);
     }
+  }, [inputs]);
 
-    // 计算终值
-    const terminalCashFlow = annualDistribution * Math.pow(1 + growthRateDecimal, projectionYears);
-    const terminalValue = (terminalCashFlow * (1 + terminalGrowthDecimal)) / (discountRateDecimal - terminalGrowthDecimal);
-    const discountedTerminalValue = terminalValue / Math.pow(1 + discountRateDecimal, projectionYears);
-
-    const totalPresentValue = presentValue + discountedTerminalValue;
-    const dcfPrice = totalPresentValue;
-    const upsideDownside = ((dcfPrice - currentPrice) / currentPrice) * 100;
-
-    return {
-      value: totalPresentValue,
-      price: dcfPrice,
-      upsideDownside: Number(upsideDownside.toFixed(2)),
-    };
-  };
-
-  // 相对估值计算
-  const calculateRelativeValuation = () => {
-    const { currentPrice, annualDistribution, peerAveragePE, peerAveragePB, peerAverageYield, marketPE, marketPB } = inputs;
-
-    // 假设每股收益为 annualDistribution * 0.8 (保守估计)
-    const eps = annualDistribution * 0.8;
-    const nav = currentPrice / 1.2;
-
-    // PE法估值
-    const peBasedPrice = eps * peerAveragePE;
-
-    // PB法估值
-    const pbBasedPrice = nav * peerAveragePB;
-
-    // 收益率法估值
-    const yieldBasedPrice = annualDistribution / (peerAverageYield / 100);
-
-    return {
-      peBasedPrice: Number(peBasedPrice.toFixed(2)),
-      pbBasedPrice: Number(pbBasedPrice.toFixed(2)),
-      yieldBasedPrice: Number(yieldBasedPrice.toFixed(2)),
-      eps,
-      nav: Number(nav.toFixed(2)),
-    };
-  };
-
-  // 综合估值计算
-  const handleCalculate = () => {
-    setIsCalculating(true);
-
-    setTimeout(() => {
-      const dcfResult = calculateDCF();
-      const relativeResult = calculateRelativeValuation();
-
-      // 综合估值（DCF权重40%，PE权重30%，PB权重30%）
-      const averagePrice =
-        dcfResult.price * 0.4 +
-        relativeResult.peBasedPrice * 0.3 +
-        relativeResult.pbBasedPrice * 0.3;
-
-      // 隐含资本化率
-      const impliedCapRate = (inputs.annualDistribution / averagePrice) * 100;
-
-      setResult({
-        dcfValue: dcfResult.value,
-        dcfPrice: Number(dcfResult.price.toFixed(2)),
-        dcfUpsideDownside: dcfResult.upsideDownside,
-
-        peBasedPrice: relativeResult.peBasedPrice,
-        pbBasedPrice: relativeResult.pbBasedPrice,
-        yieldBasedPrice: relativeResult.yieldBasedPrice,
-
-        averagePrice: Number(averagePrice.toFixed(2)),
-        impliedCapRate: Number(impliedCapRate.toFixed(2)),
-
-        nav: relativeResult.nav,
-        ffoPerShare: Number((relativeResult.eps * 1.1).toFixed(2)),
-        adjustedFfoPerShare: Number((relativeResult.eps * 1.15).toFixed(2)),
-      });
-
-      setIsCalculating(false);
-    }, 500);
+  // 更新输入参数
+  const updateInput = (field: keyof ValuationInput, value: number) => {
+    setInputs(prev => ({ ...prev, [field]: value }));
   };
 
   // 重置输入
   const handleReset = () => {
     setInputs({
-      currentPrice: 10,
+      currentPrice: 10.5,
       totalShares: 100000,
-      annualDistribution: 0.5,
-      distributionYield: 5,
+      annualDistribution: 0.52,
+      distributionYield: 4.95,
 
-      growthRate: 3,
-      discountRate: 8,
-      terminalGrowthRate: 2,
-      projectionYears: 10,
+      growthRate: 3.5,
+      discountRate: 8.0,
+      terminalGrowthRate: 2.0,
+      projectionYears: 5,
 
-      peerAveragePE: 15,
+      peerAveragePE: 15.0,
       peerAveragePB: 1.2,
       peerAverageYield: 4.5,
-      marketPE: 20,
-      marketPB: 1.5,
+      marketPE: 18.0,
+      marketPB: 1.4,
     });
-    setResult(null);
+  };
+
+  // 导出估值报告
+  const handleExport = () => {
+    if (result) {
+      downloadValuationReport(inputs, result, 'REITs估值');
+    }
   };
 
   return (
-    <div className="container mx-auto px-6 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* 头部 */}
-      <div className="mb-6">
+      <div className="mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Link href="/">
@@ -229,368 +122,469 @@ export default function CalculatorPage() {
                 返回
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold flex items-center">
-              <Calculator className="mr-3 text-[#667eea]" />
-              REITs 估值计算器
-            </h1>
+            <div>
+              <h1 className="text-3xl font-bold flex items-center">
+                <Calculator className="mr-3 h-8 w-8 text-[#667eea]" />
+                REITs 估值计算器
+              </h1>
+              <p className="text-gray-600 mt-2">
+                综合估值分析工具 - 支持DCF估值、相对估值等多种估值方法
+              </p>
+            </div>
           </div>
-          <Button variant="outline" onClick={handleReset}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            重置
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleReset}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              重置
+            </Button>
+            <Button onClick={handleExport} disabled={!result}>
+              <Download className="mr-2 h-4 w-4" />
+              导出报告
+            </Button>
+          </div>
         </div>
-        <p className="text-gray-600 mt-2 ml-20">
-          综合估值分析工具 - 支持DCF估值、相对估值等多种估值方法
-        </p>
       </div>
 
-      {/* 估值计算器 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <DollarSign className="mr-2 text-[#667eea]" />
-            估值参数设置
-          </CardTitle>
-          <CardDescription>
-            输入REITs产品的基础参数和市场参数，系统将自动计算估值结果
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="p-6">
-          <Tabs defaultValue="inputs" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="inputs">输入参数</TabsTrigger>
-              <TabsTrigger value="results" disabled={!result}>
-                估值结果
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="inputs" className="space-y-6">
-              {/* 基础参数 */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
-                  <DollarSign className="mr-2 h-5 w-5 text-blue-600" />
-                  基础参数
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPrice">当前价格 (元)</Label>
-                    <Input
-                      id="currentPrice"
-                      type="number"
-                      step="0.01"
-                      value={inputs.currentPrice}
-                      onChange={(e) => setInputs({ ...inputs, currentPrice: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="totalShares">总股本 (万股)</Label>
-                    <Input
-                      id="totalShares"
-                      type="number"
-                      value={inputs.totalShares}
-                      onChange={(e) => setInputs({ ...inputs, totalShares: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="annualDistribution">年度分红 (元/份)</Label>
-                    <Input
-                      id="annualDistribution"
-                      type="number"
-                      step="0.01"
-                      value={inputs.annualDistribution}
-                      onChange={(e) => setInputs({ ...inputs, annualDistribution: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="distributionYield">分红率 (%)</Label>
-                    <Input
-                      id="distributionYield"
-                      type="number"
-                      step="0.01"
-                      value={inputs.distributionYield}
-                      disabled
-                    />
-                  </div>
+      {/* 两栏布局 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* 左侧：参数输入表单 */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* 基础参数 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <DollarSign className="mr-2 h-5 w-5 text-blue-600" />
+                基础参数
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPrice">
+                    当前价格 <span className="text-red-500">*</span>
+                    <span className="text-xs text-gray-500 ml-1">(元)</span>
+                  </Label>
+                  <Input
+                    id="currentPrice"
+                    type="number"
+                    step="0.01"
+                    value={inputs.currentPrice}
+                    onChange={(e) => updateInput('currentPrice', Number(e.target.value))}
+                    className="text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="totalShares">
+                    总股本 <span className="text-red-500">*</span>
+                    <span className="text-xs text-gray-500 ml-1">(万股)</span>
+                  </Label>
+                  <Input
+                    id="totalShares"
+                    type="number"
+                    step="0.01"
+                    value={inputs.totalShares}
+                    onChange={(e) => updateInput('totalShares', Number(e.target.value))}
+                    className="text-base"
+                  />
                 </div>
               </div>
-
-              <Separator />
-
-              {/* DCF参数 */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
-                  <TrendingUp className="mr-2 h-5 w-5 text-green-600" />
-                  DCF估值参数
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="growthRate">增长率 (%)</Label>
-                    <Input
-                      id="growthRate"
-                      type="number"
-                      step="0.1"
-                      value={inputs.growthRate}
-                      onChange={(e) => setInputs({ ...inputs, growthRate: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="discountRate">折现率 (%)</Label>
-                    <Input
-                      id="discountRate"
-                      type="number"
-                      step="0.1"
-                      value={inputs.discountRate}
-                      onChange={(e) => setInputs({ ...inputs, discountRate: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="terminalGrowthRate">终值增长率 (%)</Label>
-                    <Input
-                      id="terminalGrowthRate"
-                      type="number"
-                      step="0.1"
-                      value={inputs.terminalGrowthRate}
-                      onChange={(e) => setInputs({ ...inputs, terminalGrowthRate: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="projectionYears">预测年数 (年)</Label>
-                    <Input
-                      id="projectionYears"
-                      type="number"
-                      min="1"
-                      max="30"
-                      value={inputs.projectionYears}
-                      onChange={(e) => setInputs({ ...inputs, projectionYears: Number(e.target.value) })}
-                    />
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="annualDistribution">
+                    年度分红 <span className="text-red-500">*</span>
+                    <span className="text-xs text-gray-500 ml-1">(元/份)</span>
+                  </Label>
+                  <Input
+                    id="annualDistribution"
+                    type="number"
+                    step="0.01"
+                    value={inputs.annualDistribution}
+                    onChange={(e) => updateInput('annualDistribution', Number(e.target.value))}
+                    className="text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="distributionYield">
+                    分红率
+                    <span className="text-xs text-gray-500 ml-1">(%)</span>
+                  </Label>
+                  <Input
+                    id="distributionYield"
+                    type="number"
+                    step="0.01"
+                    value={inputs.distributionYield}
+                    disabled
+                    className="text-base bg-gray-50"
+                  />
+                  <p className="text-xs text-gray-500">根据年度分红自动计算</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <Separator />
-
-              {/* 相对估值参数 */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
-                  <PieChart className="mr-2 h-5 w-5 text-purple-600" />
-                  相对估值参数
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="peerAveragePE">可比公司平均PE</Label>
-                    <Input
-                      id="peerAveragePE"
-                      type="number"
-                      step="0.1"
-                      value={inputs.peerAveragePE}
-                      onChange={(e) => setInputs({ ...inputs, peerAveragePE: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="peerAveragePB">可比公司平均PB</Label>
-                    <Input
-                      id="peerAveragePB"
-                      type="number"
-                      step="0.01"
-                      value={inputs.peerAveragePB}
-                      onChange={(e) => setInputs({ ...inputs, peerAveragePB: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="peerAverageYield">可比公司平均分红率 (%)</Label>
-                    <Input
-                      id="peerAverageYield"
-                      type="number"
-                      step="0.1"
-                      value={inputs.peerAverageYield}
-                      onChange={(e) => setInputs({ ...inputs, peerAverageYield: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="marketPE">市场平均PE</Label>
-                    <Input
-                      id="marketPE"
-                      type="number"
-                      step="0.1"
-                      value={inputs.marketPE}
-                      onChange={(e) => setInputs({ ...inputs, marketPE: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="marketPB">市场平均PB</Label>
-                    <Input
-                      id="marketPB"
-                      type="number"
-                      step="0.01"
-                      value={inputs.marketPB}
-                      onChange={(e) => setInputs({ ...inputs, marketPB: Number(e.target.value) })}
-                    />
-                  </div>
+          {/* DCF估值参数 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <TrendingUp className="mr-2 h-5 w-5 text-green-600" />
+                DCF估值参数
+              </CardTitle>
+              <CardDescription>现金流折现法参数设置</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="growthRate">
+                    增长率
+                    <span className="text-xs text-gray-500 ml-1">(%)</span>
+                  </Label>
+                  <Input
+                    id="growthRate"
+                    type="number"
+                    step="0.1"
+                    value={inputs.growthRate}
+                    onChange={(e) => updateInput('growthRate', Number(e.target.value))}
+                    className="text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="discountRate">
+                    折现率
+                    <span className="text-xs text-gray-500 ml-1">(%)</span>
+                  </Label>
+                  <Input
+                    id="discountRate"
+                    type="number"
+                    step="0.1"
+                    value={inputs.discountRate}
+                    onChange={(e) => updateInput('discountRate', Number(e.target.value))}
+                    className="text-base"
+                  />
                 </div>
               </div>
-
-              {/* 计算按钮 */}
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleCalculate}
-                  disabled={isCalculating}
-                  className="w-full md:w-auto"
-                  size="lg"
-                >
-                  {isCalculating ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      计算中...
-                    </>
-                  ) : (
-                    <>
-                      <Calculator className="mr-2 h-4 w-4" />
-                      开始估值计算
-                    </>
-                  )}
-                </Button>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="terminalGrowthRate">
+                    终值增长率
+                    <span className="text-xs text-gray-500 ml-1">(%)</span>
+                  </Label>
+                  <Input
+                    id="terminalGrowthRate"
+                    type="number"
+                    step="0.1"
+                    value={inputs.terminalGrowthRate}
+                    onChange={(e) => updateInput('terminalGrowthRate', Number(e.target.value))}
+                    className="text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="projectionYears">
+                    预测年数
+                    <span className="text-xs text-gray-500 ml-1">(年)</span>
+                  </Label>
+                  <Input
+                    id="projectionYears"
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={inputs.projectionYears}
+                    onChange={(e) => updateInput('projectionYears', Number(e.target.value))}
+                    className="text-base"
+                  />
+                </div>
               </div>
-            </TabsContent>
+            </CardContent>
+          </Card>
 
-            <TabsContent value="results" className="space-y-6">
-              {result && (
-                <>
-                  {/* 综合估值结果 */}
-                  <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white p-6 rounded-lg">
-                    <h3 className="text-xl font-bold mb-4 flex items-center">
-                      <BarChart className="mr-2 h-6 w-6" />
-                      综合估值结果
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-sm opacity-90">目标价格</p>
-                        <p className="text-3xl font-bold">¥{result.averagePrice.toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm opacity-90">当前价格</p>
-                        <p className="text-3xl font-bold">¥{inputs.currentPrice.toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm opacity-90">涨跌幅</p>
-                        <p className={`text-3xl font-bold ${result.dcfUpsideDownside >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                          {result.dcfUpsideDownside >= 0 ? '+' : ''}{result.dcfUpsideDownside.toFixed(2)}%
+          {/* 相对估值参数 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <PieChart className="mr-2 h-5 w-5 text-purple-600" />
+                相对估值参数
+              </CardTitle>
+              <CardDescription>行业对标参数设置</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="peerAveragePE">
+                    可比公司PE
+                  </Label>
+                  <Input
+                    id="peerAveragePE"
+                    type="number"
+                    step="0.1"
+                    value={inputs.peerAveragePE}
+                    onChange={(e) => updateInput('peerAveragePE', Number(e.target.value))}
+                    className="text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="peerAveragePB">
+                    可比公司PB
+                  </Label>
+                  <Input
+                    id="peerAveragePB"
+                    type="number"
+                    step="0.01"
+                    value={inputs.peerAveragePB}
+                    onChange={(e) => updateInput('peerAveragePB', Number(e.target.value))}
+                    className="text-base"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="peerAverageYield">
+                    可比分红率
+                    <span className="text-xs text-gray-500 ml-1">(%)</span>
+                  </Label>
+                  <Input
+                    id="peerAverageYield"
+                    type="number"
+                    step="0.1"
+                    value={inputs.peerAverageYield}
+                    onChange={(e) => updateInput('peerAverageYield', Number(e.target.value))}
+                    className="text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="marketPE">
+                    市场PE
+                    <span className="text-xs text-gray-500 ml-1">(可选)</span>
+                  </Label>
+                  <Input
+                    id="marketPE"
+                    type="number"
+                    step="0.1"
+                    value={inputs.marketPE}
+                    onChange={(e) => updateInput('marketPE', Number(e.target.value))}
+                    className="text-base"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="marketPB">
+                  市场PB
+                  <span className="text-xs text-gray-500 ml-1">(可选)</span>
+                </Label>
+                <Input
+                  id="marketPB"
+                  type="number"
+                  step="0.01"
+                  value={inputs.marketPB}
+                  onChange={(e) => updateInput('marketPB', Number(e.target.value))}
+                  className="text-base"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 右侧：估值结果展示 */}
+        <div className="lg:col-span-7 space-y-6">
+          {result ? (
+            <>
+              {/* 综合估值卡片 */}
+              <Card className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white border-0">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-2xl">
+                    <Calculator className="mr-3 h-8 w-8" />
+                    综合估值结果
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-sm opacity-90 mb-2">综合目标价</p>
+                      <p className="text-4xl font-bold">¥{result.targetPrice.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm opacity-90 mb-2">当前价格</p>
+                      <p className="text-4xl font-bold">¥{inputs.currentPrice.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm opacity-90 mb-2">涨跌幅</p>
+                      <div className="flex items-center gap-2">
+                        <p className={`text-4xl font-bold ${result.upsideDownside >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                          {result.upsideDownside >= 0 ? '+' : ''}{result.upsideDownside.toFixed(2)}%
                         </p>
                       </div>
                     </div>
                   </div>
+                  <Separator className="my-4 bg-white/20" />
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant="outline"
+                      className={
+                        result.recommendation === 'buy'
+                          ? 'border-green-400 text-green-300 bg-green-400/20'
+                          : result.recommendation === 'sell'
+                          ? 'border-red-400 text-red-300 bg-red-400/20'
+                          : 'border-yellow-400 text-yellow-300 bg-yellow-400/20'
+                      }
+                    >
+                      <Info className="mr-1 h-4 w-4" />
+                      {result.recommendationText}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
 
-                  <Separator />
+              {/* DCF估值卡片 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center text-lg">
+                    <TrendingUp className="mr-2 h-5 w-5 text-green-600" />
+                    DCF估值
+                    <Badge variant="outline" className="ml-2">权重 50%</Badge>
+                  </CardTitle>
+                  <CardDescription>现金流折现法（两阶段模型）</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-sm text-gray-600 mb-1">DCF目标价</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          ¥{result.dcfPrice.toFixed(2)}
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-sm text-gray-600 mb-1">潜在涨跌幅</p>
+                        <p className={`text-2xl font-bold ${result.dcfUpsideDownside >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {result.dcfUpsideDownside >= 0 ? '+' : ''}{result.dcfUpsideDownside}%
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-sm text-gray-600 mb-1">折现率</p>
+                        <p className="text-2xl font-bold">{inputs.discountRate}%</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600">
+                      <strong>关键假设：</strong>
+                      增长率 {inputs.growthRate}%，终值增长率 {inputs.terminalGrowthRate}%，
+                      预测年数 {inputs.projectionYears} 年
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
 
-                  {/* DCF估值结果 */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4 flex items-center">
-                      <TrendingUp className="mr-2 h-5 w-5 text-green-600" />
-                      DCF估值
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">DCF估值价格</p>
-                          <p className="text-2xl font-bold">¥{result.dcfPrice.toFixed(2)}</p>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">DCF现值</p>
-                          <p className="text-2xl font-bold">¥{result.dcfValue.toFixed(2)}</p>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">潜在涨跌幅</p>
-                          <p className={`text-2xl font-bold ${result.dcfUpsideDownside >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {result.dcfUpsideDownside >= 0 ? '+' : ''}{result.dcfUpsideDownside}%
-                          </p>
-                        </CardContent>
-                      </Card>
+              {/* 相对估值卡片 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center text-lg">
+                    <PieChart className="mr-2 h-5 w-5 text-purple-600" />
+                    相对估值
+                    <Badge variant="outline" className="ml-2">权重 50%</Badge>
+                  </CardTitle>
+                  <CardDescription>PE法、PB法、收益率法</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-sm text-gray-600 mb-1">PE法估值</p>
+                        <p className="text-2xl font-bold">¥{result.peBasedPrice.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500 mt-1">可比PE: {inputs.peerAveragePE}</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-sm text-gray-600 mb-1">PB法估值</p>
+                        <p className="text-2xl font-bold">¥{result.pbBasedPrice.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500 mt-1">可比PB: {inputs.peerAveragePB}</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-sm text-gray-600 mb-1">收益率法估值</p>
+                        <p className="text-2xl font-bold">¥{result.yieldBasedPrice.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500 mt-1">可比分红率: {inputs.peerAverageYield}%</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">相对估值平均价</span>
+                      <span className="text-2xl font-bold text-purple-600">
+                        ¥{result.relativePrice.toFixed(2)}
+                      </span>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <Separator />
-
-                  {/* 相对估值结果 */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4 flex items-center">
-                      <PieChart className="mr-2 h-5 w-5 text-purple-600" />
-                      相对估值
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">PE法估值</p>
-                          <p className="text-2xl font-bold">¥{result.peBasedPrice.toFixed(2)}</p>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">PB法估值</p>
-                          <p className="text-2xl font-bold">¥{result.pbBasedPrice.toFixed(2)}</p>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">收益率法估值</p>
-                          <p className="text-2xl font-bold">¥{result.yieldBasedPrice.toFixed(2)}</p>
-                        </CardContent>
-                      </Card>
-                    </div>
+              {/* 关键财务指标 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center text-lg">
+                    <Building2 className="mr-2 h-5 w-5 text-blue-600" />
+                    关键财务指标
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Building2 className="h-4 w-4 text-blue-600" />
+                          <p className="text-sm text-gray-600">NAV</p>
+                        </div>
+                        <p className="text-2xl font-bold">¥{result.nav.toFixed(2)}</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-2 mb-1">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <p className="text-sm text-gray-600">FFO/份</p>
+                        </div>
+                        <p className="text-2xl font-bold">¥{result.ffoPerShare.toFixed(2)}</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Percent className="h-4 w-4 text-purple-600" />
+                          <p className="text-sm text-gray-600">P/FFO</p>
+                        </div>
+                        <p className="text-2xl font-bold">{result.pFFO.toFixed(2)}</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="h-4 w-4 text-orange-600" />
+                          <p className="text-sm text-gray-600">股息率</p>
+                        </div>
+                        <p className="text-2xl font-bold">{result.distributionYield.toFixed(2)}%</p>
+                      </CardContent>
+                    </Card>
                   </div>
-
-                  <Separator />
-
-                  {/* 财务指标 */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4 flex items-center">
-                      <Info className="mr-2 h-5 w-5 text-blue-600" />
-                      关键财务指标
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">NAV (元)</p>
-                          <p className="text-2xl font-bold">¥{result.nav.toFixed(2)}</p>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">FFO/份 (元)</p>
-                          <p className="text-2xl font-bold">¥{result.ffoPerShare.toFixed(2)}</p>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">调整后FFO/份 (元)</p>
-                          <p className="text-2xl font-bold">¥{result.adjustedFfoPerShare.toFixed(2)}</p>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="pt-6">
-                          <p className="text-sm text-gray-600">隐含资本化率 (%)</p>
-                          <p className="text-2xl font-bold">{result.impliedCapRate.toFixed(2)}%</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-
-                  {/* 导出按钮 */}
-                  <div className="flex justify-end">
-                    <Button variant="outline">
-                      <Download className="mr-2 h-4 w-4" />
-                      导出估值报告
-                    </Button>
-                  </div>
-                </>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center text-gray-500">
+                  <Calculator className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">等待输入参数</p>
+                  <p className="text-sm mt-2">在左侧输入参数后，估值结果将自动显示</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
