@@ -77,17 +77,10 @@ export default function DataMetrics() {
       isPositive: false,
       sparklineData: [10, 14, 12, 16, 13, 9, 11],
     },
-    {
-      label: '待发行项目',
-      value: '3个',
-      change: '-',
-      isPositive: null,
-      sparklineData: [5, 5, 6, 4, 4, 3, 3],
-    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {metrics.map((metric, index) => (
         <MetricCard key={index} {...metric} />
       ))}
