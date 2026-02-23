@@ -35,11 +35,11 @@ export default function MarketOverview() {
               key={index}
               className="flex items-center justify-between py-2 border-b last:border-0 border-gray-100"
             >
-              <span className="text-sm text-gray-600">{item.label}</span>
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-gray-800">{item.value}</span>
+              <span className="text-xs sm:text-sm text-gray-600 min-w-[70px]">{item.label}</span>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="text-xs sm:text-sm font-semibold text-gray-800">{item.value}</span>
                 <span
-                  className={`text-xs font-medium flex items-center ${
+                  className={`text-xs font-medium flex items-center whitespace-nowrap ${
                     item.isPositive === true
                       ? 'text-green-600'
                       : item.isPositive === false

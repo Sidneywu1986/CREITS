@@ -46,14 +46,14 @@ export default function NewsFeed() {
         <div className="space-y-3">
           {newsItems.map((item, index) => (
             <Link key={index} href={item.url} className="block">
-              <div className="p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
-                <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 transition-colors mb-1">
+              <div className="p-2 sm:p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
+                <p className="text-xs sm:text-sm font-medium text-gray-800 group-hover:text-blue-600 transition-colors mb-1 line-clamp-2">
                   {item.title}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>{item.source}</span>
+                  <span className="truncate">{item.source}</span>
                   <span>·</span>
-                  <span className="flex items-center">
+                  <span className="flex items-center whitespace-nowrap">
                     <Clock className="h-3 w-3 mr-0.5" />
                     {item.time}
                   </span>
