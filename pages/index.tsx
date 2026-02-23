@@ -13,29 +13,29 @@ export default function Home() {
           欢迎使用 REITs 智能助手系统
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Link href="/issuance-status">
-            <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200 hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <h2 className="text-xl font-semibold mb-2 text-blue-700">发行状态跟踪</h2>
-              <p className="text-sm text-gray-600">实时跟踪REITs和ABS产品从申请到上市的全过程</p>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
+              <h2 className="text-lg font-semibold mb-2 text-blue-700">发行状态跟踪</h2>
+              <p className="text-sm text-gray-600">跟踪REITs/ABS发行进度</p>
             </div>
           </Link>
           <Link href="/issued-reits">
-            <div className="bg-purple-50 p-6 rounded-lg border-2 border-purple-200 hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <h2 className="text-xl font-semibold mb-2 text-purple-700">已发行REITs</h2>
-              <p className="text-sm text-gray-600">查看市场上已发行的REITs产品实时行情</p>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
+              <h2 className="text-lg font-semibold mb-2 text-purple-700">已发行 REITs</h2>
+              <p className="text-sm text-gray-600">查看已上市REITs列表</p>
             </div>
           </Link>
           <Link href="/abs-dashboard">
-            <div className="bg-green-50 p-6 rounded-lg border-2 border-green-200 hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <h2 className="text-xl font-semibold mb-2 text-green-700">已发行ABS</h2>
-              <p className="text-sm text-gray-600">查看已发行的ABS项目信息和票面利率</p>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
+              <h2 className="text-lg font-semibold mb-2 text-green-700">已发行 ABS</h2>
+              <p className="text-sm text-gray-600">ABS产品概览与详情</p>
             </div>
           </Link>
           <Link href="/calculator">
-            <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-200 hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <h2 className="text-xl font-semibold mb-2 text-orange-700">估值计算器</h2>
-              <p className="text-sm text-gray-600">REITs产品估值分析工具，支持DCF、相对估值等方法</p>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
+              <h2 className="text-lg font-semibold mb-2 text-orange-700">估值计算器</h2>
+              <p className="text-sm text-gray-600">DCF/相对估值综合分析</p>
             </div>
           </Link>
         </div>

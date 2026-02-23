@@ -2,171 +2,77 @@
  * 估值计算工具函数
  */
 
-// 基础参数接口
-export interface ValuationInput {
-  // 基础参数
-  currentPrice: number;        // 当前价格（元）
-  totalShares: number;         // 总股本（万股）
-  annualDistribution: number;  // 年度分红（元/份）
-  distributionYield: number;   // 分红率（%）
-
-  // DCF估值参数
-  growthRate: number;          // 增长率（%）
-  discountRate: number;        // 折现率（%）
-  terminalGrowthRate: number;  // 终值增长率（%）
-  projectionYears: number;     // 预测年数
-
-  // 相对估值参数
-  peerAveragePE: number;       // 可比公司PE
-  peerAveragePB: number;       // 可比公司PB
-  peerAverageYield: number;    // 可比分红率（%）
-  marketPE?: number;           // 市场PE（可选）
-  marketPB?: number;           // 市场PB（可选）
-}
-
-// DCF估值结果
-export interface DCFResult {
-  presentValue: number;        // 现值总和
-  terminalValue: number;       // 终值
-  dcfPrice: number;            // DCF目标价
-  upsideDownside: number;      // 潜在涨跌幅（%）
-  cashFlows: number[];         // 现金流序列
-  discountedCashFlows: number[]; // 折现现金流序列
-}
-
-// 相对估值结果
-export interface RelativeValuationResult {
-  peBasedPrice: number;        // PE法估值价
-  pbBasedPrice: number;        // PB法估值价
-  yieldBasedPrice: number;     // 收益率法估值价
-  averagePrice: number;        // 相对估值平均价
-  eps: number;                 // 每股收益（元）
-  nav: number;                 // 每股净资产（元）
-}
-
-// 综合估值结果
-export interface ValuationResult {
-  // DCF估值
-  dcfPrice: number;
-  dcfUpsideDownside: number;
-
-  // 相对估值
-  peBasedPrice: number;
-  pbBasedPrice: number;
-  yieldBasedPrice: number;
-  relativePrice: number;
-
-  // 综合估值
-  targetPrice: number;         // 综合目标价
-  upsideDownside: number;      // 涨跌幅（%）
-
-  // 财务指标
-  distributionYield: number;   // 股息率（%）
-  nav: number;                 // 每股净资产（元）
-  ffoPerShare: number;         // FFO/份（元）
-  pFFO: number;                // P/FFO
-
-  // 投资建议
-  recommendation: 'buy' | 'hold' | 'sell';
-  recommendationText: string;
-}
+import type {
+  ValuationInput,
+  DCFInput,
+  RelativeInput,
+  RelativeResult,
+  ValuationResult,
+  ValuationReportData,
+} from '@/types/valuation';
 
 /**
  * 计算分红率
  */
-export function calculateDistributionYield(
-  annualDistribution: number,
+export function calculateDividendYield(
+  annualDividend: number,
   currentPrice: number
 ): number {
   if (currentPrice === 0) return 0;
-  return Number((annualDistribution / currentPrice * 100).toFixed(2));
+  return Number((annualDividend / currentPrice * 100).toFixed(2));
 }
 
 /**
  * DCF估值计算（两阶段模型）
  */
-export function calculateDCF(inputs: ValuationInput): DCFResult {
-  const {
-    currentPrice,
-    annualDistribution,
-    growthRate,
-    discountRate,
-    terminalGrowthRate,
-    projectionYears
-  } = inputs;
-
-  const growthRateDecimal = growthRate / 100;
-  const discountRateDecimal = discountRate / 100;
-  const terminalGrowthDecimal = terminalGrowthRate / 100;
+export function calculateDCF(input: DCFInput): number {
+  const { dividend, growthRate, discountRate, terminalGrowthRate, years } = input;
 
   let presentValue = 0;
-  const cashFlows: number[] = [];
-  const discountedCashFlows: number[] = [];
 
-  // 第一阶段：预测未来现金流
-  for (let year = 1; year <= projectionYears; year++) {
-    const projectedCashFlow = annualDistribution * Math.pow(1 + growthRateDecimal, year);
-    const discountedCashFlow = projectedCashFlow / Math.pow(1 + discountRateDecimal, year);
-    presentValue += discountedCashFlow;
-    cashFlows.push(Number(projectedCashFlow.toFixed(2)));
-    discountedCashFlows.push(Number(discountedCashFlow.toFixed(2)));
+  // 第一阶段：逐年折现
+  for (let i = 1; i <= years; i++) {
+    const fcf = dividend * Math.pow(1 + growthRate, i);
+    presentValue += fcf / Math.pow(1 + discountRate, i);
   }
 
-  // 第二阶段：计算终值
-  const terminalCashFlow = annualDistribution * Math.pow(1 + growthRateDecimal, projectionYears);
-  const terminalValue = (terminalCashFlow * (1 + terminalGrowthDecimal)) / (discountRateDecimal - terminalGrowthDecimal);
-  const discountedTerminalValue = terminalValue / Math.pow(1 + discountRateDecimal, projectionYears);
+  // 终值
+  const terminalFCF = dividend * Math.pow(1 + growthRate, years) * (1 + terminalGrowthRate);
+  const terminalValue = terminalFCF / (discountRate - terminalGrowthRate);
+  presentValue += terminalValue / Math.pow(1 + discountRate, years);
 
-  const totalPresentValue = presentValue + discountedTerminalValue;
-  const dcfPrice = totalPresentValue;
-  const upsideDownside = ((dcfPrice - currentPrice) / currentPrice) * 100;
-
-  return {
-    presentValue: Number(totalPresentValue.toFixed(2)),
-    terminalValue: Number(terminalValue.toFixed(2)),
-    dcfPrice: Number(dcfPrice.toFixed(2)),
-    upsideDownside: Number(upsideDownside.toFixed(2)),
-    cashFlows,
-    discountedCashFlows
-  };
+  return Number(presentValue.toFixed(2));
 }
 
 /**
  * 相对估值计算
  */
-export function calculateRelativeValuation(inputs: ValuationInput): RelativeValuationResult {
+export function calculateRelative(input: RelativeInput): RelativeResult {
   const {
-    currentPrice,
-    annualDistribution,
-    peerAveragePE,
-    peerAveragePB,
-    peerAverageYield
-  } = inputs;
+    dividend,
+    peComparable,
+    pbComparable,
+    dividendYieldComparable,
+    bookValuePerShare = 10,
+  } = input;
 
-  // 假设每股收益为年度分红的80%（保守估计）
-  const eps = annualDistribution * 0.8;
-  // 假设每股净资产为当前价格的83%
-  const nav = currentPrice / 1.2;
-
-  // PE法估值：每股收益 × 可比PE
-  const peBasedPrice = eps * peerAveragePE;
+  // PE法估值：使用收益率法（股息率法）
+  const peValue = dividend / dividendYieldComparable;
 
   // PB法估值：每股净资产 × 可比PB
-  const pbBasedPrice = nav * peerAveragePB;
+  const pbValue = bookValuePerShare * pbComparable;
 
-  // 收益率法估值：年度分红 / 可比分红率
-  const yieldBasedPrice = annualDistribution / (peerAverageYield / 100);
+  // 收益率法估值（与PE法相同，但可区分）
+  const yieldValue = dividend / dividendYieldComparable;
 
-  // 相对估值平均价（三种方法平均）
-  const averagePrice = (peBasedPrice + pbBasedPrice + yieldBasedPrice) / 3;
+  // 取三种方法的平均值作为相对估值结果
+  const average = (peValue + pbValue + yieldValue) / 3;
 
   return {
-    peBasedPrice: Number(peBasedPrice.toFixed(2)),
-    pbBasedPrice: Number(pbBasedPrice.toFixed(2)),
-    yieldBasedPrice: Number(yieldBasedPrice.toFixed(2)),
-    averagePrice: Number(averagePrice.toFixed(2)),
-    eps: Number(eps.toFixed(2)),
-    nav: Number(nav.toFixed(2))
+    peValue: Number(peValue.toFixed(2)),
+    pbValue: Number(pbValue.toFixed(2)),
+    yieldValue: Number(yieldValue.toFixed(2)),
+    average: Number(average.toFixed(2)),
   };
 }
 
@@ -178,159 +84,110 @@ export function calculateComprehensiveValuation(
   dcfWeight: number = 0.5,
   relativeWeight: number = 0.5
 ): ValuationResult {
-  const dcfResult = calculateDCF(inputs);
-  const relativeResult = calculateRelativeValuation(inputs);
+  // DCF估值
+  const dcfInput: DCFInput = {
+    dividend: inputs.annualDividend,
+    growthRate: inputs.growthRate / 100,
+    discountRate: inputs.discountRate / 100,
+    terminalGrowthRate: inputs.terminalGrowthRate / 100,
+    years: inputs.forecastYears,
+  };
+  const dcfValue = calculateDCF(dcfInput);
+  const dcfUpsideDownside = Number(((dcfValue - inputs.currentPrice) / inputs.currentPrice * 100).toFixed(2));
 
-  // 综合目标价（DCF + 相对估值）
-  const targetPrice = dcfResult.dcfPrice * dcfWeight + relativeResult.averagePrice * relativeWeight;
+  // 相对估值
+  const relativeInput: RelativeInput = {
+    currentPrice: inputs.currentPrice,
+    dividend: inputs.annualDividend,
+    bookValuePerShare: inputs.navPerShare || inputs.currentPrice / 1.2,
+    peComparable: inputs.peComparable,
+    pbComparable: inputs.pbComparable,
+    dividendYieldComparable: inputs.dividendYieldComparable / 100,
+  };
+  const relativeResult = calculateRelative(relativeInput);
+
+  // 综合估值（DCF权重50%，相对估值权重50%）
+  const comprehensive = dcfValue * dcfWeight + relativeResult.average * relativeWeight;
 
   // 涨跌幅
-  const upsideDownside = ((targetPrice - inputs.currentPrice) / inputs.currentPrice) * 100;
+  const upsideDownside = Number(((comprehensive - inputs.currentPrice) / inputs.currentPrice * 100).toFixed(2));
 
-  // FFO（Funds From Operations）：假设为每股收益的1.1倍
-  const ffoPerShare = relativeResult.eps * 1.1;
-  const pFFO = targetPrice / ffoPerShare;
+  // 财务指标
+  const nav = inputs.navPerShare || inputs.currentPrice / 1.2;
+  const ffo = inputs.annualDividend * 1.1; // 假设FFO为分红的1.1倍
+  const pffo = comprehensive / ffo;
+  const dividendYield = inputs.dividendYield;
 
   // 投资建议
   let recommendation: 'buy' | 'hold' | 'sell';
   let recommendationText: string;
 
-  if (upsideDownside >= 20) {
+  if (upsideDownside >= 10) {
     recommendation = 'buy';
-    recommendationText = '低估 - 强烈推荐买入';
-  } else if (upsideDownside >= 10) {
-    recommendation = 'buy';
-    recommendationText = '偏低 - 推荐买入';
+    recommendationText = '低估 - 推荐买入';
   } else if (upsideDownside >= -10) {
     recommendation = 'hold';
     recommendationText = '合理 - 持有观望';
-  } else if (upsideDownside >= -20) {
-    recommendation = 'sell';
-    recommendationText = '偏高 - 建议卖出';
   } else {
     recommendation = 'sell';
-    recommendationText = '高估 - 强烈建议卖出';
+    recommendationText = '高估 - 建议卖出';
   }
 
   return {
-    dcfPrice: dcfResult.dcfPrice,
-    dcfUpsideDownside: dcfResult.upsideDownside,
-
-    peBasedPrice: relativeResult.peBasedPrice,
-    pbBasedPrice: relativeResult.pbBasedPrice,
-    yieldBasedPrice: relativeResult.yieldBasedPrice,
-    relativePrice: relativeResult.averagePrice,
-
-    targetPrice: Number(targetPrice.toFixed(2)),
-    upsideDownside: Number(upsideDownside.toFixed(2)),
-
-    distributionYield: inputs.distributionYield,
-    nav: relativeResult.nav,
-    ffoPerShare: Number(ffoPerShare.toFixed(2)),
-    pFFO: Number(pFFO.toFixed(2)),
-
+    comprehensive: Number(comprehensive.toFixed(2)),
+    dcf: dcfValue,
+    dcfUpsideDownside,
+    relative: {
+      pe: relativeResult.peValue,
+      pb: relativeResult.pbValue,
+      yield: relativeResult.yieldValue,
+      average: relativeResult.average,
+    },
+    financials: {
+      nav: Number(nav.toFixed(2)),
+      ffo: Number(ffo.toFixed(2)),
+      pffo: Number(pffo.toFixed(2)),
+      dividendYield,
+    },
     recommendation,
-    recommendationText
+    recommendationText,
   };
 }
 
 /**
- * 生成估值报告文本
+ * 生成估值报告数据
  */
-export function generateValuationReport(
+export function generateValuationReportData(
   inputs: ValuationInput,
   result: ValuationResult
-): string {
-  const now = new Date().toLocaleString('zh-CN');
-
-  return `
-===========================================
-REITs估值计算报告
-===========================================
-生成时间：${now}
-
-===========================================
-一、输入参数
-===========================================
-
-1. 基础参数
-   - 当前价格：${inputs.currentPrice.toFixed(2)} 元
-   - 总股本：${inputs.totalShares} 万股
-   - 年度分红：${inputs.annualDistribution.toFixed(2)} 元/份
-   - 分红率：${inputs.distributionYield.toFixed(2)}%
-
-2. DCF估值参数
-   - 增长率：${inputs.growthRate}%
-   - 折现率：${inputs.discountRate}%
-   - 终值增长率：${inputs.terminalGrowthRate}%
-   - 预测年数：${inputs.projectionYears} 年
-
-3. 相对估值参数
-   - 可比公司PE：${inputs.peerAveragePE}
-   - 可比公司PB：${inputs.peerAveragePB}
-   - 可比分红率：${inputs.peerAverageYield}%
-
-===========================================
-二、估值结果
-===========================================
-
-1. DCF估值
-   - DCF目标价：${result.dcfPrice.toFixed(2)} 元
-   - 潜在涨跌幅：${result.dcfUpsideDownside >= 0 ? '+' : ''}${result.dcfUpsideDownside.toFixed(2)}%
-
-2. 相对估值
-   - PE法估值：${result.peBasedPrice.toFixed(2)} 元
-   - PB法估值：${result.pbBasedPrice.toFixed(2)} 元
-   - 收益率法估值：${result.yieldBasedPrice.toFixed(2)} 元
-   - 相对估值平均：${result.relativePrice.toFixed(2)} 元
-
-3. 综合估值
-   - 综合目标价：${result.targetPrice.toFixed(2)} 元
-   - 当前价格：${inputs.currentPrice.toFixed(2)} 元
-   - 涨跌幅：${result.upsideDownside >= 0 ? '+' : ''}${result.upsideDownside.toFixed(2)}%
-   - 投资建议：${result.recommendationText}
-
-===========================================
-三、关键财务指标
-===========================================
-
-- 每股净资产（NAV）：${result.nav.toFixed(2)} 元
-- FFO/份：${result.ffoPerShare.toFixed(2)} 元
-- P/FFO：${result.pFFO.toFixed(2)}
-- 股息率：${result.distributionYield.toFixed(2)}%
-
-===========================================
-四、估值说明
-===========================================
-
-本报告基于以下方法进行估值：
-1. DCF估值：使用两阶段现金流折现模型
-2. 相对估值：采用PE、PB、股息率三种方法
-3. 综合估值：DCF权重50%，相对估值权重50%
-
-注意：本估值仅供参考，不构成投资建议。
-实际投资决策请结合更多因素综合考量。
-
-===========================================
-报告结束
-===========================================
-`;
+): ValuationReportData {
+  return {
+    input: inputs,
+    results: {
+      comprehensive: result.comprehensive,
+      dcf: result.dcf,
+      relative: result.relative,
+      financials: result.financials,
+    },
+    timestamp: new Date().toISOString(),
+  };
 }
 
 /**
- * 导出估值报告
+ * 导出估值报告（JSON格式）
  */
 export function downloadValuationReport(
   inputs: ValuationInput,
   result: ValuationResult,
   reitsName: string = 'REITs产品'
 ): void {
-  const reportText = generateValuationReport(inputs, result);
-  const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+  const reportData = generateValuationReportData(inputs, result);
+  const jsonString = JSON.stringify(reportData, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${reitsName}_估值报告_${new Date().toISOString().split('T')[0]}.txt`;
+  link.download = `${reitsName}_估值报告_${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
