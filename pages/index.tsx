@@ -1,78 +1,113 @@
-import MainLayout from '../src/components/layout/MainLayout';
-import HackerAnonymousBBS from '../src/components/bbs/HackerAnonymousBBS';
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import MainLayout from '@/src/components/layout/MainLayout';
+import AgentCard from '@/src/components/home/AgentCard';
+import CalculatorEntrance from '@/src/components/home/CalculatorEntrance';
+import REITsTablePreview from '@/src/components/home/REITsTablePreview';
+import MarketOverview from '@/src/components/home/MarketOverview';
+import NewsFeed from '@/src/components/home/NewsFeed';
+import BBSTopics from '@/src/components/home/BBSTopics';
+
+const agents = [
+  {
+    icon: '⚖️',
+    title: '法务风险合规',
+    description: '法规检索·风险识别·合规审查',
+    href: '/agents',
+    isHot: true,
+  },
+  {
+    icon: '📜',
+    title: '政策解读',
+    description: 'REITs相关政策法规解读',
+    href: '/agents',
+  },
+  {
+    icon: '🔍',
+    title: '尽职调查',
+    description: '全面分析REITs项目风险',
+    href: '/agents',
+    isNew: true,
+  },
+  {
+    icon: '📄',
+    title: '申报材料生成',
+    description: '协助生成REITs发行申报材料',
+    href: '/agents',
+  },
+  {
+    icon: '💡',
+    title: '定价发行建议',
+    description: '提供REITs定价分析和发行建议',
+    href: '/agents',
+    isHot: true,
+  },
+  {
+    icon: '📈',
+    title: '存续期管理',
+    description: '提供REITs存续期管理建议',
+    href: '/agents',
+  },
+];
 
 export default function Home() {
   return (
     <MainLayout>
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-4">REITs 智能助手</h1>
-        <p className="text-lg text-gray-700 mb-8">
-          欢迎使用 REITs 智能助手系统
-        </p>
+      {/* 三栏布局 */}
+      <div className="min-h-[calc(100vh-4rem)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
+          {/* 左侧导航区 - 20% (2.4列) */}
+          <div className="hidden lg:block lg:col-span-2.4">
+            {/* 侧边栏在MainLayout中已经渲染，这里留空或可以添加快捷入口 */}
+            <div className="sticky top-6">
+              <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-4 text-white mb-4 shadow-lg">
+                <h3 className="font-bold text-lg mb-2">🚀 快速开始</h3>
+                <p className="text-sm opacity-90 mb-3">
+                  选择一个Agent开始您的REITs之旅
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Link href="/issuance-status">
-            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
-              <h2 className="text-lg font-semibold mb-2 text-blue-700">发行状态跟踪</h2>
-              <p className="text-sm text-gray-600">跟踪REITs/ABS发行进度</p>
+          {/* 中间核心区 - 50% (6列) */}
+          <div className="col-span-1 lg:col-span-6 space-y-6">
+            {/* 欢迎 banner */}
+            <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-xl p-6 text-white shadow-lg">
+              <h1 className="text-2xl font-bold mb-2">欢迎来到 REITs 智能助手</h1>
+              <p className="opacity-90">
+                多Agent协作系统 · 专业的REITs发行服务平台 · 全流程智能辅助
+              </p>
             </div>
-          </Link>
-          <Link href="/issued-reits">
-            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
-              <h2 className="text-lg font-semibold mb-2 text-purple-700">已发行 REITs</h2>
-              <p className="text-sm text-gray-600">查看已上市REITs列表</p>
-            </div>
-          </Link>
-          <Link href="/abs-dashboard">
-            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
-              <h2 className="text-lg font-semibold mb-2 text-green-700">已发行 ABS</h2>
-              <p className="text-sm text-gray-600">ABS产品概览与详情</p>
-            </div>
-          </Link>
-          <Link href="/calculator">
-            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
-              <h2 className="text-lg font-semibold mb-2 text-orange-700">估值计算器</h2>
-              <p className="text-sm text-gray-600">DCF/相对估值综合分析</p>
-            </div>
-          </Link>
-        </div>
 
-        <div className="bg-white p-6 rounded-lg border shadow-sm mb-8">
-          <h2 className="text-2xl font-bold mb-4">核心功能</h2>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">1.</span>
-              <span>法务风控合规 Agent - 提供法规检索、风险识别、合规审查等服务</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-purple-600 font-bold">2.</span>
-              <span>政策解读 Agent - 解读 REITs 相关政策法规</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-green-600 font-bold">3.</span>
-              <span>尽职调查 Agent - 全面分析 REITs 项目风险</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-orange-600 font-bold">4.</span>
-              <span>申报材料生成 Agent - 协助生成REITs发行申报材料</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-red-600 font-bold">5.</span>
-              <span>定价发行建议 Agent - 提供REITs定价分析和发行建议</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-teal-600 font-bold">6.</span>
-              <span>存续期管理 Agent - 提供REITs存续期管理建议</span>
-            </li>
-          </ul>
-        </div>
+            {/* 核心 Agent 卡片墙 */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                <span className="w-1 h-6 bg-blue-600 rounded mr-2" />
+                核心 Agent
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {agents.map((agent, index) => (
+                  <AgentCard key={index} {...agent} />
+                ))}
+              </div>
+            </div>
 
-        {/* 黑客风格匿名BBS */}
-        <div className="mt-12">
-          <HackerAnonymousBBS />
+            {/* 估值计算器入口卡片 */}
+            <CalculatorEntrance />
+
+            {/* REITs 八张表数据预览 */}
+            <REITsTablePreview />
+          </div>
+
+          {/* 右侧信息区 - 30% (3.6列) */}
+          <div className="col-span-1 lg:col-span-3.6 space-y-6">
+            {/* 市场行情速览 */}
+            <MarketOverview />
+
+            {/* 资产证券化新闻 */}
+            <NewsFeed />
+
+            {/* 匿名 BBS 话题 */}
+            <BBSTopics />
+          </div>
         </div>
       </div>
     </MainLayout>
