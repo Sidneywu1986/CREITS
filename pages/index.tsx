@@ -55,17 +55,16 @@ export default function Home() {
       <div className="min-h-[calc(100vh-4rem)]">
         <div className="max-w-7xl mx-auto p-6 space-y-6">
           {/* 欢迎 banner */}
-          <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-xl p-6 text-white shadow-lg">
-            <h1 className="text-2xl font-bold mb-2">欢迎来到 REITs 智能助手</h1>
-            <p className="opacity-90 leading-relaxed">
+          <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">欢迎来到 REITs 智能助手</h1>
+            <p className="text-gray-500 leading-relaxed">
               多Agent协作系统 · 专业的REITs发行服务平台 · 全流程智能辅助
             </p>
           </div>
 
           {/* 核心 Agent 卡片墙 */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <span className="w-1 h-6 bg-blue-600 rounded mr-2" />
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
               核心 Agent
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

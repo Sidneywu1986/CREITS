@@ -1,6 +1,5 @@
 'use client';
 
-import { ExternalLink, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface NewsItem {
@@ -45,33 +44,33 @@ const newsItems: NewsItem[] = [
 
 export default function NewsHorizontal() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    <div className="border border-gray-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <ExternalLink className="h-4 w-4 text-purple-600" />
-          <h3 className="text-sm font-semibold text-gray-700">资产证券化新闻</h3>
-        </div>
+        <h3 className="text-sm font-semibold text-gray-800">资产证券化新闻</h3>
         <Link href="/news">
-          <span className="text-xs text-gray-500 hover:text-blue-600 transition-colors">
-            更多 →
-          </span>
+          <span className="text-sm text-blue-600 hover:underline">更多</span>
         </Link>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+      <div className="space-y-0">
         {newsItems.map((item, index) => (
           <Link
             key={index}
             href={item.url}
-            className="flex-shrink-0 w-72 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+            className="block group"
           >
-            <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2">
-              {item.title}
-            </p>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="truncate">{item.source}</span>
-              <span>·</span>
-              <span className="flex items-center whitespace-nowrap">{item.time}</span>
+            <div className="py-3 hover:bg-gray-50 transition-colors duration-200 relative pl-3 last:pb-0">
+              {/* 左侧蓝色竖线 */}
+              <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              
+              <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
+                {item.title}
+              </p>
+              <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+                <span>{item.source}</span>
+                <span>·</span>
+                <span>{item.time}</span>
+              </div>
             </div>
           </Link>
         ))}

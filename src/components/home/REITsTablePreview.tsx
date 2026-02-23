@@ -1,9 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 interface TablePreviewItem {
   label: string;
@@ -20,64 +17,55 @@ const tablePreviewData: TablePreviewItem[] = [
 
 export default function REITsTablePreview() {
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="p-4 pb-3">
-        <CardTitle className="text-base font-semibold flex items-center">
-          <TrendingUp className="mr-2 h-4 w-4 text-blue-600" />
-          REITs 八张表数据（最新）
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  项目
-                </th>
-                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  数值
-                </th>
-                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  环比
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {tablePreviewData.map((item, index) => (
-                <tr key={index} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
-                  <td className="py-2 px-3 text-sm text-gray-700 font-medium">{item.label}</td>
-                  <td className="py-2 px-3 text-sm text-gray-800 text-right font-semibold">
-                    {item.value}
-                  </td>
-                  <td className="py-2 px-3 text-sm text-right">
-                    <span
-                      className={`inline-flex items-center font-semibold ${
-                        item.isPositive ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {item.isPositive ? (
-                        <TrendingUp className="h-3 w-3 mr-1" />
-                      ) : (
-                        <TrendingDown className="h-3 w-3 mr-1" />
-                      )}
-                      {item.change}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex justify-end pt-3">
-          <Link href="/reits-data-tables">
-            <Button variant="ghost" className="text-xs text-blue-600 hover:text-blue-700" size="sm">
-              查看完整八张表
-              <ArrowRight className="ml-2 h-3 w-3" />
-            </Button>
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="border border-gray-200 rounded-lg p-4">
+      <h3 className="text-sm font-semibold text-gray-800 mb-3">
+        REITs 八张表数据（最新）
+      </h3>
+      
+      <table className="w-full">
+        <thead>
+          <tr>
+            <th className="text-left py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">
+              项目
+            </th>
+            <th className="text-right py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">
+              数值
+            </th>
+            <th className="text-right py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">
+              环比
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {tablePreviewData.map((item, index) => (
+            <tr key={index}>
+              <td className="py-2 text-sm text-gray-800">{item.label}</td>
+              <td className="py-2 text-sm text-gray-800 text-right font-semibold">
+                {item.value}
+              </td>
+              <td className="py-2 text-sm text-right">
+                <span
+                  className={`font-semibold ${
+                    item.isPositive ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {item.change.startsWith('+') && '↑'}
+                  {item.change.startsWith('-') && '↓'}
+                  {item.change.replace(/[+-]/g, '')}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="mt-3 pt-3 border-t border-gray-100">
+        <Link href="/reits-data-tables">
+          <span className="text-sm text-blue-600 hover:underline">
+            查看完整八张表
+          </span>
+        </Link>
+      </div>
+    </div>
   );
 }

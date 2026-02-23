@@ -1,51 +1,46 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageSquare, Shield, Flame } from 'lucide-react';
 import Link from 'next/link';
 
 interface Topic {
   title: string;
   replies: number;
-  isHot: boolean;
 }
 
 const topics: Topic[] = [
-  { title: '估值参数怎么选？经验分享', replies: 23, isHot: true },
-  { title: '尽调中发现产权瑕疵怎么办？', replies: 15, isHot: true },
+  { title: '估值参数怎么选？经验分享', replies: 23 },
+  { title: '尽调中发现产权瑕疵怎么办？', replies: 15 },
 ];
 
 export default function BBSTopics() {
   return (
-    <Card className="shadow-sm h-full">
-      <CardHeader className="p-4 pb-3">
-        <CardTitle className="text-base font-semibold flex items-center">
-          <MessageSquare className="mr-2 h-4 w-4 text-orange-600" />
-          匿名BBS · 热门讨论
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="space-y-2">
-          {topics.map((topic, index) => (
-            <Link key={index} href="/bbs" className="block">
-              <div className="py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
-                <p className="text-sm text-gray-800 group-hover:text-blue-600 transition-colors mb-1 line-clamp-2">
-                  {topic.title}
-                </p>
-                <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                  <MessageSquare className="h-3 w-3" />
-                  <span>{topic.replies} 回复</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-        <div className="flex justify-end pt-3">
-          <Link href="/bbs" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">
-            匿名参与 →
+    <div className="border border-gray-200 rounded-lg p-4 h-full">
+      <h3 className="text-sm font-semibold text-gray-800 mb-2">
+        匿名BBS · 热门讨论
+      </h3>
+
+      <div className="space-y-0">
+        {topics.map((topic, index) => (
+          <Link key={index} href="/bbs" className="block">
+            <div className="flex justify-between items-center py-2 hover:bg-gray-50 transition-colors duration-200 group">
+              <span className="text-sm text-gray-700 group-hover:text-blue-600 transition-colors">
+                {topic.title}
+              </span>
+              <span className="text-xs text-gray-400">
+                {topic.replies} 回复
+              </span>
+            </div>
           </Link>
-        </div>
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+
+      <div className="mt-3 pt-3 border-t border-gray-100">
+        <Link href="/bbs">
+          <span className="text-sm text-blue-600 hover:underline">
+            匿名参与
+          </span>
+        </Link>
+      </div>
+    </div>
   );
 }
