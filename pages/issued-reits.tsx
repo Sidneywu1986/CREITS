@@ -295,13 +295,27 @@ export default function IssuedREITsPage() {
                         className="border-b border-white/10 hover:bg-white/10 transition-colors"
                       >
                         <td className="py-3 px-4 text-sm">
-                          <Link href={`/issued-reits/${product.code}`} className="flex items-center font-mono font-bold text-white/80 hover:text-blue-400 transition-colors">
+                          <Link
+                            href={{
+                              pathname: '/issued-reits/[code]',
+                              query: { code: product.code }
+                            }}
+                            as={`/issued-reits/${product.code}`}
+                            className="flex items-center font-mono font-bold text-white/80 hover:text-blue-400 transition-colors"
+                          >
                             {product.code}
                             <ExternalLink className="ml-2 h-3 w-3 text-white/40" />
                           </Link>
                         </td>
                         <td className="py-3 px-4 text-sm">
-                          <Link href={`/issued-reits/${product.code}`} className="text-white/80 hover:text-blue-400 transition-colors">
+                          <Link
+                            href={{
+                              pathname: '/issued-reits/[code]',
+                              query: { code: product.code }
+                            }}
+                            as={`/issued-reits/${product.code}`}
+                            className="text-white/80 hover:text-blue-400 transition-colors"
+                          >
                             {product.name}
                           </Link>
                         </td>
