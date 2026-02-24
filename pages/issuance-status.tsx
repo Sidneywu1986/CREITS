@@ -1,11 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, ArrowRight, MessageSquare, ThumbsUp, MessageCircle } from 'lucide-react';
+'use client';
+
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Clock, ArrowRight, Search, ChevronDown } from 'lucide-react';
 
 // 模拟发行状态数据
 const issuanceData = [
@@ -17,18 +14,6 @@ const issuanceData = [
     broker: '中金公司',
     progress: 10,
     description: '中金安徽交通控股集团有限公司作为原始权益人，发行规模50亿元。',
-    comments: [
-      {
-        id: 1,
-        user: '投资者A',
-        content: '这个项目看起来很有前景，期待进展！',
-        time: '2024-01-16 10:30',
-        likes: 12,
-        replies: [
-          { user: '投资者B', content: '同期待，交控类资产稳定性不错', time: '2024-01-16 11:00' }
-        ]
-      }
-    ]
   },
   {
     code: 'SH202402',
@@ -38,7 +23,6 @@ const issuanceData = [
     broker: '华夏基金',
     progress: 30,
     description: '华夏基金管理有限公司作为基金管理人，发行规模80亿元。',
-    comments: []
   },
   {
     code: 'SZ202403',
@@ -48,7 +32,6 @@ const issuanceData = [
     broker: '博时基金',
     progress: 50,
     description: '博时基金管理有限公司作为基金管理人，发行规模30亿元。',
-    comments: []
   },
   {
     code: 'SH202404',
@@ -58,7 +41,6 @@ const issuanceData = [
     broker: '国泰君安证券',
     progress: 70,
     description: '国泰君安资产管理有限公司作为管理人，发行规模60亿元。',
-    comments: []
   },
   {
     code: 'SZ202405',
@@ -68,7 +50,6 @@ const issuanceData = [
     broker: '红土创新基金',
     progress: 90,
     description: '红土创新基金管理有限公司作为基金管理人，发行规模25亿元。',
-    comments: []
   },
   {
     code: 'SH202406',
@@ -78,234 +59,284 @@ const issuanceData = [
     broker: '富国基金',
     progress: 100,
     description: '富国基金管理有限公司作为基金管理人，发行规模45亿元。',
-    comments: []
-  }
+  },
+  {
+    code: 'SZ202407',
+    name: '华安张江产业园REIT',
+    status: '已受理',
+    date: '2024-02-18',
+    broker: '华安基金',
+    progress: 5,
+    description: '华安基金管理有限公司作为基金管理人，发行规模35亿元。',
+  },
+  {
+    code: 'SH202408',
+    name: '易方达广州开发区物流园REIT',
+    status: '已受理',
+    date: '2024-02-20',
+    broker: '易方达基金',
+    progress: 15,
+    description: '易方达资产管理有限公司作为管理人，发行规模40亿元。',
+  },
+  {
+    code: 'SZ202409',
+    name: '广发中关村产业园REIT',
+    status: '已反馈',
+    date: '2024-02-22',
+    broker: '广发基金',
+    progress: 25,
+    description: '广发基金管理有限公司作为基金管理人，发行规模55亿元。',
+  },
+  {
+    code: 'SH202410',
+    name: '工银瑞信河北高速REIT',
+    status: '已通过',
+    date: '2024-02-25',
+    broker: '工银瑞信基金',
+    progress: 60,
+    description: '工银瑞信基金管理有限公司作为基金管理人，发行规模70亿元。',
+  },
 ];
 
-// 状态颜色映射
-const statusColors: Record<string, string> = {
-  '已受理': 'bg-blue-500',
-  '已反馈': 'bg-yellow-500',
-  '已通过': 'bg-green-500',
-  '已注册': 'bg-purple-500',
-  '已定价': 'bg-orange-500',
-  '上市/挂牌': 'bg-emerald-600'
+// 状态顺序映射（用于排序）
+const statusOrder: Record<string, number> = {
+  '已受理': 1,
+  '已反馈': 2,
+  '已通过': 3,
+  '已注册': 4,
+  '已定价': 5,
+  '上市/挂牌': 6,
 };
 
+// 进度颜色函数
+function getProgressColor(progress: number): string {
+  if (progress <= 30) return 'text-blue-400';
+  if (progress <= 70) return 'text-yellow-400';
+  if (progress <= 99) return 'text-green-400';
+  return 'text-purple-400';
+}
+
 export default function IssuanceStatusPage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('latest');
   const [selectedStatus, setSelectedStatus] = useState('全部');
-  const [expandedProject, setExpandedProject] = useState<string | null>(null);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   const statuses = ['全部', '已受理', '已反馈', '已通过', '已注册', '已定价', '上市/挂牌'];
 
-  const filteredData = selectedStatus === '全部'
-    ? issuanceData
-    : issuanceData.filter(item => item.status === selectedStatus);
+  // 排序选项
+  const sortOptions = [
+    { value: 'latest', label: '最新受理' },
+    { value: 'progress-high', label: '进度最高' },
+    { value: 'progress-low', label: '进度最低' },
+    { value: 'name-az', label: '名称A-Z' },
+  ];
+
+  // 过滤和排序数据
+  const filteredData = useMemo(() => {
+    let filtered = issuanceData;
+
+    // 按状态筛选
+    if (selectedStatus !== '全部') {
+      filtered = filtered.filter(item => item.status === selectedStatus);
+    }
+
+    // 按搜索词筛选
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        item =>
+          item.name.toLowerCase().includes(query) ||
+          item.code.toLowerCase().includes(query) ||
+          item.broker.toLowerCase().includes(query)
+      );
+    }
+
+    // 排序
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'latest':
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        case 'progress-high':
+          return b.progress - a.progress;
+        case 'progress-low':
+          return a.progress - b.progress;
+        case 'name-az':
+          return a.name.localeCompare(b.name, 'zh-CN');
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [searchQuery, sortBy, selectedStatus]);
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="mb-6">
-        <div className="flex items-center">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="mr-4">
-              <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
-              返回
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold flex items-center">
-            <Clock className="mr-3 text-[#667eea]" />
-            发行状态跟踪
-          </h1>
-        </div>
-      </div>
-
-      <Tabs defaultValue="list" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="list">发行项目列表</TabsTrigger>
-          <TabsTrigger value="progress">发行流程进度</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="list" className="space-y-4">
-          <div className="mb-6">
-            <div className="flex gap-2 flex-wrap">
-              {statuses.map(status => (
-                <Button
-                  key={status}
-                  variant={selectedStatus === status ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedStatus(status)}
-                  className={selectedStatus === status ? 'bg-[#667eea]' : ''}
-                >
-                  {status}
-                </Button>
-              ))}
+    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-[#0B1E33] to-[#1A3B5E]">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 头部区域 */}
+        <div className="mb-6 border-b border-white/10 pb-6">
+          <div className="flex items-center">
+            <Link href="/">
+              <button className="flex items-center gap-2 text-white/70 hover:text-white transition-colors">
+                <ArrowRight className="h-4 w-4 rotate-180" />
+                返回
+              </button>
+            </Link>
+            <div className="ml-6">
+              <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                <Clock className="h-6 w-6 text-blue-400" />
+                发行状态跟踪
+              </h1>
+              <p className="text-white/60 text-sm mt-1">
+                跟踪REITs/ABS发行全流程进度
+              </p>
             </div>
           </div>
+        </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {filteredData.map(project => (
-              <Card key={project.code} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">{project.name}</CardTitle>
-                    <Badge className={`${statusColors[project.status]} text-white`}>
-                      {project.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">项目代码：</span>
-                        {project.code}
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">受理日期：</span>
-                        {project.date}
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">计划管理人：</span>
-                        {project.broker}
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">发行进度：</span>
-                        {project.progress}%
-                      </div>
-                    </div>
-
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-[#667eea] h-2 rounded-full transition-all"
-                        style={{ width: `${project.progress}%` }}
-                      />
-                    </div>
-
-                    <p className="text-sm text-muted-foreground">
-                      {project.description}
-                    </p>
-
-                    {/* BBS 讨论区 */}
-                    <div className="border-t pt-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start"
-                        onClick={() => setExpandedProject(
-                          expandedProject === project.code ? null : project.code
-                        )}
-                      >
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        讨论 ({project.comments.length})
-                      </Button>
-
-                      {expandedProject === project.code && (
-                        <div className="mt-3 space-y-3">
-                          {project.comments.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                              暂无评论，快来发表第一个观点吧！
-                            </p>
-                          ) : (
-                            project.comments.map(comment => (
-                              <div key={comment.id} className="pl-4 border-l-2 border-gray-200">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-semibold text-sm">{comment.user}</span>
-                                  <span className="text-xs text-muted-foreground">{comment.time}</span>
-                                </div>
-                                <p className="text-sm mt-1">{comment.content}</p>
-                                <div className="flex items-center gap-4 mt-2">
-                                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                                    <ThumbsUp className="mr-1 h-3 w-3" />
-                                    {comment.likes}
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                                    <MessageCircle className="mr-1 h-3 w-3" />
-                                    回复 ({comment.replies.length})
-                                  </Button>
-                                </div>
-                                {comment.replies.length > 0 && (
-                                  <div className="mt-2 pl-4 space-y-2">
-                                    {comment.replies.map((reply, idx) => (
-                                      <div key={idx} className="bg-gray-50 p-2 rounded">
-                                        <div className="flex items-center justify-between">
-                                          <span className="font-medium text-xs">{reply.user}</span>
-                                          <span className="text-xs text-muted-foreground">{reply.time}</span>
-                                        </div>
-                                        <p className="text-xs mt-1">{reply.content}</p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            ))
-                          )}
-                          <div className="space-y-2">
-                            <Textarea
-                              placeholder="发表你的看法..."
-                              className="min-h-[80px]"
-                            />
-                            <div className="flex gap-2">
-                              <Button size="sm" className="bg-[#667eea]">
-                                发表评论
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        {/* 搜索和排序工具栏 */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-3 items-center justify-between">
+          {/* 搜索框 */}
+          <div className="relative flex-1 w-full sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+            <input
+              type="text"
+              placeholder="搜索项目名称、代码或管理人..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg pl-10 pr-4 py-2 text-white placeholder-white/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            />
           </div>
-        </TabsContent>
 
-        <TabsContent value="progress">
-          <Card>
-            <CardHeader>
-              <CardTitle>REITs发行流程进度</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-8">
-                {issuanceData.map((project, idx) => (
-                  <div key={project.code} className="relative">
-                    {idx !== issuanceData.length - 1 && (
-                      <div className="absolute left-4 top-8 bottom-0 w-0.5 bg-gray-200" />
-                    )}
-                    <div className="flex items-start gap-4">
-                      <div className={`w-8 h-8 rounded-full ${statusColors[project.status]} flex items-center justify-center text-white font-bold shrink-0`}>
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold">{project.name}</h3>
-                          <Badge className={`${statusColors[project.status]} text-white`}>
-                            {project.status}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground mb-2">
-                          项目代码：{project.code} | 受理日期：{project.date}
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-[#667eea] h-2 rounded-full"
-                            style={{ width: `${project.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+          {/* 排序下拉按钮 */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2 text-white flex items-center gap-2 hover:bg-white/20 transition-colors"
+            >
+              <span className="text-sm">
+                {sortOptions.find(opt => opt.value === sortBy)?.label}
+              </span>
+              <ChevronDown className="h-4 w-4" />
+            </button>
+
+            {showSortDropdown && (
+              <div className="absolute right-0 mt-2 bg-[#0B1E33] border border-white/20 rounded-lg shadow-xl z-50 min-w-[150px]">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSortBy(option.value);
+                      setShowSortDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                  >
+                    {option.label}
+                  </button>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        </div>
+
+        {/* 筛选标签区 */}
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2">
+            {statuses.map(status => (
+              <button
+                key={status}
+                onClick={() => setSelectedStatus(status)}
+                className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                  selectedStatus === status
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 结果计数 */}
+        <div className="mb-4">
+          <p className="text-white/60 text-sm">
+            找到 <span className="text-white font-semibold">{filteredData.length}</span> 个项目
+          </p>
+        </div>
+
+        {/* 项目卡片列表 */}
+        {filteredData.length > 0 ? (
+          <>
+            <div className="flex flex-col gap-4 mb-6">
+              {filteredData.map(project => (
+                <div
+                  key={project.code}
+                  className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5 hover:bg-white/20 transition"
+                >
+                  {/* 第一行：项目名称 + 进度百分比 */}
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg font-semibold text-white">{project.name}</h3>
+                    <span className={`text-sm font-medium ${getProgressColor(project.progress)}`}>
+                      {project.progress}%
+                    </span>
+                  </div>
+
+                  {/* 第二行：项目代码 · 管理人 · 受理日期 */}
+                  <div className="text-sm text-white/60 mb-3">
+                    <span>{project.code}</span>
+                    <span className="mx-2">·</span>
+                    <span>{project.broker}</span>
+                    <span className="mx-2">·</span>
+                    <span>{project.date}</span>
+                  </div>
+
+                  {/* 第三行：进度条 */}
+                  <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-300"
+                      style={{ width: `${project.progress}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 加载更多按钮 */}
+            <div className="flex justify-center">
+              <button className="border border-white/30 text-white px-6 py-2 rounded-lg hover:bg-white/10 transition-colors">
+                加载更多
+              </button>
+            </div>
+          </>
+        ) : (
+          /* 空状态 */
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-12 text-center">
+            <div className="text-white/40 text-5xl mb-4">🔍</div>
+            <h3 className="text-white text-lg font-semibold mb-2">
+              没有找到匹配的项目
+            </h3>
+            <p className="text-white/60 text-sm mb-4">
+              尝试调整搜索词或筛选条件
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedStatus('全部');
+              }}
+              className="bg-white/10 border border-white/30 text-white px-6 py-2 rounded-lg hover:bg-white/20 transition-colors"
+            >
+              清除筛选
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export const metadata = {
   title: '发行状态跟踪 - REITs 智能助手',
-  description: '实时跟踪REITs发行状态',
+  description: '实时跟踪REITs/ABS发行全流程进度',
 };
