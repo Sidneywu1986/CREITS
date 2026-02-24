@@ -266,13 +266,19 @@ export function ABSCenterPanel() {
       axisPointer: {
         type: 'cross',
         label: {
-          backgroundColor: '#6a7985'
+          backgroundColor: 'rgba(51, 65, 85, 0.9)',
+          color: '#fff'
         }
+      },
+      backgroundColor: 'rgba(51, 65, 85, 0.9)',
+      borderColor: '#334155',
+      textStyle: {
+        color: '#fff'
       }
     },
     legend: {
       data: ['发行数量', '发行规模（亿元）'],
-      textStyle: { color: '#374151' }
+      textStyle: { color: '#94a3b8' }
     },
     grid: {
       left: '3%',
@@ -285,7 +291,8 @@ export function ABSCenterPanel() {
         type: 'category',
         boundaryGap: false,
         data: trendData.years,
-        axisLabel: { color: '#6B7280' }
+        axisLabel: { color: '#94a3b8' },
+        axisLine: { lineStyle: { color: '#475569' } }
       }
     ],
     yAxis: [
@@ -293,13 +300,17 @@ export function ABSCenterPanel() {
         type: 'value',
         name: '数量',
         position: 'left',
-        axisLabel: { color: '#6B7280' }
+        axisLabel: { color: '#94a3b8' },
+        axisLine: { lineStyle: { color: '#475569' } },
+        splitLine: { lineStyle: { color: '#334155' } }
       },
       {
         type: 'value',
         name: '规模（亿元）',
         position: 'right',
-        axisLabel: { color: '#6B7280' }
+        axisLabel: { color: '#94a3b8' },
+        axisLine: { lineStyle: { color: '#475569' } },
+        splitLine: { lineStyle: { color: '#334155' } }
       }
     ],
     series: [
@@ -309,12 +320,13 @@ export function ABSCenterPanel() {
         smooth: true,
         data: trendData.counts,
         itemStyle: { color: '#667eea' },
+        lineStyle: { color: '#667eea' },
         areaStyle: {
           color: {
             type: 'linear',
             x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(102, 126, 234, 0.3)' },
+              { offset: 0, color: 'rgba(102, 126, 234, 0.4)' },
               { offset: 1, color: 'rgba(102, 126, 234, 0.05)' }
             ]
           }
@@ -334,12 +346,17 @@ export function ABSCenterPanel() {
   const typeOption = {
     tooltip: {
       trigger: 'item',
-      formatter: '{b}: {c} ({d}%)'
+      formatter: '{b}: {c} ({d}%)',
+      backgroundColor: 'rgba(51, 65, 85, 0.9)',
+      borderColor: '#334155',
+      textStyle: {
+        color: '#fff'
+      }
     },
     legend: {
       orient: 'vertical',
       left: 'left',
-      textStyle: { color: '#374151' }
+      textStyle: { color: '#94a3b8' }
     },
     series: [
       {
@@ -349,18 +366,20 @@ export function ABSCenterPanel() {
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 10,
-          borderColor: '#fff',
+          borderColor: '#1e293b',
           borderWidth: 2
         },
         label: {
           show: true,
-          formatter: '{b}\n{d}%'
+          formatter: '{b}\n{d}%',
+          color: '#94a3b8'
         },
         emphasis: {
           label: {
             show: true,
             fontSize: 14,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            color: '#fff'
           }
         },
         data: typeData
@@ -401,77 +420,77 @@ export function ABSCenterPanel() {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
+    <div className="p-6 space-y-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
       {/* 顶部统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-[#667eea]/10 to-[#667eea]/5 border-[#667eea]/20">
+        <Card className="bg-gradient-to-br from-[#667eea]/20 to-[#667eea]/10 border-[#667eea]/30 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <div className="text-sm text-muted-foreground flex items-center">
-              <Building2 className="mr-2 h-4 w-4" />
+            <div className="text-sm text-slate-300 flex items-center">
+              <Building2 className="mr-2 h-4 w-4 text-[#667eea]" />
               发行总数
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[#667eea]">
+            <div className="text-3xl font-bold text-white">
               {stats.totalProducts}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-slate-400 mt-1">
               更新: {lastUpdate}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-[#764ba2]/10 to-[#764ba2]/5 border-[#764ba2]/20">
+        <Card className="bg-gradient-to-br from-[#764ba2]/20 to-[#764ba2]/10 border-[#764ba2]/30 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <div className="text-sm text-muted-foreground flex items-center">
-              <DollarSign className="mr-2 h-4 w-4" />
+            <div className="text-sm text-slate-300 flex items-center">
+              <DollarSign className="mr-2 h-4 w-4 text-[#764ba2]" />
               发行总规模
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[#764ba2]">
+            <div className="text-3xl font-bold text-white">
               {formatAmount(stats.totalScale)}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">累计发行</div>
+            <div className="text-sm text-slate-400 mt-1">累计发行</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-[#10b981]/10 to-[#10b981]/5 border-[#10b981]/20">
+        <Card className="bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 border-emerald-500/30 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <div className="text-sm text-muted-foreground flex items-center">
-              <TrendingUp className="mr-2 h-4 w-4" />
+            <div className="text-sm text-slate-300 flex items-center">
+              <TrendingUp className="mr-2 h-4 w-4 text-emerald-400" />
               REITs相关ABS
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[#10b981]">
+            <div className="text-3xl font-bold text-white">
               {stats.reitsRelated}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">不动产类资产</div>
+            <div className="text-sm text-slate-400 mt-1">不动产类资产</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-[#ed8936]/10 to-[#ed8936]/5 border-[#ed8936]/20">
+        <Card className="bg-gradient-to-br from-orange-500/20 to-orange-500/10 border-orange-500/30 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <div className="text-sm text-muted-foreground flex items-center">
-              <Building className="mr-2 h-4 w-4" />
+            <div className="text-sm text-slate-300 flex items-center">
+              <Building className="mr-2 h-4 w-4 text-orange-400" />
               城投平台ABS
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[#ed8936]">
+            <div className="text-3xl font-bold text-white">
               {stats.cityPlatform}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">基础设施类</div>
+            <div className="text-sm text-slate-400 mt-1">基础设施类</div>
           </CardContent>
         </Card>
       </div>
 
       {/* 图表区域 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-gray-200 dark:border-gray-700">
+        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold flex items-center">
+            <CardTitle className="text-lg font-semibold flex items-center text-white">
               <TrendingUp className="mr-2 h-5 w-5 text-[#667eea]" />
               ABS发行趋势
             </CardTitle>
@@ -481,9 +500,9 @@ export function ABSCenterPanel() {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-200 dark:border-gray-700">
+        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold flex items-center">
+            <CardTitle className="text-lg font-semibold flex items-center text-white">
               <Building2 className="mr-2 h-5 w-5 text-[#764ba2]" />
               基础资产类型分布
             </CardTitle>
@@ -495,21 +514,21 @@ export function ABSCenterPanel() {
       </div>
 
       {/* 产品列表 */}
-      <Card className="border-gray-200 dark:border-gray-700">
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold">
+            <CardTitle className="text-lg font-semibold text-white">
               ABS产品列表
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
+              <span className="ml-2 text-sm font-normal text-slate-400">
                 共 {filteredProducts.length} 个项目
               </span>
             </CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={exportData}>
+              <Button variant="outline" size="sm" onClick={exportData} className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
                 <Download className="mr-2 h-4 w-4" />
                 导出数据
               </Button>
-              <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+              <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
                 <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 刷新
               </Button>
@@ -522,62 +541,62 @@ export function ABSCenterPanel() {
             <div className="flex flex-wrap gap-3">
               <div className="flex-1 min-w-[200px]">
                 <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="搜索产品名称、发起机构、基础资产..."
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-[#667eea]"
                   />
                 </div>
               </div>
 
               <Select value={selectedAssetType} onValueChange={setSelectedAssetType}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-[160px] bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue placeholder="资产类型" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-slate-800 border-slate-700">
                   {ASSET_TYPE_OPTIONS.map(option => (
-                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                    <SelectItem key={option} value={option} className="text-white hover:bg-slate-700">{option}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               <Select value={selectedMarket} onValueChange={setSelectedMarket}>
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger className="w-[120px] bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue placeholder="发行场所" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-slate-800 border-slate-700">
                   {MARKET_OPTIONS.map(option => (
-                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                    <SelectItem key={option} value={option} className="text-white hover:bg-slate-700">{option}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-[100px]">
+                <SelectTrigger className="w-[100px] bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue placeholder="状态" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-slate-800 border-slate-700">
                   {STATUS_OPTIONS.map(option => (
-                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                    <SelectItem key={option} value={option} className="text-white hover:bg-slate-700">{option}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               <Select value={selectedSpecial} onValueChange={setSelectedSpecial}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-[140px] bg-slate-700/50 border-slate-600 text-white">
                   <Filter className="mr-2 h-4 w-4" />
                   <SelectValue placeholder="专项筛选" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-slate-800 border-slate-700">
                   {SPECIAL_FILTER_OPTIONS.map(option => (
-                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                    <SelectItem key={option} value={option} className="text-white hover:bg-slate-700">{option}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              <Button variant="ghost" size="sm" onClick={resetFilters}>
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="text-slate-300 hover:bg-slate-700 hover:text-white">
                 <X className="mr-2 h-4 w-4" />
                 重置
               </Button>
@@ -585,12 +604,12 @@ export function ABSCenterPanel() {
           </div>
 
           {/* 表格 */}
-          <div className="rounded-md border">
+          <div className="rounded-md border border-slate-700/50 overflow-hidden">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-slate-700/30">
                 <TableRow>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  <TableHead
+                    className="cursor-pointer hover:bg-slate-700/50 text-slate-300"
                     onClick={() => handleSort('product_name')}
                   >
                     产品名称
@@ -598,11 +617,11 @@ export function ABSCenterPanel() {
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </TableHead>
-                  <TableHead>发起机构</TableHead>
-                  <TableHead>基础资产类型</TableHead>
-                  <TableHead>特殊标签</TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-right"
+                  <TableHead className="text-slate-300">发起机构</TableHead>
+                  <TableHead className="text-slate-300">基础资产类型</TableHead>
+                  <TableHead className="text-slate-300">特殊标签</TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-slate-700/50 text-right text-slate-300"
                     onClick={() => handleSort('total_scale')}
                   >
                     发行规模
@@ -610,8 +629,8 @@ export function ABSCenterPanel() {
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  <TableHead
+                    className="cursor-pointer hover:bg-slate-700/50 text-slate-300"
                     onClick={() => handleSort('issue_date')}
                   >
                     发行日期
@@ -619,13 +638,13 @@ export function ABSCenterPanel() {
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </TableHead>
-                  <TableHead>状态</TableHead>
+                  <TableHead className="text-slate-300">状态</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProducts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-slate-400">
                       暂无匹配的数据
                     </TableCell>
                   </TableRow>
@@ -633,23 +652,23 @@ export function ABSCenterPanel() {
                   filteredProducts.slice(0, 20).map((product) => {
                     const specialTags = getSpecialTags(product);
                     return (
-                      <TableRow key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <TableCell className="font-medium">
+                      <TableRow key={product.id} className="hover:bg-slate-700/30 border-b border-slate-700/50">
+                        <TableCell className="font-medium text-white">
                           <div className="max-w-[200px] truncate" title={product.product_name}>
                             {product.product_name}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-slate-300">
                           <div className="max-w-[120px] truncate" title={product.issuer_name}>
                             {product.issuer_name}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-slate-500">
                               {product.asset_type_main}
                             </span>
-                            <span className="text-sm font-medium">
+                            <span className="text-sm font-medium text-white">
                               {product.asset_type_sub}
                             </span>
                           </div>
@@ -663,21 +682,21 @@ export function ABSCenterPanel() {
                             ))}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-medium">
+                        <TableCell className="text-right font-medium text-white">
                           {formatAmount(product.total_scale || 0)}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1 text-sm">
-                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <div className="flex items-center gap-1 text-sm text-slate-300">
+                            <Calendar className="h-3 w-3 text-slate-500" />
                             {formatDate(product.issue_date || '')}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant={product.status === '存续' ? 'default' : 'secondary'}
-                            className={product.status === '存续' 
-                              ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                            className={product.status === '存续'
+                              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                              : 'bg-slate-600/50 text-slate-400 border-slate-600/30'
                             }
                           >
                             {product.status}
@@ -692,7 +711,7 @@ export function ABSCenterPanel() {
           </div>
 
           {filteredProducts.length > 20 && (
-            <div className="mt-4 text-center text-sm text-muted-foreground">
+            <div className="mt-4 text-center text-sm text-slate-400">
               显示前 20 条数据，共 {filteredProducts.length} 条。使用筛选条件缩小范围或导出全部数据。
             </div>
           )}
