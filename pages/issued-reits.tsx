@@ -9,6 +9,7 @@ interface REITData {
   name: string;
   issuePrice: number;
   price: number;
+  prevClose: number;  // 昨日收盘价
   open: number;
   change: number;
   changePercent: number;
@@ -74,6 +75,7 @@ export default function IssuedREITsPage() {
           name: p.name || '',
           issuePrice: p.issuePrice || 0,
           price: p.quote?.price || p.issuePrice || 0,
+          prevClose: p.quote?.prevClose || 0,  // 昨日收盘价
           open: p.quote?.open || 0,
           change: p.quote?.change || 0,
           changePercent: p.quote?.changePercent || 0,
@@ -278,6 +280,7 @@ export default function IssuedREITsPage() {
                       <th className="text-left py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-[140px]">名称</th>
                       <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-[70px]">开盘</th>
                       <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-[70px]">最新</th>
+                      <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-[70px]">昨日收盘</th>
                       <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-[70px]">涨跌幅</th>
                       <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-[70px]">涨跌额</th>
                       <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-[100px]">成交量</th>
@@ -307,6 +310,9 @@ export default function IssuedREITsPage() {
                         </td>
                         <td className="py-3 px-4 text-sm text-right font-medium text-white/80">
                           {product.price ? product.price.toFixed(2) : '0.00'}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right text-white/60">
+                          {product.prevClose > 0 ? product.prevClose.toFixed(2) : '-'}
                         </td>
                         <td className={`py-3 px-4 text-sm text-right font-semibold ${product.changePercent >= 0 ? 'text-red-400' : 'text-green-400'}`}>
                           {product.changePercent >= 0 ? '+' : ''}{product.changePercent.toFixed(2)}%
