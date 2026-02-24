@@ -51,7 +51,7 @@ const navigation: NavGroup[] = [
       { name: '项目管理', href: '/projects', icon: FolderKanban },
       { name: '发行状态', href: '/issuance-status', icon: Clock },
       { name: '已发行 REITs', href: '/issued-reits', icon: Building },
-      { name: '已发行 ABS', href: '/abs-dashboard', icon: Briefcase },
+      { name: 'ABS数据中心', href: '/abs-dashboard', icon: Briefcase },
       { name: 'REITs 八张表数据', href: '/reits-data-tables', icon: Table2 },
     ],
   },
