@@ -7,7 +7,7 @@ import { ABSCenterPanel } from '@/components/abs/ABSCenterPanel';
 import { ABSSidebar } from '@/components/abs/ABSSidebar';
 
 export default function ABSDashboardPage() {
-  const [activeTab, setActiveTab] = useState('ABS项目大全');
+  const [activeTab, setActiveTab] = useState('ABS数据中心');
 
   const tabs = [
     'ABS速览',
