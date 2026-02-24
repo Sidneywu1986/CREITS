@@ -16,12 +16,17 @@ const GLOBAL_REITS_INDEX = [
 
 // 全球主要市场股指
 const GLOBAL_STOCK_INDEX = [
+  // 美洲
   { region: '美国道指', index: 38654.42, change: 234.52, changePercent: 0.61, name: 'Dow Jones' },
   { region: '美国纳指', index: 16428.82, change: 285.16, changePercent: 1.77, name: 'NASDAQ' },
   { region: '美国标普', index: 5234.18, change: 45.87, changePercent: 0.88, name: 'S&P 500' },
-  { region: '英国富时', index: 8164.12, change: -23.45, changePercent: -0.29, name: 'FTSE 100' },
-  { region: '德国DAX', index: 17437.45, change: 89.32, changePercent: 0.51, name: 'DAX 40' },
-  { region: '法国CAC', index: 8088.24, change: 56.78, changePercent: 0.71, name: 'CAC 40' },
+  { region: '巴西圣保罗', index: 125876.3, change: 1234.56, changePercent: 0.99, name: 'BOVESPA' },
+  // 欧洲
+  { region: '欧洲STOXX50', index: 4956.8, change: 56.7, changePercent: 1.15, name: 'STOXX 50' },
+  { region: '欧洲STOX', index: 5234.5, change: 45.3, changePercent: 0.87, name: 'STOX' },
+  { region: '欧洲STOXX', index: 4876.2, change: 38.9, changePercent: 0.80, name: 'STOXX' },
+  { region: '欧洲FTSE300', index: 1425.6, change: 12.8, changePercent: 0.91, name: 'FTSE Eurofirst 300' },
+  // 亚洲
   { region: '日经225', index: 39238.81, change: 324.56, changePercent: 0.83, name: 'NIKKEI 225' },
   { region: '恒生指数', index: 17651.15, change: -89.23, changePercent: -0.50, name: 'Hang Seng' },
   { region: '上证指数', index: 3088.64, change: 15.42, changePercent: 0.50, name: 'SSE Composite' },
@@ -30,8 +35,8 @@ const GLOBAL_STOCK_INDEX = [
 
 // 按地区分组的市场股指
 const MARKET_BY_REGION = {
-  美洲: GLOBAL_STOCK_INDEX.filter(item => ['美国道指', '美国纳指', '美国标普'].includes(item.region)),
-  欧洲: GLOBAL_STOCK_INDEX.filter(item => ['英国富时', '德国DAX', '法国CAC'].includes(item.region)),
+  美洲: GLOBAL_STOCK_INDEX.filter(item => ['美国道指', '美国纳指', '美国标普', '巴西圣保罗'].includes(item.region)),
+  欧洲: GLOBAL_STOCK_INDEX.filter(item => ['欧洲STOXX50', '欧洲STOX', '欧洲STOXX', '欧洲FTSE300'].includes(item.region)),
   亚洲: GLOBAL_STOCK_INDEX.filter(item => ['日经225', '恒生指数', '上证指数', '深证成指'].includes(item.region)),
 };
 
