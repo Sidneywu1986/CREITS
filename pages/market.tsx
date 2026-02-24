@@ -1,34 +1,8 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  TrendingUp,
-  TrendingDown,
-  RefreshCw,
-  Globe,
-  ArrowRight,
-  DollarSign,
-  Activity,
-  Landmark,
-  Search,
-  ArrowUp,
-  ArrowDown,
-  BarChart3,
-  Database,
-  ExternalLink,
-} from 'lucide-react';
+import { ArrowRight, RefreshCw, Globe, Activity, Landmark, BarChart3, ArrowUp, ArrowDown } from 'lucide-react';
 import Link from 'next/link';
-import { getREITsWithQuotes } from '@/src/lib/services/simple-real-data-service';
-import { REAL_REITS_PRODUCTS } from '@/src/lib/data/real-reits-products';
 
 // 全球REITs指数数据
 const GLOBAL_REITS_INDEX = [
@@ -42,26 +16,33 @@ const GLOBAL_REITS_INDEX = [
 
 // 全球主要市场股指
 const GLOBAL_STOCK_INDEX = [
-  { region: '美国道指', index: 38654.42, change: 234.52, changePercent: 0.61, name: 'Dow Jones Industrial' },
-  { region: '美国纳指', index: 16428.82, change: 285.16, changePercent: 1.77, name: 'NASDAQ Composite' },
+  { region: '美国道指', index: 38654.42, change: 234.52, changePercent: 0.61, name: 'Dow Jones' },
+  { region: '美国纳指', index: 16428.82, change: 285.16, changePercent: 1.77, name: 'NASDAQ' },
   { region: '美国标普', index: 5234.18, change: 45.87, changePercent: 0.88, name: 'S&P 500' },
   { region: '英国富时', index: 8164.12, change: -23.45, changePercent: -0.29, name: 'FTSE 100' },
   { region: '德国DAX', index: 17437.45, change: 89.32, changePercent: 0.51, name: 'DAX 40' },
   { region: '法国CAC', index: 8088.24, change: 56.78, changePercent: 0.71, name: 'CAC 40' },
   { region: '日经225', index: 39238.81, change: 324.56, changePercent: 0.83, name: 'NIKKEI 225' },
-  { region: '恒生指数', index: 17651.15, change: -89.23, changePercent: -0.50, name: 'Hang Seng Index' },
+  { region: '恒生指数', index: 17651.15, change: -89.23, changePercent: -0.50, name: 'Hang Seng' },
   { region: '上证指数', index: 3088.64, change: 15.42, changePercent: 0.50, name: 'SSE Composite' },
   { region: '深证成指', index: 9668.52, change: -23.67, changePercent: -0.24, name: 'SZSE Component' },
 ];
 
+// 按地区分组的市场股指
+const MARKET_BY_REGION = {
+  美洲: GLOBAL_STOCK_INDEX.filter(item => ['美国道指', '美国纳指', '美国标普'].includes(item.region)),
+  欧洲: GLOBAL_STOCK_INDEX.filter(item => ['英国富时', '德国DAX', '法国CAC'].includes(item.region)),
+  亚洲: GLOBAL_STOCK_INDEX.filter(item => ['日经225', '恒生指数', '上证指数', '深证成指'].includes(item.region)),
+};
+
 // 十年期国债行情
 const TREASURY_BOND_DATA = [
-  { country: '美国', yield: 4.23, change: 0.05, name: 'US 10-Year Treasury' },
-  { country: '中国', yield: 2.34, change: -0.02, name: 'CGB 10-Year' },
-  { country: '日本', yield: 0.73, change: 0.01, name: 'JGB 10-Year' },
-  { country: '德国', yield: 2.45, change: 0.03, name: 'Bund 10-Year' },
-  { country: '英国', yield: 4.12, change: 0.07, name: 'Gilt 10-Year' },
-  { country: '法国', yield: 2.98, change: 0.04, name: 'OAT 10-Year' },
+  { country: 'US', yield: 4.23, change: 0.05, name: '美国' },
+  { country: '中国', yield: 2.34, change: -0.02, name: '中国' },
+  { country: '日本', yield: 0.73, change: 0.01, name: '日本' },
+  { country: '德国', yield: 2.45, change: 0.03, name: '德国' },
+  { country: '英国', yield: 4.12, change: 0.07, name: '英国' },
+  { country: '法国', yield: 2.98, change: 0.04, name: '法国' },
 ];
 
 // 中国REITs/ABS指数
@@ -159,327 +140,231 @@ const CHINA_REITS_ABS_INDEX = [
   },
 ];
 
+// 迷你折线图组件
+const MiniSparkline = ({ trend }: { trend: 'up' | 'down' | 'neutral' }) => {
+  const points = trend === 'up' 
+    ? '0,15 10,12 20,10 30,8 40,5 50,3 60,4 70,2 80,1'
+    : trend === 'down'
+    ? '0,2 10,5 20,8 30,10 40,12 50,15 60,13 70,16 80,18'
+    : '0,10 10,8 20,12 30,9 40,11 50,8 60,10 70,9 80,10';
+  
+  const color = trend === 'up' ? '#34D399' : trend === 'down' ? '#F87171' : 'rgba(255, 255, 255, 0.4)';
+  
+  return (
+    <svg width="100%" height="20" viewBox="0 0 80 20" className="mt-2" preserveAspectRatio="none">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
+
+// 涨跌幅单元格组件
+const ChangeCell = ({ value }: { value: number }) => {
+  const isPositive = value >= 0;
+  return (
+    <span className={isPositive ? 'text-green-400' : 'text-red-400'}>
+      {isPositive ? '↑' : '↓'} {value >= 0 ? '+' : ''}{value.toFixed(2)}%
+    </span>
+  );
+};
+
 export default function MarketPage() {
-  // 初始化模拟数据
-  const initialMockData = REAL_REITS_PRODUCTS.map(item => ({
-    id: item.id,
-    code: item.code,
-    name: item.name,
-    price: item.issuePrice * (1 + (Math.random() * 0.2 - 0.1)),
-    issuePrice: item.issuePrice,
-    change: Math.random() * 10 - 5,
-    volume: Math.floor(Math.random() * 10000000),
-    amount: item.issueScale * 100000000,
-  }));
-
-  const [products, setProducts] = useState<any[]>(initialMockData);
-  const [loading, setLoading] = useState(false);
-  const [sortBy, setSortBy] = useState<'change' | 'price' | 'volume'>('change');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [searchTerm, setSearchTerm] = useState('');
   const [countdown, setCountdown] = useState(60);
-  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleTimeString('zh-CN'));
 
-  // 加载数据函数
-  const loadMarketData = async () => {
-    try {
-      setLoading(true);
-      const data = await getREITsWithQuotes();
-      const realProducts = data.map(item => ({
-        id: item.id,
-        code: item.code,
-        name: item.name,
-        price: item.quote?.price || item.issuePrice,
-        issuePrice: item.issuePrice,
-        issueDate: item.issueDate,
-        change: item.quote?.changePercent || 0,
-        volume: item.quote?.volume || 0,
-        amount: item.quote?.volume * (item.quote?.price || item.issuePrice) || 0,
-      }));
-      setProducts(realProducts);
-      setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
-      setCountdown(60); // 重置倒计时为1分钟
-    } catch (error) {
-      console.error('获取真实数据失败，继续使用模拟数据:', error);
-      // 不重新设置products，保持当前数据
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 初始化加载
+  // 自动刷新
   useEffect(() => {
-    // 直接使用模拟数据进行测试
-    const mockData = REAL_REITS_PRODUCTS.map(item => ({
-      id: item.id,
-      code: item.code,
-      name: item.name,
-      price: item.issuePrice * (1 + (Math.random() * 0.2 - 0.1)),
-      issuePrice: item.issuePrice,
-      issueDate: item.issueDate,
-      change: Math.random() * 10 - 5,
-      volume: Math.floor(Math.random() * 10000000),
-      amount: item.issueScale * 100000000,
-    }));
-    setProducts(mockData);
-    setLoading(false);
-
-    // 尝试获取真实数据
-    loadMarketData();
-
-    // 设置1分钟自动刷新
     const interval = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          loadMarketData();
+          setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
           return 60;
         }
         return prev - 1;
       });
     }, 1000);
 
-    // 清理定时器
     return () => clearInterval(interval);
   }, []);
 
-  // 排序函数
-  const sortedProducts = [...products].sort((a, b) => {
-    let comparison = 0;
-    if (sortBy === 'change') {
-      comparison = a.change - b.change;
-    } else if (sortBy === 'price') {
-      comparison = a.price - b.price;
-    } else if (sortBy === 'volume') {
-      comparison = (a.volume || 0) - (b.volume || 0);
-    }
-    return sortOrder === 'asc' ? comparison : -comparison;
-  });
-
-  // 过滤搜索
-  const filteredProducts = sortedProducts.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // 格式化金额
-  const formatVolume = (volume: number) => {
-    if (volume >= 100000000) {
-      return `${(volume / 100000000).toFixed(2)}亿`;
-    } else if (volume >= 10000) {
-      return `${(volume / 10000).toFixed(2)}万`;
-    }
-    return volume.toString();
-  };
-
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="mr-4">
-              <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
-              返回
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold flex items-center">
-            <Globe className="mr-3 text-[#667eea]" />
-            金融看板
-          </h1>
+    <div className="min-h-screen bg-gradient-to-b from-[#0B1E33] to-[#1A3B5E]">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* 头部区域 */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <button className="flex items-center gap-2 text-white/70 hover:text-white transition-colors">
+                <ArrowRight className="w-4 h-4 rotate-180" />
+                <span>返回</span>
+              </button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-white">市场行情</h1>
+              <p className="text-white/60 text-sm mt-1">
+                全球REITs指数 · 主要市场股指 · 十年期国债 · 中国REITs/ABS
+              </p>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-sm">
-              <Activity className="w-3 h-3 mr-1" />
-              {countdown}s 后自动刷新
-            </Badge>
-            <Badge variant="outline" className="text-xs text-muted-foreground">
-              1分钟/次
-            </Badge>
-            {lastUpdate && (
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                更新于 {lastUpdate}
-              </span>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadMarketData}
-              disabled={loading}
-              className="relative"
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
+              <Activity className="w-3 h-3 text-blue-400" />
+              <span className="text-sm text-white/80">{countdown}s 后刷新</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
+              <Globe className="w-3 h-3 text-blue-400" />
+              <span className="text-sm text-white/80">更新: {lastUpdate}</span>
+            </div>
+            <button
+              onClick={() => {
+                setCountdown(60);
+                setLastUpdate(new Date().toLocaleTimeString('zh-CN'));
+              }}
+              className="px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg hover:bg-white/20 transition-colors"
             >
-              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              刷新
-            </Button>
+              <RefreshCw className="w-4 h-4 text-white/80" />
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* 板块1: 全球REITs指数 */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Landmark className="mr-2 text-[#667eea]" />
+        {/* 1. 全球REITs指数 */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Landmark className="w-5 h-5 text-blue-400" />
             全球REITs指数
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {GLOBAL_REITS_INDEX.map((item) => (
               <div
                 key={item.region}
-                className="p-4 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 hover:bg-white/20 transition"
               >
-                <div className="text-sm text-muted-foreground mb-1">{item.name}</div>
-                <div className="text-xl font-bold mb-1">{item.index.toFixed(1)}</div>
-                <div className={`flex items-center text-sm font-semibold ${item.changePercent >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  {item.changePercent >= 0 ? (
-                    <ArrowUp className="h-3 w-3 mr-1" />
-                  ) : (
-                    <ArrowDown className="h-3 w-3 mr-1" />
-                  )}
-                  {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
+                <div className="text-sm font-medium text-white/70">{item.name}</div>
+                <div className="text-xl font-bold text-white mt-1">{item.index.toFixed(1)}</div>
+                <div className="flex items-center gap-1 mt-1">
+                  <span className={item.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}>
+                    {item.changePercent >= 0 ? '↑' : '↓'}
+                  </span>
+                  <ChangeCell value={item.changePercent} />
                 </div>
+                <MiniSparkline trend={item.changePercent >= 0 ? 'up' : 'down'} />
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* 板块2: 全球主要市场股指 */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <BarChart3 className="mr-2 text-[#764ba2]" />
+        {/* 2. 全球主要市场股指 */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-purple-400" />
             全球主要市场股指
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {GLOBAL_STOCK_INDEX.map((item) => (
-              <div
-                key={item.region}
-                className="p-4 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
-              >
-                <div className="text-sm text-muted-foreground mb-1">{item.name}</div>
-                <div className="text-xl font-bold mb-1">{item.index.toFixed(2)}</div>
-                <div className={`flex items-center text-sm font-semibold ${item.changePercent >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  {item.changePercent >= 0 ? (
-                    <ArrowUp className="h-3 w-3 mr-1" />
-                  ) : (
-                    <ArrowDown className="h-3 w-3 mr-1" />
-                  )}
-                  {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
-                </div>
+          </h2>
+          {Object.entries(MARKET_BY_REGION).map(([region, indices]) => (
+            <div key={region} className="mt-6">
+              <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider mb-3">
+                {region}
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {indices.map((item) => (
+                  <div
+                    key={item.region}
+                    className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition"
+                  >
+                    <div className="text-sm font-medium text-white/70">{item.name}</div>
+                    <div className="text-lg font-bold text-white mt-1">{item.index.toFixed(0)}</div>
+                    <ChangeCell value={item.changePercent} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          ))}
+        </div>
 
-      {/* 板块3: 十年期国债行情 */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <DollarSign className="mr-2 text-[#48bb78]" />
+        {/* 3. 十年期国债行情 */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Landmark className="w-5 h-5 text-green-400" />
             十年期国债行情
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {TREASURY_BOND_DATA.map((item) => (
               <div
                 key={item.country}
-                className="p-4 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition"
               >
-                <div className="text-sm text-muted-foreground mb-1">{item.name}</div>
-                <div className="text-xl font-bold mb-1">{item.yield.toFixed(2)}%</div>
-                <div className={`flex items-center text-sm font-semibold ${item.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  {item.change >= 0 ? (
-                    <ArrowUp className="h-3 w-3 mr-1" />
-                  ) : (
-                    <ArrowDown className="h-3 w-3 mr-1" />
-                  )}
-                  {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}%
+                <div className="text-xs font-medium text-white/60">{item.name}</div>
+                <div className="text-base font-bold text-white mt-1">{item.yield.toFixed(2)}%</div>
+                <div className={`text-xs font-medium ${item.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {item.change >= 0 ? '↑' : '↓'} {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}%
                 </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* 板块4: 中国REITs/ABS指数 */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Database className="mr-2 text-[#667eea]" />
+        {/* 4. 中国REITs/ABS指数 */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-blue-400" />
             中国REITs/ABS指数
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 font-semibold text-sm">指数名称</th>
-                  <th className="text-left py-3 px-4 font-semibold text-sm">类型</th>
-                  <th className="text-left py-3 px-4 font-semibold text-sm">发布方/代码</th>
-                  <th className="text-left py-3 px-4 font-semibold text-sm">主要特点</th>
-                  <th className="text-right py-3 px-4 font-semibold text-sm">指数</th>
-                  <th className="text-right py-3 px-4 font-semibold text-sm">最高值</th>
-                  <th className="text-right py-3 px-4 font-semibold text-sm">最低值</th>
-                  <th className="text-right py-3 px-4 font-semibold text-sm">涨跌幅</th>
-                </tr>
-              </thead>
-              <tbody>
-                {CHINA_REITS_ABS_INDEX.map((item, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <td className="py-3 px-4 text-sm font-medium">{item.name}</td>
-                    <td className="py-3 px-4">
-                      <Badge
-                        variant="outline"
-                        className={item.type === 'REITs' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-purple-50 text-purple-700 border-purple-200'}
-                      >
-                        {item.type}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4 text-sm">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground">{item.publisher}</span>
-                        {item.code && <span className="text-xs text-muted-foreground">代码: {item.code}</span>}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground max-w-xs truncate" title={item.features}>
-                      {item.features}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-right font-medium">{item.indexValue.toFixed(1)}</td>
-                    <td className="py-3 px-4 text-sm text-right">
-                      <div className="flex flex-col items-end">
-                        <span className="font-semibold text-green-600 dark:text-green-400">{item.highestValue?.toFixed(1) || '-'}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{item.highestDate || '-'}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-right">
-                      <div className="flex flex-col items-end">
-                        <span className="font-semibold text-red-600 dark:text-red-400">{item.lowestValue?.toFixed(1) || '-'}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{item.lowestDate || '-'}</span>
-                      </div>
-                    </td>
-                    <td className={`py-3 px-4 text-sm text-right font-semibold ${item.changePercent >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
-                    </td>
+          </h2>
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
+            <div className="max-h-96 overflow-y-auto">
+              <table className="w-full">
+                <thead className="sticky top-0 z-10 bg-[#0B1E33]/95 backdrop-blur-sm">
+                  <tr>
+                    <th className="text-left py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider min-w-[180px]">指数名称</th>
+                    <th className="text-left py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-16">类型</th>
+                    <th className="text-left py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-24">发布方/代码</th>
+                    <th className="text-left py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider min-w-[200px]">主要特点</th>
+                    <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-20">指数</th>
+                    <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-20">最高值</th>
+                    <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-20">最低值</th>
+                    <th className="text-right py-3 px-4 text-xs font-medium text-white/50 uppercase tracking-wider w-20">涨跌幅</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {CHINA_REITS_ABS_INDEX.map((item, index) => (
+                    <tr key={index} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <td className="py-3 px-4 text-sm text-white/80">{item.name}</td>
+                      <td className="py-3 px-4">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                          item.type === 'REITs' 
+                            ? 'bg-blue-500/20 text-blue-400' 
+                            : 'bg-purple-500/20 text-purple-400'
+                        }`}>
+                          {item.type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-white/80">
+                        <div className="flex flex-col">
+                          <span className="text-xs">{item.publisher}</span>
+                          {item.code && <span className="text-xs text-white/60">{item.code}</span>}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-white/60 truncate max-w-[200px]" title={item.features}>
+                        {item.features}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right text-white/80">{item.indexValue.toFixed(1)}</td>
+                      <td className="py-3 px-4 text-sm text-right text-white/60">{item.highestValue.toFixed(1)}</td>
+                      <td className="py-3 px-4 text-sm text-right text-white/60">{item.lowestValue.toFixed(1)}</td>
+                      <td className="py-3 px-4 text-sm text-right font-medium">
+                        <ChangeCell value={item.changePercent} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
-
-export const metadata = {
-  title: '金融看板 - REITs 智能助手',
-  description: '全球REITs市场行情和金融数据',
-};
