@@ -19,7 +19,7 @@ export default function REITsTablePreview() {
   return (
     <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/20 transition">
       <h3 className="text-sm font-semibold text-white mb-3">
-        REITs 八张表数据（最新）
+        REITs 八张表（最新）
       </h3>
 
       <table className="w-full">

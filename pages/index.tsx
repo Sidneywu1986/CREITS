@@ -84,7 +84,7 @@ export default function Home() {
                 {/* 资产证券化新闻 */}
                 <NewsHorizontal />
 
-                {/* REITs 八张表数据预览 */}
+                {/* REITs 八张表预览 */}
                 <REITsTablePreview />
 
                 {/* 待发行项目 + 匿名BBS */}
