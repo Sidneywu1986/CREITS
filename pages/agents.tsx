@@ -1,119 +1,86 @@
-import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { AGENTS } from '@/types';
-import { ArrowRight, Bot, Sparkles, BookOpen } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { AGENTS } from '@/src/types';
 
 export default function AgentsPage() {
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="mr-4">
-              <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
-              返回
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold flex items-center">
-            <Bot className="mr-3 text-[#667eea]" />
-            Agent 服务中心
-          </h1>
-        </div>
-      </div>
-
-      <div className="mb-8">
-        <div className="rounded-2xl bg-gradient-to-r from-[#667eea] to-[#764ba2] p-6 text-white shadow-lg">
-          <h2 className="text-2xl font-bold mb-2">
-            智能Agent + 文档分析
-          </h2>
-          <p className="opacity-90">
+    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-[#0B1E33] to-[#1A3B5E]">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 头部区域 */}
+        <div className="mb-6 border-b border-white/10 pb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Link href="/">
+                <button className="flex items-center gap-2 text-white/70 hover:text-white transition-colors">
+                  <ArrowRight className="h-4 w-4 rotate-180" />
+                  返回
+                </button>
+              </Link>
+              <div className="ml-6">
+                <h1 className="text-2xl font-bold text-white">Agent服务中心</h1>
+              </div>
+            </div>
+          </div>
+          <p className="text-white/60 text-sm mt-4 ml-16">
             选择专业Agent进行对话，或上传文档让Agent进行分析。每个Agent都专注于特定领域，为您提供专业、精准的服务。
           </p>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {AGENTS.filter(agent => agent.id !== 'collaboration').map((agent) => (
-          <Card
-            key={agent.id}
-            className="h-full hover:shadow-2xl transition-all duration-300 border-2 hover:border-[#667eea] group"
-          >
-            <CardHeader>
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl shadow-md"
-                  style={{ backgroundColor: agent.color + '20', border: '2px solid ' + agent.color }}
-                >
-                  {agent.icon}
-                </div>
-                <Badge
-                  className="font-medium"
-                  style={{
-                    backgroundColor: agent.color + '20',
-                    color: agent.color,
-                    border: '1px solid ' + agent.color,
-                  }}
-                >
-                  专业 Agent
-                </Badge>
-              </div>
-              <CardTitle className="text-xl">{agent.name}</CardTitle>
-              <CardDescription className="text-base">{agent.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex space-x-2">
-                  <Link href={`/chat/${agent.id}`} className="flex-1">
-                    <Button variant="default" className="w-full">
-                      开始对话
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-                <div className="flex space-x-2">
-                  <Button variant="outline" className="flex-1">
-                    文档分析
-                  </Button>
-                  <Link href={`/knowledge/${agent.id}`} className="flex-1">
-                    <Button variant="outline" className="w-full">
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      知识库
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="border-2 border-[#667eea] bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5">
-        <CardHeader>
-          <div>
-            <CardTitle className="text-2xl">智能协作模式</CardTitle>
-            <CardDescription className="text-base mt-1">
-              多 Agent 协同工作，复杂任务交给 AI
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            通过智能协作模式，系统会自动协调多个专业Agent共同处理复杂任务，为您提供更全面、更深入的解决方案。
-          </p>
-          <Link href="/chat/collaboration">
-            <Button
-              size="lg"
-              className="w-full bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90 transition-opacity"
+        {/* Agent卡片区域 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+          {AGENTS.filter(agent => agent.id !== 'collaboration').map((agent) => (
+            <div
+              key={agent.id}
+              className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5 hover:bg-white/20 hover:border-white/40 transition-all duration-200"
             >
-              <Sparkles className="mr-2 h-5 w-5" />
-              启动协作模式
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">{agent.icon}</span>
+                <h3 className="text-lg font-semibold text-white">{agent.name}</h3>
+              </div>
+              <p className="text-sm text-white/60 h-10 line-clamp-2">
+                {agent.description}
+              </p>
+              <div className="mt-4">
+                <Link href={`/chat/${agent.id}`} className="block">
+                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium w-full transition-colors">
+                    开始对话 →
+                  </button>
+                </Link>
+                <div className="flex justify-center items-center gap-3 mt-3 text-sm">
+                  <span className="text-white/60 hover:text-white cursor-pointer transition-colors">
+                    文档分析
+                  </span>
+                  <span className="text-white/20">·</span>
+                  <Link href={`/knowledge/${agent.id}`}>
+                    <span className="text-white/60 hover:text-white cursor-pointer transition-colors">
+                      知识库
+                    </span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 智能协作模式区域 */}
+        <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4 flex-1">
+              <span className="text-3xl">🧠</span>
+              <div>
+                <h3 className="text-xl font-semibold text-white">智能协作模式</h3>
+                <p className="text-white/60 text-sm mt-1">多Agent协同工作，复杂任务交给AI</p>
+              </div>
+            </div>
+            <Link href="/chat/collaboration" className="flex-shrink-0">
+              <button className="border border-white/30 text-white px-6 py-3 rounded-lg hover:bg-white/10 transition-all duration-200 flex items-center gap-2">
+                启动协作模式
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
