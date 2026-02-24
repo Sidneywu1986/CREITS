@@ -22,6 +22,7 @@ type SortOption = 'default' | 'changePercent' | 'volume' | 'issueDate';
 export default function IssuedREITsPage() {
   const [products, setProducts] = useState<REITData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,14 +32,48 @@ export default function IssuedREITsPage() {
   React.useEffect(() => {
     async function loadData() {
       try {
-        const response = await fetch('/api/database/query/products');
-        const data = await response.json();
+        setLoading(true);
+        setError(null);
         
-        const productsWithQuotes = data.map((p: any) => ({
-          code: p.code,
-          name: p.name,
-          issuePrice: p.issuePrice,
-          price: p.quote?.price || p.issuePrice,
+        const response = await fetch('/api/database/query/products');
+        
+        if (!response.ok) {
+          throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        // 检查API返回数据格式，提取实际的产品数组
+        let productsData: any[] = [];
+        
+        if (Array.isArray(result)) {
+          // 直接返回数组
+          productsData = result;
+        } else if (result?.data && Array.isArray(result.data)) {
+          // 常见包装格式: { data: [...] }
+          productsData = result.data;
+        } else if (result?.records && Array.isArray(result.records)) {
+          // 常见包装格式: { records: [...] }
+          productsData = result.records;
+        } else if (result?.products && Array.isArray(result.products)) {
+          // 常见包装格式: { products: [...] }
+          productsData = result.products;
+        } else if (result?.items && Array.isArray(result.items)) {
+          // 常见包装格式: { items: [...] }
+          productsData = result.items;
+        } else {
+          console.error('API返回格式异常，无法识别为数组:', result);
+          setError('数据格式错误，请联系管理员');
+          setProducts([]);
+          return;
+        }
+        
+        // 转换数据格式
+        const productsWithQuotes = productsData.map((p: any) => ({
+          code: p.code || '',
+          name: p.name || '',
+          issuePrice: p.issuePrice || 0,
+          price: p.quote?.price || p.issuePrice || 0,
           open: p.quote?.open || 0,
           change: p.quote?.change || 0,
           changePercent: p.quote?.changePercent || 0,
@@ -50,6 +85,8 @@ export default function IssuedREITsPage() {
         setProducts(productsWithQuotes);
       } catch (error) {
         console.error('加载数据失败:', error);
+        setError(error instanceof Error ? error.message : '加载数据失败，请稍后重试');
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -132,6 +169,26 @@ export default function IssuedREITsPage() {
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white/70">加载数据中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#0B1E33] to-[#1A3B5E] flex items-center justify-center">
+        <div className="text-center px-6">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">数据加载失败</h2>
+          <p className="text-white/60 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            重新加载
+          </button>
         </div>
       </div>
     );
