@@ -172,33 +172,34 @@ export async function getREITsWithQuotes(): Promise<REITsWithQuote[]> {
 /**
  * 获取单个REITs产品详情（含行情）
  */
+/**
+ * 获取单个REITs产品详情（含行情）
+ */
 export async function getREITsDetail(code: string): Promise<REITsWithQuote | null> {
-  const product = REAL_REITS_PRODUCTS.find(p => p.code === code);
-  if (!product) return null;
+  try {
+    // 调用API接口获取产品详情
+    const response = await fetch(`/api/database/query/product-detail/${code}`);
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.warn(`未找到REITs产品，代码: ${code}`);
+        return null;
+      }
+      throw new Error(`API请求失败: ${response.status}`);
+    }
 
-  // 直接使用模拟数据，避免外部API调用超时问题
-  const mockChange = (Math.random() - 0.5) * 2; // -1% 到 +1%
-  const mockVolume = Math.floor(Math.random() * 10000000); // 随机成交量
-  const mockTurnoverRate = (Math.random() * 2).toFixed(2); // 随机换手率 0-2%
-  
-  const quote: Quote = {
-    code: product.code,
-    name: product.name,
-    price: product.issuePrice * (0.95 + Math.random() * 0.1), // 在发行价上下浮动
-    change: parseFloat(mockChange.toFixed(2)), // 保留两位小数
-    changePercent: parseFloat(mockChange.toFixed(2)), // 保留两位小数
-    open: product.issuePrice * (0.98 + Math.random() * 0.02),
-    high: product.issuePrice * (1.0 + Math.random() * 0.1),
-    low: product.issuePrice * (0.9 + Math.random() * 0.08),
-    volume: mockVolume,
-    turnoverRate: parseFloat(mockTurnoverRate),
-    updateTime: new Date().toISOString(),
-  };
+    const result = await response.json();
+    
+    if (!result.success || !result.data) {
+      console.warn(`获取REITs产品详情失败，代码: ${code}`);
+      return null;
+    }
 
-  return {
-    ...product,
-    quote: quote || undefined,
-  };
+    return result.data;
+  } catch (error) {
+    console.error(`获取REITs产品详情失败，代码: ${code}:`, error);
+    return null;
+  }
 }
 
 /**
