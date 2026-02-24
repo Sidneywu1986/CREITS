@@ -266,24 +266,26 @@ export function ABSCenterPanel() {
       axisPointer: {
         type: 'cross',
         label: {
-          backgroundColor: 'rgba(51, 65, 85, 0.9)',
+          backgroundColor: 'rgba(30, 41, 59, 0.95)',
           color: '#fff'
         }
       },
-      backgroundColor: 'rgba(51, 65, 85, 0.9)',
-      borderColor: '#334155',
+      backgroundColor: 'rgba(30, 41, 59, 0.95)',
+      borderColor: '#475569',
       textStyle: {
         color: '#fff'
       }
     },
     legend: {
       data: ['发行数量', '发行规模（亿元）'],
-      textStyle: { color: '#94a3b8' }
+      textStyle: { color: '#cbd5e1', fontSize: 13 },
+      top: 10
     },
     grid: {
       left: '3%',
       right: '4%',
       bottom: '3%',
+      top: '15%',
       containLabel: true
     },
     xAxis: [
@@ -291,8 +293,8 @@ export function ABSCenterPanel() {
         type: 'category',
         boundaryGap: false,
         data: trendData.years,
-        axisLabel: { color: '#94a3b8' },
-        axisLine: { lineStyle: { color: '#475569' } }
+        axisLabel: { color: '#cbd5e1', fontSize: 12 },
+        axisLine: { lineStyle: { color: '#64748b' } }
       }
     ],
     yAxis: [
@@ -300,17 +302,19 @@ export function ABSCenterPanel() {
         type: 'value',
         name: '数量',
         position: 'left',
-        axisLabel: { color: '#94a3b8' },
-        axisLine: { lineStyle: { color: '#475569' } },
-        splitLine: { lineStyle: { color: '#334155' } }
+        axisLabel: { color: '#cbd5e1', fontSize: 12 },
+        axisLine: { lineStyle: { color: '#64748b' } },
+        splitLine: { lineStyle: { color: '#475569', type: 'dashed' } },
+        nameTextStyle: { color: '#cbd5e1', fontSize: 12 }
       },
       {
         type: 'value',
         name: '规模（亿元）',
         position: 'right',
-        axisLabel: { color: '#94a3b8' },
-        axisLine: { lineStyle: { color: '#475569' } },
-        splitLine: { lineStyle: { color: '#334155' } }
+        axisLabel: { color: '#cbd5e1', fontSize: 12 },
+        axisLine: { lineStyle: { color: '#64748b' } },
+        splitLine: { show: false },
+        nameTextStyle: { color: '#cbd5e1', fontSize: 12 }
       }
     ],
     series: [
@@ -319,25 +323,47 @@ export function ABSCenterPanel() {
         type: 'line',
         smooth: true,
         data: trendData.counts,
-        itemStyle: { color: '#667eea' },
-        lineStyle: { color: '#667eea' },
+        itemStyle: { 
+          color: '#60a5fa',
+          borderWidth: 2,
+          borderColor: '#fff'
+        },
+        lineStyle: { 
+          color: '#60a5fa', 
+          width: 3,
+          shadowColor: 'rgba(96, 165, 250, 0.5)',
+          shadowBlur: 10
+        },
         areaStyle: {
           color: {
             type: 'linear',
             x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(102, 126, 234, 0.4)' },
-              { offset: 1, color: 'rgba(102, 126, 234, 0.05)' }
+              { offset: 0, color: 'rgba(96, 165, 250, 0.5)' },
+              { offset: 1, color: 'rgba(96, 165, 250, 0.1)' }
             ]
           }
-        }
+        },
+        symbol: 'circle',
+        symbolSize: 8
       },
       {
         name: '发行规模（亿元）',
         type: 'bar',
         yAxisIndex: 1,
         data: trendData.scales,
-        itemStyle: { color: '#764ba2', borderRadius: [4, 4, 0, 0] }
+        itemStyle: { 
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: '#a78bfa' },
+              { offset: 1, color: '#7c3aed' }
+            ]
+          },
+          borderRadius: [6, 6, 0, 0]
+        },
+        barWidth: '60%'
       }
     ]
   };
@@ -347,32 +373,47 @@ export function ABSCenterPanel() {
     tooltip: {
       trigger: 'item',
       formatter: '{b}: {c} ({d}%)',
-      backgroundColor: 'rgba(51, 65, 85, 0.9)',
-      borderColor: '#334155',
+      backgroundColor: 'rgba(30, 41, 59, 0.95)',
+      borderColor: '#475569',
       textStyle: {
-        color: '#fff'
+        color: '#fff',
+        fontSize: 13
       }
     },
     legend: {
       orient: 'vertical',
       left: 'left',
-      textStyle: { color: '#94a3b8' }
+      top: 'middle',
+      textStyle: { 
+        color: '#cbd5e1',
+        fontSize: 12
+      },
+      itemGap: 12
     },
     series: [
       {
         name: '基础资产类型',
         type: 'pie',
-        radius: ['40%', '70%'],
-        avoidLabelOverlap: false,
+        radius: ['45%', '70%'],
+        center: ['60%', '50%'],
+        avoidLabelOverlap: true,
         itemStyle: {
-          borderRadius: 10,
+          borderRadius: 8,
           borderColor: '#1e293b',
-          borderWidth: 2
+          borderWidth: 3
         },
         label: {
           show: true,
           formatter: '{b}\n{d}%',
-          color: '#94a3b8'
+          color: '#cbd5e1',
+          fontSize: 12,
+          fontWeight: '500'
+        },
+        labelLine: {
+          show: true,
+          lineStyle: {
+            color: '#64748b'
+          }
         },
         emphasis: {
           label: {
@@ -380,9 +421,29 @@ export function ABSCenterPanel() {
             fontSize: 14,
             fontWeight: 'bold',
             color: '#fff'
+          },
+          itemStyle: {
+            shadowBlur: 20,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
           }
         },
-        data: typeData
+        data: typeData.map((item, index) => ({
+          ...item,
+          itemStyle: {
+            color: [
+              '#60a5fa',  // 蓝色
+              '#a78bfa',  // 紫色
+              '#f472b6',  // 粉色
+              '#34d399',  // 绿色
+              '#fbbf24',  // 黄色
+              '#f97316',  // 橙色
+              '#06b6d4',  // 青色
+              '#8b5cf6',  // 深紫
+            ][index % 8],
+            borderWidth: 3,
+            borderColor: '#1e293b'
+          }
+        }))
       }
     ]
   };
