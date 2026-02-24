@@ -1,19 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, RefreshCw, ArrowRight, Eye, Flame, AlertCircle, Loader2 } from 'lucide-react';
+import { Search, RefreshCw, ArrowRight, Eye, Flame, AlertCircle, Loader2, Building2, Landmark, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 
 interface NewsItem {
-  id: number;
+  id: string;
   title: string;
-  source: string;
-  category: 'national' | 'exchange' | 'industry';
-  date: string;
-  views: number;
   summary: string;
-  tags: string[];
+  source: string;
+  sourceType: 'gov' | 'exchange' | 'media';
+  publishTime: string;
   url: string;
+  tags: string[];
+  readCount: number;
 }
 
 interface ApiResponse {
@@ -34,6 +34,7 @@ const HOT_TOPICS = [
   '存量资产盘活',
   '碳中和金融',
   '公募REITs',
+  '保障性租赁住房',
 ];
 
 export default function NewsPage() {
@@ -48,10 +49,10 @@ export default function NewsPage() {
   const [warning, setWarning] = useState<string | null>(null);
 
   const categories = [
-    { id: 'all', label: '全部新闻' },
-    { id: 'national', label: '国家部委' },
-    { id: 'exchange', label: '交易所' },
-    { id: 'industry', label: '行业公司' },
+    { id: 'all', label: '全部新闻', icon: null },
+    { id: 'gov', label: '国家部委', icon: <Landmark className="w-4 h-4" /> },
+    { id: 'exchange', label: '交易所', icon: <Building2 className="w-4 h-4" /> },
+    { id: 'media', label: '行业公司', icon: <Newspaper className="w-4 h-4" /> },
   ];
 
   // 获取新闻数据
@@ -61,29 +62,55 @@ export default function NewsPage() {
     setWarning(null);
 
     try {
-      const response = await fetch('/api/news', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // 并行调用三个接口
+      const [policyRes, exchangeRes, industryRes] = await Promise.all([
+        fetch('/api/news/policy'),
+        fetch('/api/news/exchange'),
+        fetch('/api/news/industry'),
+      ]);
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+      const [policyData, exchangeData, industryData] = await Promise.all([
+        policyRes.json(),
+        exchangeRes.json(),
+        industryRes.json(),
+      ]);
+
+      // 合并数据
+      const allNews = [
+        ...(policyData.data || []),
+        ...(exchangeData.data || []),
+        ...(industryData.data || []),
+      ];
+
+      // 按发布时间排序
+      allNews.sort((a, b) => 
+        new Date(b.publishTime).getTime() - new Date(a.publishTime).getTime()
+      );
+
+      setNewsData(allNews);
+
+      // 检查是否有缓存数据
+      const hasCached = policyData.cached || exchangeData.cached || industryData.cached;
+      setIsCached(hasCached);
+
+      // 设置最后更新时间
+      const latestTimestamp = [
+        policyData.timestamp,
+        exchangeData.timestamp,
+        industryData.timestamp,
+      ].filter(Boolean)[0] || new Date().toISOString();
+      setLastUpdate(latestTimestamp);
+
+      // 收集警告信息
+      const warnings = [
+        policyData.warning,
+        exchangeData.warning,
+        industryData.warning,
+      ].filter(Boolean);
+      if (warnings.length > 0) {
+        setWarning(warnings.join('; '));
       }
 
-      const result: ApiResponse = await response.json();
-
-      if (result.success && result.data) {
-        setNewsData(result.data);
-        setIsCached(result.cached || false);
-        setLastUpdate(result.timestamp || new Date().toISOString());
-        if (result.warning) {
-          setWarning(result.warning);
-        }
-      } else {
-        throw new Error(result.error || 'Failed to fetch news');
-      }
     } catch (err) {
       console.error('Failed to fetch news:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch news');
@@ -130,7 +157,7 @@ export default function NewsPage() {
 
   // 过滤新闻
   const filteredNews = newsData.filter((news) => {
-    const categoryMatch = selectedCategory === 'all' || news.category === selectedCategory;
+    const categoryMatch = selectedCategory === 'all' || news.sourceType === selectedCategory;
     const searchMatch =
       !searchQuery ||
       news.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -141,10 +168,38 @@ export default function NewsPage() {
     return categoryMatch && searchMatch && topicMatch;
   });
 
-  // 获取当前分类的中文标签
-  const getCategoryLabel = (category: string) => {
-    const cat = categories.find(c => c.id === category);
-    return cat?.label || '新闻';
+  // 获取来源类型配置
+  const getSourceConfig = (sourceType: 'gov' | 'exchange' | 'media') => {
+    switch (sourceType) {
+      case 'gov':
+        return {
+          label: '政务',
+          color: 'bg-blue-600',
+          borderColor: 'border-blue-500',
+          textColor: 'text-blue-400',
+        };
+      case 'exchange':
+        return {
+          label: '交易所',
+          color: 'bg-purple-600',
+          borderColor: 'border-purple-500',
+          textColor: 'text-purple-400',
+        };
+      case 'media':
+        return {
+          label: '媒体',
+          color: 'bg-green-600',
+          borderColor: 'border-green-500',
+          textColor: 'text-green-400',
+        };
+      default:
+        return {
+          label: '新闻',
+          color: 'bg-gray-600',
+          borderColor: 'border-gray-500',
+          textColor: 'text-gray-400',
+        };
+    }
   };
 
   return (
@@ -205,11 +260,6 @@ export default function NewsPage() {
               <span className="text-sm font-semibold text-red-300">获取新闻失败</span>
             </div>
             <p className="text-sm text-red-200">{error}</p>
-            <p className="text-xs text-red-300 mt-2">
-              提示：请在环境变量中配置 TIINGO_API_KEY 以获取真实数据。
-              <br />
-                {/* TODO: 提供API Key配置指南 */}
-            </p>
           </div>
         )}
 
@@ -265,12 +315,13 @@ export default function NewsPage() {
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               disabled={loading}
-              className={`pb-2 text-sm transition disabled:opacity-50 ${
+              className={`pb-2 text-sm transition flex items-center gap-2 disabled:opacity-50 ${
                 selectedCategory === cat.id
                   ? 'text-white border-b-2 border-blue-500'
                   : 'text-white/60 hover:text-white cursor-pointer'
               }`}
             >
+              {cat.icon}
               {cat.label}
             </button>
           ))}
@@ -287,51 +338,59 @@ export default function NewsPage() {
         {/* 新闻列表 */}
         {!loading && newsData.length > 0 && (
           <div className="flex flex-col gap-4">
-            {filteredNews.map((news) => (
-              <a
-                key={news.id}
-                href={news.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5 hover:bg-white/20 transition cursor-pointer block"
-              >
-                {/* 来源、时间、阅读量 */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-blue-400">{news.source}</span>
-                  <span className="text-xs text-white/40">· {formatTime(news.date)}</span>
-                  <span className="text-xs text-white/40 ml-auto flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    {formatViews(news.views)}阅读
-                  </span>
-                </div>
-
-                {/* 标题 */}
-                <h3 className="text-base font-semibold text-white mt-1 hover:text-blue-400 transition">
-                  {news.title}
-                </h3>
-
-                {/* 摘要 */}
-                <p className="text-sm text-white/60 mt-1 line-clamp-2">{news.summary}</p>
-
-                {/* 标签 */}
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {news.tags.length > 0 ? (
-                    news.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2 py-0.5 rounded text-xs bg-white/10 text-white/60"
-                      >
-                        #{tag}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="px-2 py-0.5 rounded text-xs bg-white/10 text-white/60">
-                      #{getCategoryLabel(news.category)}
+            {filteredNews.map((news) => {
+              const sourceConfig = getSourceConfig(news.sourceType);
+              return (
+                <a
+                  key={news.id}
+                  href={news.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5 hover:bg-white/20 transition cursor-pointer block"
+                >
+                  {/* 来源、时间、阅读量 */}
+                  <div className="flex items-center gap-2">
+                    {/* 来源类型标签 */}
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${sourceConfig.color} text-white`}>
+                      {sourceConfig.label}
                     </span>
-                  )}
-                </div>
-              </a>
-            ))}
+                    {/* 来源名称 */}
+                    <span className={`text-sm font-medium ${sourceConfig.textColor}`}>{news.source}</span>
+                    <span className="text-xs text-white/40">· {formatTime(news.publishTime)}</span>
+                    <span className="text-xs text-white/40 ml-auto flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      {formatViews(news.readCount)}阅读
+                    </span>
+                  </div>
+
+                  {/* 标题 */}
+                  <h3 className="text-base font-semibold text-white mt-1 hover:text-blue-400 transition">
+                    {news.title}
+                  </h3>
+
+                  {/* 摘要 */}
+                  <p className="text-sm text-white/60 mt-1 line-clamp-2">{news.summary}</p>
+
+                  {/* 标签 */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {news.tags.length > 0 ? (
+                      news.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-0.5 rounded text-xs bg-white/10 text-white/60"
+                        >
+                          #{tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-xs bg-white/10 text-white/60">
+                        #资讯
+                      </span>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
 
             {/* 空状态 */}
             {filteredNews.length === 0 && (
@@ -341,6 +400,7 @@ export default function NewsPage() {
                   onClick={() => {
                     setSearchQuery('');
                     setSelectedTopic(null);
+                    setSelectedCategory('all');
                   }}
                   className="mt-2 text-blue-400 hover:underline"
                 >
@@ -365,7 +425,7 @@ export default function NewsPage() {
         )}
 
         {/* 加载更多 */}
-        {filteredNews.length > 0 && filteredNews.length >= 10 && (
+        {filteredNews.length > 0 && filteredNews.length >= 20 && (
           <div className="mt-8 text-center">
             <button className="border border-white/30 text-white px-6 py-2 rounded-lg hover:bg-white/10 transition disabled:opacity-50" disabled={loading}>
               加载更多
