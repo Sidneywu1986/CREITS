@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, RefreshCw, ArrowRight, Eye, Flame, AlertCircle, Loader2, Building2, Landmark, Newspaper } from 'lucide-react';
+import { Search, RefreshCw, ArrowRight, Eye, Flame, AlertCircle, Loader2, Building2, Landmark, Newspaper, Globe } from 'lucide-react';
 import Link from 'next/link';
 
 interface NewsItem {
@@ -9,7 +9,7 @@ interface NewsItem {
   title: string;
   summary: string;
   source: string;
-  sourceType: 'gov' | 'exchange' | 'media';
+  sourceType: 'gov' | 'exchange' | 'media' | 'international';
   publishTime: string;
   url: string;
   tags: string[];
@@ -53,6 +53,7 @@ export default function NewsPage() {
     { id: 'gov', label: '国家部委', icon: <Landmark className="w-4 h-4" /> },
     { id: 'exchange', label: '交易所', icon: <Building2 className="w-4 h-4" /> },
     { id: 'media', label: '行业公司', icon: <Newspaper className="w-4 h-4" /> },
+    { id: 'international', label: '国际资讯', icon: <Globe className="w-4 h-4" /> },
   ];
 
   // 获取新闻数据
@@ -62,17 +63,19 @@ export default function NewsPage() {
     setWarning(null);
 
     try {
-      // 并行调用三个接口
-      const [policyRes, exchangeRes, industryRes] = await Promise.all([
+      // 并行调用四个接口
+      const [policyRes, exchangeRes, industryRes, internationalRes] = await Promise.all([
         fetch('/api/news/policy'),
         fetch('/api/news/exchange'),
         fetch('/api/news/industry'),
+        fetch('/api/news/international'),
       ]);
 
-      const [policyData, exchangeData, industryData] = await Promise.all([
+      const [policyData, exchangeData, industryData, internationalData] = await Promise.all([
         policyRes.json(),
         exchangeRes.json(),
         industryRes.json(),
+        internationalRes.json(),
       ]);
 
       // 合并数据
@@ -80,6 +83,7 @@ export default function NewsPage() {
         ...(policyData.data || []),
         ...(exchangeData.data || []),
         ...(industryData.data || []),
+        ...(internationalData.data || []),
       ];
 
       // 按发布时间排序
@@ -106,6 +110,7 @@ export default function NewsPage() {
         policyData.warning,
         exchangeData.warning,
         industryData.warning,
+        internationalData.warning,
       ].filter(Boolean);
       if (warnings.length > 0) {
         setWarning(warnings.join('; '));
@@ -191,6 +196,13 @@ export default function NewsPage() {
           color: 'bg-green-600',
           borderColor: 'border-green-500',
           textColor: 'text-green-400',
+        };
+      case 'international':
+        return {
+          label: '国际',
+          color: 'bg-orange-600',
+          borderColor: 'border-orange-500',
+          textColor: 'text-orange-400',
         };
       default:
         return {
