@@ -239,7 +239,7 @@ export default function MarketPage() {
             <Landmark className="w-5 h-5 text-blue-400" />
             全球REITs指数
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {GLOBAL_REITS_INDEX.map((item) => (
               <div
                 key={item.region}
