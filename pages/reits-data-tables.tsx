@@ -151,6 +151,40 @@ const MOCK_REIT_PRODUCTS = [
   },
 ];
 
+// 投资者结构模拟数据
+const MOCK_INVESTOR_DATA: Record<string, any[]> = {
+  '508000': [
+    { investor_type: '机构投资者', holding_ratio: 65.3, holding_amount: 3.265, investor_count: 45 },
+    { investor_type: '个人投资者', holding_ratio: 34.7, holding_amount: 1.735, investor_count: 12890 },
+    { investor_type: '其中：前十大持有人', holding_ratio: 42.8, holding_amount: 2.140, investor_count: 10 },
+    { investor_type: '其中：战略投资者', holding_ratio: 20.5, holding_amount: 1.025, investor_count: 3 },
+  ],
+  '508001': [
+    { investor_type: '机构投资者', holding_ratio: 72.5, holding_amount: 4.350, investor_count: 52 },
+    { investor_type: '个人投资者', holding_ratio: 27.5, holding_amount: 1.650, investor_count: 9560 },
+    { investor_type: '其中：前十大持有人', holding_ratio: 48.3, holding_amount: 2.898, investor_count: 10 },
+    { investor_type: '其中：战略投资者', holding_ratio: 25.0, holding_amount: 1.500, investor_count: 4 },
+  ],
+  '508002': [
+    { investor_type: '机构投资者', holding_ratio: 68.9, holding_amount: 6.201, investor_count: 38 },
+    { investor_type: '个人投资者', holding_ratio: 31.1, holding_amount: 2.799, investor_count: 15620 },
+    { investor_type: '其中：前十大持有人', holding_ratio: 45.6, holding_amount: 4.104, investor_count: 10 },
+    { investor_type: '其中：战略投资者', holding_ratio: 22.0, holding_amount: 1.980, investor_count: 3 },
+  ],
+  '508008': [
+    { investor_type: '机构投资者', holding_ratio: 70.2, holding_amount: 5.616, investor_count: 41 },
+    { investor_type: '个人投资者', holding_ratio: 29.8, holding_amount: 2.384, investor_count: 11230 },
+    { investor_type: '其中：前十大持有人', holding_ratio: 46.9, holding_amount: 3.752, investor_count: 10 },
+    { investor_type: '其中：战略投资者', holding_ratio: 23.5, holding_amount: 1.880, investor_count: 3 },
+  ],
+  '508018': [
+    { investor_type: '机构投资者', holding_ratio: 75.8, holding_amount: 7.580, investor_count: 58 },
+    { investor_type: '个人投资者', holding_ratio: 24.2, holding_amount: 2.420, investor_count: 7890 },
+    { investor_type: '其中：前十大持有人', holding_ratio: 52.3, holding_amount: 5.230, investor_count: 10 },
+    { investor_type: '其中：战略投资者', holding_ratio: 28.0, holding_amount: 2.800, investor_count: 4 },
+  ],
+};
+
 // 全局筛选选项
 const FUND_TYPES = ['产权类', '经营权类'];
 const ASSET_TYPES = ['产业园', '仓储物流', '高速公路', '保障性租赁住房', '生态环保', '清洁能源'];
@@ -499,7 +533,9 @@ function TabsGrid({ tables, selectedTable, onTableSelect, filteredProducts, onPr
           </div>
           {selectedTable === table.id && (
             <div className="text-xs text-slate-400 mt-1">
-              {table.id === 'product' ? `${filteredProducts.length} 条记录` : '点击产品信息表查看'}
+              {table.id === 'product' ? `${filteredProducts.length} 条记录` : 
+               table.id === 'investor' ? '点击产品信息表查看' :
+               '开发中'}
             </div>
           )}
         </button>
@@ -514,7 +550,10 @@ function TabsGrid({ tables, selectedTable, onTableSelect, filteredProducts, onPr
             selectedProduct={selectedProduct}
           />
         )}
-        {selectedTable !== 'product' && selectedProduct && (
+        {selectedTable === 'investor' && (
+          <InvestorStructureTable selectedProduct={selectedProduct} />
+        )}
+        {selectedTable !== 'product' && selectedTable !== 'investor' && selectedProduct && (
           <div className="text-center py-20">
             <div className="flex flex-col items-center gap-4">
               <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center">
@@ -629,6 +668,221 @@ function REITProductTable({ products, onProductSelect, selectedProduct }: any) {
           ))}
         </TableBody>
       </Table>
+    </div>
+  );
+}
+
+// 投资者结构表格组件
+function InvestorStructureTable({ selectedProduct }: any) {
+  if (!selectedProduct) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+        <Users className="w-16 h-16 mb-4" />
+        <h3 className="text-xl font-semibold text-white mb-2">
+          请先选择一个产品
+        </h3>
+        <p>在"产品信息"表中点击任意产品即可查看其投资者结构</p>
+      </div>
+    );
+  }
+
+  const investorData = MOCK_INVESTOR_DATA[selectedProduct.fund_code] || [];
+
+  // 准备饼图数据（只显示机构投资者和个人投资者）
+  const pieData = investorData
+    .filter(item => !item.investor_type.includes('其中'))
+    .map(item => ({
+      name: item.investor_type,
+      value: item.holding_ratio,
+      itemStyle: {
+        borderRadius: 8,
+        borderWidth: 2,
+        borderColor: '#1e293b'
+      }
+    }));
+
+  // 饼图配置
+  const pieOption = {
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c}% ({d}%)',
+      backgroundColor: 'rgba(30, 41, 59, 0.95)',
+      borderColor: '#475569',
+      textStyle: {
+        color: '#fff',
+        fontSize: 13
+      }
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left',
+      top: 'middle',
+      textStyle: {
+        color: '#cbd5e1',
+        fontSize: 12
+      },
+      itemGap: 12
+    },
+    series: [
+      {
+        name: '投资者结构',
+        type: 'pie',
+        radius: ['45%', '70%'],
+        center: ['60%', '50%'],
+        avoidLabelOverlap: true,
+        itemStyle: {
+          borderRadius: 8,
+          borderColor: '#1e293b',
+          borderWidth: 3
+        },
+        label: {
+          show: true,
+          formatter: '{b}\n{d}%',
+          color: '#cbd5e1',
+          fontSize: 12,
+          fontWeight: '500'
+        },
+        labelLine: {
+          show: true,
+          lineStyle: {
+            color: '#64748b'
+          }
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: 14,
+            fontWeight: 'bold',
+            color: '#fff'
+          },
+          itemStyle: {
+            shadowBlur: 20,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        },
+        data: pieData.map((item, index) => ({
+          ...item,
+          itemStyle: {
+            color: ['#60a5fa', '#a78bfa'][index % 2],
+            borderWidth: 3,
+            borderColor: '#1e293b'
+          }
+        }))
+      }
+    ]
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 饼图展示 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold flex items-center text-white">
+              <PieChartIcon className="mr-2 h-5 w-5 text-[#8b5cf6]" />
+              投资者结构分布
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ReactECharts option={pieOption} style={{ height: '300px' }} />
+          </CardContent>
+        </Card>
+
+        {/* 统计摘要 */}
+        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-white">
+              持有人统计
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {investorData.map((item, index) => (
+                <div key={index} className="p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        index % 2 === 0 ? 'bg-[#60a5fa]' : 'bg-[#a78bfa]'
+                      }`}></div>
+                      <span className="font-medium text-white">{item.investor_type}</span>
+                    </div>
+                    <Badge className="bg-[#8b5cf6]/20 text-[#8b5cf6] border-[#8b5cf6]/30">
+                      {item.holding_ratio.toFixed(1)}%
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-slate-400">持有份额</div>
+                      <div className="text-white font-semibold">{item.holding_amount.toFixed(3)}亿份</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400">持有人数</div>
+                      <div className="text-white font-semibold">{item.investor_count.toLocaleString()}户</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 详细数据表格 */}
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-white">
+            投资者结构明细
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-700/30">
+                <TableRow>
+                  <TableHead className="text-slate-300 whitespace-nowrap">投资者类型</TableHead>
+                  <TableHead className="text-slate-300 whitespace-nowrap text-right">持有比例</TableHead>
+                  <TableHead className="text-slate-300 whitespace-nowrap text-right">持有份额</TableHead>
+                  <TableHead className="text-slate-300 whitespace-nowrap text-right">持有人数</TableHead>
+                  <TableHead className="text-slate-300 whitespace-nowrap">占比分布</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {investorData.map((item, index) => (
+                  <TableRow key={index} className="hover:bg-slate-700/30 border-b border-slate-700/50">
+                    <TableCell className="text-white">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${
+                          index % 2 === 0 ? 'bg-[#60a5fa]' : 'bg-[#a78bfa]'
+                        }`}></div>
+                        {item.investor_type}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right text-white font-semibold">
+                      {item.holding_ratio.toFixed(1)}%
+                    </TableCell>
+                    <TableCell className="text-right text-white">
+                      {item.holding_amount.toFixed(3)}亿份
+                    </TableCell>
+                    <TableCell className="text-right text-white">
+                      {item.investor_count.toLocaleString()}户
+                    </TableCell>
+                    <TableCell className="text-slate-300">
+                      <div className="w-full bg-slate-700 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full ${
+                            index % 2 === 0 ? 'bg-[#60a5fa]' : 'bg-[#a78bfa]'
+                          }`}
+                          style={{ width: `${item.holding_ratio}%` }}
+                        ></div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
