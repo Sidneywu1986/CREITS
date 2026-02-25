@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { Card } from '@/components/ui/card';
 import { CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -37,6 +38,7 @@ import {
   PieChart as PieChartIcon,
   X,
   Download,
+  ArrowLeft,
 } from 'lucide-react';
 import ReactECharts from 'echarts-for-react';
 
@@ -193,6 +195,8 @@ const REPORT_PERIODS = ['2024Q4', '2024Q3', '2024Q2', '2024Q1', '2023Q4', '2023Q
 const CREDIT_RATINGS = ['AAA', 'AA+', 'AA'];
 
 export default function REITsDataTables() {
+  const router = useRouter();
+
   const [selectedTable, setSelectedTable] = useState('product');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -285,11 +289,25 @@ export default function REITsDataTables() {
         <div className="bg-slate-800/50 border-b border-slate-700/50 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <BarChart3 className="w-8 h-8 text-[#667eea] mr-3" />
-                <div>
-                  <h1 className="text-2xl font-bold text-white">REITs八张表</h1>
-                  <p className="text-sm text-slate-400 mt-0.5">专业数据库 · 全维度数据展示</p>
+              <div className="flex items-center gap-4">
+                {/* 返回按钮 */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                  className="text-slate-400 hover:text-white hover:bg-slate-700/50 flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span>返回</span>
+                </Button>
+
+                {/* 页面标题 */}
+                <div className="flex items-center">
+                  <BarChart3 className="w-8 h-8 text-[#667eea] mr-3" />
+                  <div>
+                    <h1 className="text-2xl font-bold text-white">REITs八张表</h1>
+                    <p className="text-sm text-slate-400 mt-0.5">专业数据库 · 全维度数据展示</p>
+                  </div>
                 </div>
               </div>
               <div className="flex gap-2">
