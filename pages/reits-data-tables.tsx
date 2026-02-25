@@ -476,8 +476,17 @@ export default function REITsDataTables() {
                     <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
                       查看详情
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedProduct(null)} className="text-slate-300 hover:bg-slate-700 hover:text-white">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedProduct(null);
+                        setSelectedTable('product');
+                      }}
+                      className="border-[#667eea] text-[#667eea] hover:bg-[#667eea] hover:text-white flex items-center gap-1"
+                    >
                       <X className="w-4 h-4" />
+                      返回产品列表
                     </Button>
                   </div>
                 </div>
@@ -495,6 +504,10 @@ export default function REITsDataTables() {
                 filteredProducts={filteredProducts}
                 onProductSelect={setSelectedProduct}
                 selectedProduct={selectedProduct}
+                onBack={() => {
+                  setSelectedProduct(null);
+                  setSelectedTable('product');
+                }}
               />
             </CardContent>
           </Card>
@@ -505,7 +518,7 @@ export default function REITsDataTables() {
 }
 
 // Tab网格组件
-function TabsGrid({ tables, selectedTable, onTableSelect, filteredProducts, onProductSelect, selectedProduct }: any) {
+function TabsGrid({ tables, selectedTable, onTableSelect, filteredProducts, onProductSelect, selectedProduct, onBack }: any) {
   // 图标渲染辅助组件
   const TableIcon = () => {
     const IconComponent = tables.find((t: any) => t.id === selectedTable)?.icon;
@@ -550,25 +563,25 @@ function TabsGrid({ tables, selectedTable, onTableSelect, filteredProducts, onPr
           />
         )}
         {selectedTable === 'investor' && (
-          <InvestorStructureTable selectedProduct={selectedProduct} />
+          <InvestorStructureTable selectedProduct={selectedProduct} onBack={onBack} />
         )}
         {selectedTable === 'property' && (
-          <PropertyTable selectedProduct={selectedProduct} />
+          <PropertyTable selectedProduct={selectedProduct} onBack={onBack} />
         )}
         {selectedTable === 'financial' && (
-          <FinancialTable selectedProduct={selectedProduct} />
+          <FinancialTable selectedProduct={selectedProduct} onBack={onBack} />
         )}
         {selectedTable === 'operational' && (
-          <OperationalTable selectedProduct={selectedProduct} />
+          <OperationalTable selectedProduct={selectedProduct} onBack={onBack} />
         )}
         {selectedTable === 'market' && (
-          <MarketTable selectedProduct={selectedProduct} />
+          <MarketTable selectedProduct={selectedProduct} onBack={onBack} />
         )}
         {selectedTable === 'dividend' && (
-          <DividendTable selectedProduct={selectedProduct} />
+          <DividendTable selectedProduct={selectedProduct} onBack={onBack} />
         )}
         {selectedTable === 'risk' && (
-          <RiskTable selectedProduct={selectedProduct} />
+          <RiskTable selectedProduct={selectedProduct} onBack={onBack} />
         )}
         {selectedTable !== 'product' && selectedTable !== 'investor' && selectedTable !== 'property' && selectedTable !== 'financial' && selectedTable !== 'operational' && selectedTable !== 'market' && selectedTable !== 'dividend' && selectedTable !== 'risk' && selectedProduct && (
           <div className="text-center py-20">
@@ -690,7 +703,7 @@ function REITProductTable({ products, onProductSelect, selectedProduct }: any) {
 }
 
 // 投资者结构表格组件
-function InvestorStructureTable({ selectedProduct }: any) {
+function InvestorStructureTable({ selectedProduct, onBack }: any) {
   if (!selectedProduct) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
@@ -791,6 +804,23 @@ function InvestorStructureTable({ selectedProduct }: any) {
 
   return (
     <div className="space-y-6">
+      {/* 返回按钮 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-[#8b5cf6]" />
+          <span className="text-white font-semibold">{selectedProduct.fund_short_name} - 投资者结构</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBack}
+          className="border-[#667eea] text-[#667eea] hover:bg-[#667eea] hover:text-white flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
+          返回产品列表
+        </Button>
+      </div>
+
       {/* 饼图展示 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
@@ -1179,7 +1209,7 @@ const MOCK_PROPERTY_DATA: any = {
   }
 };
 
-function PropertyTable({ selectedProduct }: any) {
+function PropertyTable({ selectedProduct, onBack }: any) {
   if (!selectedProduct) {
     return (
       <div className="text-center py-20">
@@ -1238,6 +1268,23 @@ function PropertyTable({ selectedProduct }: any) {
 
   return (
     <div className="space-y-6">
+      {/* 返回按钮 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-[#06b6d4]" />
+          <span className="text-white font-semibold">{selectedProduct.fund_short_name} - 风险指标</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBack}
+          className="border-[#667eea] text-[#667eea] hover:bg-[#667eea] hover:text-white flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
+          返回产品列表
+        </Button>
+      </div>
+
       {/* 核心指标卡片 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-slate-800/50 border-slate-700/50">
@@ -1457,7 +1504,7 @@ const MOCK_FINANCIAL_DATA: any = {
   }
 };
 
-function FinancialTable({ selectedProduct }: any) {
+function FinancialTable({ selectedProduct, onBack }: any) {
   if (!selectedProduct) {
     return (
       <div className="text-center py-20">
@@ -1536,6 +1583,23 @@ function FinancialTable({ selectedProduct }: any) {
 
   return (
     <div className="space-y-6">
+      {/* 返回按钮 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-[#06b6d4]" />
+          <span className="text-white font-semibold">{selectedProduct.fund_short_name} - 风险指标</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBack}
+          className="border-[#667eea] text-[#667eea] hover:bg-[#667eea] hover:text-white flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
+          返回产品列表
+        </Button>
+      </div>
+
       {/* 核心指标卡片 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="bg-slate-800/50 border-slate-700/50">
@@ -1716,7 +1780,7 @@ const MOCK_OPERATIONAL_DATA: any = {
   }
 };
 
-function OperationalTable({ selectedProduct }: any) {
+function OperationalTable({ selectedProduct, onBack }: any) {
   if (!selectedProduct) {
     return (
       <div className="text-center py-20">
@@ -1797,6 +1861,23 @@ function OperationalTable({ selectedProduct }: any) {
 
   return (
     <div className="space-y-6">
+      {/* 返回按钮 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-[#06b6d4]" />
+          <span className="text-white font-semibold">{selectedProduct.fund_short_name} - 风险指标</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBack}
+          className="border-[#667eea] text-[#667eea] hover:bg-[#667eea] hover:text-white flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
+          返回产品列表
+        </Button>
+      </div>
+
       {/* 核心指标卡片 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="bg-slate-800/50 border-slate-700/50">
@@ -1977,7 +2058,7 @@ const MOCK_MARKET_DATA: any = {
   }
 };
 
-function MarketTable({ selectedProduct }: any) {
+function MarketTable({ selectedProduct, onBack }: any) {
   if (!selectedProduct) {
     return (
       <div className="text-center py-20">
@@ -2064,6 +2145,23 @@ function MarketTable({ selectedProduct }: any) {
 
   return (
     <div className="space-y-6">
+      {/* 返回按钮 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-[#06b6d4]" />
+          <span className="text-white font-semibold">{selectedProduct.fund_short_name} - 风险指标</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBack}
+          className="border-[#667eea] text-[#667eea] hover:bg-[#667eea] hover:text-white flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
+          返回产品列表
+        </Button>
+      </div>
+
       {/* 核心指标卡片 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="bg-slate-800/50 border-slate-700/50">
@@ -2250,7 +2348,7 @@ const MOCK_DIVIDEND_DATA: any = {
   }
 };
 
-function DividendTable({ selectedProduct }: any) {
+function DividendTable({ selectedProduct, onBack }: any) {
   if (!selectedProduct) {
     return (
       <div className="text-center py-20">
@@ -2337,6 +2435,23 @@ function DividendTable({ selectedProduct }: any) {
 
   return (
     <div className="space-y-6">
+      {/* 返回按钮 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-[#06b6d4]" />
+          <span className="text-white font-semibold">{selectedProduct.fund_short_name} - 风险指标</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBack}
+          className="border-[#667eea] text-[#667eea] hover:bg-[#667eea] hover:text-white flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
+          返回产品列表
+        </Button>
+      </div>
+
       {/* 核心指标卡片 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-slate-800/50 border-slate-700/50">
@@ -2509,7 +2624,7 @@ const MOCK_RISK_DATA: any = {
   }
 };
 
-function RiskTable({ selectedProduct }: any) {
+function RiskTable({ selectedProduct, onBack }: any) {
   if (!selectedProduct) {
     return (
       <div className="text-center py-20">
@@ -2640,6 +2755,23 @@ function RiskTable({ selectedProduct }: any) {
 
   return (
     <div className="space-y-6">
+      {/* 返回按钮 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-[#06b6d4]" />
+          <span className="text-white font-semibold">{selectedProduct.fund_short_name} - 风险指标</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBack}
+          className="border-[#667eea] text-[#667eea] hover:bg-[#667eea] hover:text-white flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
+          返回产品列表
+        </Button>
+      </div>
+
       {/* 核心指标卡片 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="bg-slate-800/50 border-slate-700/50">
