@@ -472,6 +472,13 @@ export default function REITsDataTables() {
 
 // Tab网格组件
 function TabsGrid({ tables, selectedTable, onTableSelect, filteredProducts, onProductSelect, selectedProduct }: any) {
+  // 图标渲染辅助组件
+  const TableIcon = () => {
+    const IconComponent = tables.find((t: any) => t.id === selectedTable)?.icon;
+    if (!IconComponent) return null;
+    return <IconComponent className="w-8 h-8 text-slate-400" />;
+  };
+
   return (
     <div className="grid grid-cols-4 gap-2 p-4">
       {tables.map((table: any) => (
@@ -511,11 +518,7 @@ function TabsGrid({ tables, selectedTable, onTableSelect, filteredProducts, onPr
           <div className="text-center py-20">
             <div className="flex flex-col items-center gap-4">
               <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center">
-                {tables.find((t: any) => t.id === selectedTable)?.icon && (
-                  React.createElement(tables.find((t: any) => t.id === selectedTable)?.icon, {
-                    className: 'w-8 h-8 text-slate-400'
-                  })
-                )}
+                <TableIcon />
               </div>
               <h3 className="text-xl font-semibold text-white">
                 {tables.find((t: any) => t.id === selectedTable)?.name}
