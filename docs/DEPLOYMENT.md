@@ -1,384 +1,420 @@
-# REITs后台管理系统 - 部署指南
+# 部署指南 - REITs 智能助手
 
-## 概述
+本文档提供了 REITs 智能助手的完整部署指南，包括环境准备、配置、部署步骤和故障排查。
 
-本文档提供了REITs后台管理系统第一阶段生产环境必备功能的部署指南，包括：
-1. Supabase Auth 集成
-2. 审计日志系统
-3. 权限管理功能
+## 📋 目录
 
----
+- [环境要求](#环境要求)
+- [部署前准备](#部署前准备)
+- [快速部署](#快速部署)
+- [详细部署步骤](#详细部署步骤)
+- [环境变量配置](#环境变量配置)
+- [验证部署](#验证部署)
+- [常见问题](#常见问题)
+- [监控和日志](#监控和日志)
 
-## 环境准备
+## 环境要求
 
-### 1. Supabase 项目设置
+### 必需环境
 
-#### 创建 Supabase 项目
+- **Node.js**: 24.x 或更高版本
+- **pnpm**: 最新版本（项目使用 pnpm 作为包管理器）
+- **操作系统**: Linux/macOS/Windows (WSL2)
+- **内存**: 至少 2GB RAM
+- **磁盘空间**: 至少 5GB 可用空间
 
-1. 访问 [Supabase](https://supabase.com/)
-2. 创建新项目
-3. 记录以下信息：
-   - Project URL
-   - Project Reference ID
-   - anon public key
-   - service_role key (admin)
+### 外部服务
 
-#### 配置环境变量
+- **Supabase**: PostgreSQL 数据库服务（必须）
+  - 需要创建 Supabase 项目
+  - 获取项目 URL 和 API 密钥
 
-在项目根目录创建 `.env.local` 文件：
+### 可选服务
+
+- **Coze 平台**: 用于托管和部署（如使用 Coze CLI）
+- **对象存储**: 用于存储文件（可选）
+- **通知服务**: 用于发送告警（可选）
+
+## 部署前准备
+
+### 1. 获取 Supabase 凭证
+
+1. 访问 [Supabase Dashboard](https://supabase.com/dashboard)
+2. 创建新项目或选择现有项目
+3. 进入项目设置 -> API
+4. 记录以下信息：
+   - **Project URL**: `https://your-project-id.supabase.co`
+   - **anon public**: 公开密钥（客户端使用）
+   - **service_role**: 服务角色密钥（仅服务端使用）
+
+### 2. 准备环境变量文件
 
 ```bash
-# Supabase配置
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+# 复制环境变量模板
+cp .env.example .env
+
+# 编辑 .env 文件，填入真实值
+nano .env  # 或使用其他编辑器
 ```
 
-### 2. 执行数据库迁移
+### 3. 验证必需环境变量
 
-#### 方式一：使用 Supabase Dashboard
-
-1. 访问 Supabase Dashboard
-2. 进入 SQL Editor
-3. 复制 `lib/supabase/schema.sql` 文件内容
-4. 执行SQL脚本
-
-#### 方式二：使用 CLI
+确保 `.env` 文件中至少包含以下变量：
 
 ```bash
-# 安装 Supabase CLI
-npm install -g supabase
-
-# 登录
-supabase login
-
-# 链接项目
-supabase link --project-ref your-project-ref
-
-# 执行迁移
-supabase db push
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-### 3. 验证数据库表
+## 快速部署
 
-执行以下SQL验证表是否创建成功：
+### 使用部署脚本（推荐）
 
-```sql
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public';
+```bash
+# 一键部署
+bash scripts/deploy.sh
 ```
 
-应该包含以下表：
-- `users`
-- `roles`
-- `permissions`
-- `audit_logs`
-- `login_attempts`
+部署脚本会自动执行以下操作：
+1. ✅ 检查环境变量
+2. ✅ 安装依赖
+3. ✅ 构建项目
+4. ✅ 清理旧进程
+5. ✅ 启动服务
+6. ✅ 运行健康检查
 
----
+### 使用 Coze CLI
 
-## 功能使用指南
+```bash
+# 构建生产版本
+coze build
 
-### 1. 用户认证
-
-#### 注册新用户
-
-1. 访问 `/register` 页面
-2. 填写注册信息：
-   - 用户名
-   - 邮箱
-   - 密码（至少6位）
-   - 角色（默认：查看者）
-3. 点击注册
-
-#### 用户登录
-
-1. 访问 `/login` 页面
-2. 输入用户名和密码
-3. 点击登录
-
-#### 密码安全特性
-
-- 使用 PBKDF2 密钥派生
-- 10000次迭代
-- 随机盐值
-- 安全哈希存储
-
-#### 账户锁定策略
-
-- 连续失败5次锁定账户
-- 锁定时长：30分钟
-- 成功登录后重置失败计数
-
-### 2. 权限管理
-
-#### 默认角色
-
-| 角色代码 | 角色名称 | 描述 |
-|---------|---------|------|
-| super_admin | 超级管理员 | 拥有所有权限 |
-| admin | 管理员 | 管理REITs数据和系统用户 |
-| editor | 编辑 | 可以编辑REITs数据 |
-| viewer | 查看者 | 只能查看数据 |
-| guest | 访客 | 仅限基础数据访问 |
-
-#### 权限管理界面
-
-1. 访问 `/admin/permissions` 页面
-2. 选择角色
-3. 查看和编辑该角色的权限
-4. 添加/删除权限
-
-#### 权限检查
-
-在组件中使用 `usePermission` Hook：
-
-```typescript
-import { usePermission } from '@/hooks/usePermission';
-
-function MyComponent() {
-  const { user, canRead, canUpdate } = usePermission();
-
-  if (!user) {
-    return <div>请先登录</div>;
-  }
-
-  return (
-    <div>
-      {canRead('reits:product') && (
-        <button>查看产品信息</button>
-      )}
-      {canUpdate('reits:product') && (
-        <button>编辑产品信息</button>
-      )}
-    </div>
-  );
-}
+# 启动生产服务
+coze start
 ```
 
-### 3. 审计日志
+## 详细部署步骤
 
-#### 审计日志记录
+### 步骤 1: 安装依赖
 
-系统会自动记录以下操作：
-- 用户登录/登出
-- 数据创建/更新/删除
-- 权限变更
-- 一致性检查
-- 系统配置更新
+```bash
+# 安装项目依赖
+pnpm install
 
-#### 审计日志查询
-
-1. 访问 `/admin/audit-logs` 页面
-2. 使用筛选条件：
-   - 资源类型
-   - 操作类型
-   - 结果（成功/失败）
-3. 查看日志详情
-
-#### 导出审计日志
-
-点击"导出"按钮，日志将导出为CSV格式。
-
-#### 日志保留策略
-
-默认保留90天，可通过 `AuditLogService.cleanup()` 方法清理。
-
----
-
-## API 接口说明
-
-### 认证相关
-
-#### 注册用户
-
-```typescript
-// 前端调用
-import { registerUser } from '@/lib/supabase/auth';
-
-const result = await registerUser(
-  'username',
-  'user@example.com',
-  'password123',
-  'roleId'
-);
+# 验证安装
+pnpm list
 ```
 
-#### 用户登录
+### 步骤 2: 同步数据库 Schema
 
-```typescript
-import { loginUser } from '@/lib/supabase/auth';
+```bash
+# 同步 Drizzle Schema 到 Supabase
+coze-coding-ai db upgrade
 
-const result = await loginUser('username', 'password');
+# 验证表创建成功
+node scripts/verify-supabase-tables.ts
 ```
 
-### 审计日志相关
+### 步骤 3: 构建项目
 
-#### 记录审计日志
+```bash
+# 构建生产版本
+pnpm run build
 
-```typescript
-import { AuditLogService } from '@/lib/supabase/audit-log';
-
-await AuditLogService.log({
-  userId: 'user-id',
-  username: 'username',
-  action: 'create',
-  resourceType: 'reit_product_info',
-  resourceId: 'resource-id',
-  newValue: { name: 'new product' },
-  result: 'success',
-});
+# 验证构建输出
+ls -la .next/
 ```
 
-#### 查询审计日志
+### 步骤 4: 启动服务
 
-```typescript
-import { AuditLogService } from '@/lib/supabase/audit-log';
+```bash
+# 方式 1: 使用启动脚本
+bash scripts/start.sh
 
-const { data, total } = await AuditLogService.query({
-  resourceType: 'reit_product_info',
-  action: 'create',
-  result: 'success',
-}, 1, 50);
+# 方式 2: 使用 Next.js 命令
+npx next start --port 5000 --hostname 0.0.0.0
+
+# 方式 3: 后台运行（推荐）
+nohup npx next start --port 5000 --hostname 0.0.0.0 > /app/work/logs/bypass/app.log 2>&1 &
 ```
 
-### 权限相关
+### 步骤 5: 验证部署
 
-#### 加载用户权限
+```bash
+# 运行健康检查
+bash scripts/health-check.sh
 
-```typescript
-import { loadUserPermissions } from '@/lib/supabase/auth';
-
-const permissions = await loadUserPermissions('role-id');
+# 或手动检查
+curl -I http://localhost:5000
 ```
 
-#### 检查用户权限
+## 环境变量配置
 
-```typescript
-import { checkUserPermission } from '@/lib/supabase/auth';
+### 必需配置
 
-const hasPermission = await checkUserPermission(
-  'user-id',
-  'reit_product_info',
-  'read'
-);
+| 变量名 | 说明 | 示例 |
+|--------|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 项目 URL | `https://xxx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase 匿名密钥 | `eyJhbGci...` |
+
+### 可选配置
+
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| `SUPABASE_SERVICE_ROLE_KEY` | 服务角色密钥 | - |
+| `PORT` | 服务端口 | `5000` |
+| `LOG_LEVEL` | 日志级别 | `info` |
+| `ENABLE_DATA_COLLECTION` | 启用数据采集 | `true` |
+| `ENABLE_EVOLUTION_LOOP` | 启用进化闭环 | `true` |
+
+### 功能开关
+
+```bash
+# 启用/禁用特定功能
+ENABLE_DATA_COLLECTION=true
+ENABLE_EVOLUTION_LOOP=true
+ENABLE_API_PLATFORM=true
+ENABLE_AI_MARKETPLACE=true
 ```
 
----
+### 数据采集配置
 
-## 安全最佳实践
+```bash
+# 数据采集间隔（小时）
+SZSE_COLLECT_INTERVAL=6
+SSE_COLLECT_INTERVAL=6
+ANNOUNCEMENT_COLLECT_INTERVAL=1
+```
 
-### 1. 密码安全
+## 验证部署
 
-- ✅ 使用 PBKDF2 密钥派生
-- ✅ 10000次迭代
-- ✅ 随机盐值
-- ✅ 最小密码长度6位
-- ✅ 账户锁定机制
+### 1. 检查服务状态
 
-### 2. 会话管理
+```bash
+# 检查端口是否监听
+ss -tuln | grep :5000
 
-- ✅ 使用 Supabase Auth 管理会话
-- ✅ 会话自动刷新
-- ✅ Token 过期处理
-- ✅ 安全的本地存储
+# 检查进程
+ps aux | grep "next start"
+```
 
-### 3. 审计日志
+### 2. 测试 HTTP 连接
 
-- ✅ 记录所有关键操作
-- ✅ 包含用户IP和User-Agent
-- ✅ 敏感数据加密存储
-- ✅ 日志导出功能
-- ✅ 定期清理旧日志
+```bash
+# 测试主页
+curl http://localhost:5000
 
-### 4. 权限控制
+# 测试健康检查端点
+curl http://localhost:5000/api/health
+```
 
-- ✅ 基于角色的访问控制（RBAC）
-- ✅ 细粒度的权限检查
-- ✅ 前端和后端双重验证
-- ✅ 动态权限加载
+### 3. 查看日志
 
----
+```bash
+# 查看最新日志
+tail -f /app/work/logs/bypass/app.log
 
-## 故障排查
+# 查看错误日志
+tail -f /app/work/logs/bypass/app.log | grep -i error
 
-### 问题1：无法连接到Supabase
+# 查看最近 50 行
+tail -n 50 /app/work/logs/bypass/app.log
+```
 
-**解决方案**：
-1. 检查 `.env.local` 文件配置
-2. 验证 Supabase 项目 URL 和密钥
-3. 检查网络连接
+### 4. 验证数据库连接
 
-### 问题2：注册失败
+```bash
+# 运行数据库连接测试
+node scripts/test-supabase-simple.ts
 
-**可能原因**：
-- 用户名已存在
-- 邮箱已被注册
-- 数据库连接失败
+# 验证表结构
+node scripts/verify-supabase-tables.ts
 
-**解决方案**：
-- 检查用户名和邮箱是否唯一
-- 查看浏览器控制台错误信息
-- 检查 Supabase 日志
+# 测试数据服务
+node scripts/test-complete-service.ts
+```
 
-### 问题3：登录失败
+### 5. 功能测试清单
 
-**可能原因**：
-- 用户名或密码错误
-- 账户被锁定
-- 账户被禁用
+- [ ] 主页正常加载
+- [ ] Supabase 连接正常
+- [ ] 所有数据表可访问
+- [ ] API 端点响应正常
+- [ ] 日志正常输出
+- [ ] 无内存泄漏
 
-**解决方案**：
-- 确认用户名和密码正确
-- 等待30分钟后重试（如果被锁定）
-- 联系管理员解锁账户
+## 常见问题
 
-### 问题4：权限检查失败
+### 1. 端口被占用
 
-**可能原因**：
-- 用户未登录
-- 用户角色未配置
-- 权限未正确设置
+**问题**: `Error: listen EADDRINUSE: address already in use :::5000`
 
-**解决方案**：
-- 确保用户已登录
-- 检查用户角色配置
-- 验证权限设置
+**解决方案**:
+```bash
+# 查找占用端口的进程
+ss -lntp | grep :5000
 
----
+# 杀死进程
+kill -9 <PID>
 
-## 后续优化建议
+# 或使用部署脚本自动清理
+bash scripts/deploy.sh
+```
 
-1. **增强认证**
-   - 集成邮箱验证
-   - 添加双因素认证（2FA）
-   - 支持第三方登录（Google、GitHub等）
+### 2. 数据库连接失败
 
-2. **增强审计日志**
-   - 实现日志告警
-   - 添加日志分析功能
-   - 实现日志可视化
+**问题**: `Database connection failed` 或 `Invalid API key`
 
-3. **增强权限管理**
-   - 添加数据行级权限
-   - 实现权限继承
-   - 添加权限模板
+**解决方案**:
+1. 检查 `NEXT_PUBLIC_SUPABASE_URL` 和 `NEXT_PUBLIC_SUPABASE_ANON_KEY` 是否正确
+2. 验证 Supabase 项目是否处于活动状态
+3. 检查网络连接和防火墙规则
+4. 运行测试脚本: `node scripts/test-supabase-simple.ts`
 
-4. **性能优化**
-   - 实现权限缓存
-   - 优化数据库查询
-   - 添加日志索引
+### 3. 构建失败
 
----
+**问题**: `Build failed` 或 TypeScript 错误
 
-## 联系支持
+**解决方案**:
+```bash
+# 清理构建缓存
+rm -rf .next node_modules
 
-如有问题，请联系：
-- 开发团队：dev@example.com
-- 技术支持：support@example.com
+# 重新安装依赖
+pnpm install
 
----
+# 重新构建
+pnpm run build
 
-**版本**：v1.0.0  
-**最后更新**：2024年
+# 检查 TypeScript 错误
+npx tsc --noEmit
+```
+
+### 4. 环境变量未生效
+
+**问题**: 服务运行但无法读取环境变量
+
+**解决方案**:
+1. 确认 `.env` 文件存在
+2. 检查变量名拼写（区分大小写）
+3. 重启服务使环境变量生效
+4. 验证变量是否正确加载: `echo $NEXT_PUBLIC_SUPABASE_URL`
+
+### 5. 健康检查失败
+
+**问题**: 健康检查脚本返回失败
+
+**解决方案**:
+1. 检查服务是否真正启动: `ps aux | grep next`
+2. 查看日志了解错误: `tail -n 50 /app/work/logs/bypass/app.log`
+3. 确认端口正确: `curl -I http://localhost:5000`
+4. 检查防火墙和网络配置
+
+## 监控和日志
+
+### 日志文件位置
+
+- **应用日志**: `/app/work/logs/bypass/app.log`
+- **开发日志**: `/app/work/logs/bypass/dev.log`
+- **控制台日志**: `/app/work/logs/bypass/console.log`
+
+### 实时监控
+
+```bash
+# 实时查看应用日志
+tail -f /app/work/logs/bypass/app.log
+
+# 监控错误日志
+tail -f /app/work/logs/bypass/app.log | grep -i error
+
+# 监控服务进程
+watch -n 1 'ps aux | grep "next start"'
+```
+
+### 性能监控
+
+```bash
+# 查看 CPU 和内存使用
+top -p $(cat /app/work/logs/bypass/service.pid)
+
+# 查看端口连接
+ss -tn | grep :5000
+
+# 查看磁盘使用
+df -h
+```
+
+## 生产环境建议
+
+### 安全配置
+
+1. **启用 HTTPS**: 在生产环境必须使用 HTTPS
+2. **保护敏感密钥**: 不要将 `SUPABASE_SERVICE_ROLE_KEY` 暴露给客户端
+3. **启用安全头**: 配置 CSP、XSS 保护等
+4. **限制 CORS**: 配置允许的域名列表
+
+### 性能优化
+
+1. **启用 CDN**: 静态资源使用 CDN 加速
+2. **配置缓存**: 配置适当的缓存策略
+3. **数据库优化**: 为常用查询添加索引
+4. **监控资源**: 设置资源使用告警
+
+### 备份策略
+
+1. **数据库备份**: 定期备份 Supabase 数据库
+2. **日志备份**: 定期归档日志文件
+3. **配置备份**: 备份环境变量和配置文件
+
+### 高可用部署
+
+1. **负载均衡**: 使用 Nginx 或云负载均衡器
+2. **多实例**: 部署多个服务实例
+3. **健康检查**: 配置自动故障转移
+4. **蓝绿部署**: 实现零停机部署
+
+## 部署检查清单
+
+### 部署前
+
+- [ ] 确认 Node.js 版本 (24.x)
+- [ ] 确认 pnpm 已安装
+- [ ] 获取 Supabase 凭证
+- [ ] 配置 `.env` 文件
+- [ ] 验证环境变量
+- [ ] 备份现有数据（如有）
+
+### 部署中
+
+- [ ] 安装依赖成功
+- [ ] 构建无错误
+- [ ] 数据库同步成功
+- [ ] 服务启动成功
+- [ ] 端口正常监听
+- [ ] 健康检查通过
+
+### 部署后
+
+- [ ] 主页可访问
+- [ ] API 响应正常
+- [ ] 数据库连接正常
+- [ ] 日志正常输出
+- [ ] 无明显性能问题
+- [ ] 监控告警配置
+
+## 获取帮助
+
+如果遇到问题：
+
+1. 查看日志文件: `/app/work/logs/bypass/app.log`
+2. 运行诊断脚本: `bash scripts/health-check.sh`
+3. 查看项目文档: `docs/` 目录
+4. 检查已知问题: 查看本文档的"常见问题"部分
+
+## 更新日志
+
+- **v1.0.0** (2025-02-27): 初始部署文档
+  - 添加部署脚本和健康检查
+  - 完整的环境变量配置说明
+  - 故障排查指南
