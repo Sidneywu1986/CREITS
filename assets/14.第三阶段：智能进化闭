@@ -1,0 +1,14 @@
+【第三阶段：智能进化闭环】
+
+1. 集成自我进化服务
+   - 从 graph_edges 中提取“政策→REITs”影响数据
+   - 从 node_events 中提取新闻情感分数
+   - 用真实数据优化 Agent 权重配置
+2. 建立知识反馈闭环
+   - 记录 Agent 预测 vs 实际结果（user_agent_interactions）
+   - 每周自动触发模型重新训练
+   - 保存模型版本（可回滚）
+3. 数据加密分级（持续）
+   - public：已做（明文）
+   - internal：已做（加密）
+   - sensitive：用户行为数据（已脱敏）
