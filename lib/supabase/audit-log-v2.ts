@@ -32,7 +32,7 @@ export interface AuditLogFilter {
  */
 export class DataMaskingService {
   // 脱敏规则：正则表达式列表
-  private static sensitivePatterns = [
+  private static sensitivePatterns: Array<{ pattern: RegExp; replace?: string; handler?: (match: string) => string }> = [
     // 密码
     { pattern: /"password"\s*:\s*"[^"]*"/gi, replace: '"password":"***"' },
     { pattern: /'password'\s*:\s*'[^']*'/gi, replace: "'password':'***'" },
@@ -52,25 +52,25 @@ export class DataMaskingService {
     { pattern: /\b\d{17}[\dXx]\b/g, replace: '***ID***' },
 
     // 手机号
-    { pattern: /\b1[3-9]\d{9}\b/g, (match: string) => {
+    { pattern: /\b1[3-9]\d{9}\b/g, handler: (match: string) => {
       return match.substring(0, 3) + '****' + match.substring(7)
     } },
 
     // 邮箱
-    { pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, (match: string) => {
+    { pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, handler: (match: string) => {
       const [local, domain] = match.split('@')
       const maskedLocal = local.substring(0, 2) + '***'
       return maskedLocal + '@' + domain
     } },
 
     // IP地址（可选，根据需求）
-    { pattern: /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, (match: string) => {
+    { pattern: /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, handler: (match: string) => {
       const parts = match.split('.')
       return parts[0] + '.' + parts[1] + '.***.***'
     } },
 
     // 信用卡号
-    { pattern: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, (match: string) => {
+    { pattern: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, handler: (match: string) => {
       const cleaned = match.replace(/[\s-]/g, '')
       return cleaned.substring(0, 4) + ' **** **** ' + cleaned.substring(12)
     } },
@@ -102,8 +102,12 @@ export class DataMaskingService {
     let masked = str
 
     // 应用所有脱敏规则
-    for (const { pattern, replace } of this.sensitivePatterns) {
-      masked = masked.replace(pattern, replace as any)
+    for (const item of this.sensitivePatterns) {
+      if (item.handler) {
+        masked = masked.replace(item.pattern, item.handler)
+      } else if (item.replace) {
+        masked = masked.replace(item.pattern, item.replace)
+      }
     }
 
     return masked

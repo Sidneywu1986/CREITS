@@ -112,6 +112,20 @@ CREATE TABLE IF NOT EXISTS backup_metadata (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 加密配置表
+CREATE TABLE IF NOT EXISTS encrypted_config (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  config_key VARCHAR(255) UNIQUE NOT NULL,
+  encrypted_data TEXT NOT NULL,
+  iv VARCHAR(32) NOT NULL,
+  auth_tag VARCHAR(32) NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  version VARCHAR(20) NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 创建索引
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);

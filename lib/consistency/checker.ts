@@ -1,197 +1,277 @@
-import { ConsistencyRule, ConsistencyCheckResult, getRulesByTable } from '@/config/consistency-rules';
+import { createClient } from '@/lib/supabase/server'
+import { AuditLogService } from '@/lib/supabase/audit-log-v2'
 
 /**
- * 数据一致性检查器
+ * 一致性规则
+ */
+export interface ConsistencyRule {
+  id: string
+  name: string
+  description: string
+  tables: string[]
+  fields: string[]
+  check: (data: any) => { passed: boolean; message: string; severity: 'error' | 'warning' | 'info' }
+}
+
+/**
+ * 一致性违规
+ */
+export interface ConsistencyViolation {
+  id: string
+  ruleId: string
+  ruleName: string
+  severity: 'error' | 'warning' | 'info'
+  message: string
+  tables: string[]
+  resourceId?: string
+  timestamp: string
+  resolved: boolean
+}
+
+/**
+ * 数据一致性检查服务
  */
 export class ConsistencyChecker {
+  private supabase
+  private auditService
+
+  constructor() {
+    this.supabase = createClient()
+    this.auditService = new AuditLogService()
+  }
+
   /**
-   * 检查单条数据
+   * 获取所有规则
    */
-  public static checkRecord(data: any, table: string): ConsistencyCheckResult[] {
-    const results: ConsistencyCheckResult[] = [];
-    const rules = getRulesByTable(table);
+  getRules(): ConsistencyRule[] {
+    return [
+      {
+        id: 'occupancy-consistency',
+        name: '出租率一致性',
+        description: '产品表和运营表的出租率应该一致',
+        tables: ['reit_product_info', 'reit_operational_data'],
+        fields: ['avg_occupancy', 'occupancy_rate'],
+        check: (data: any) => {
+          const diff = Math.abs((data.product_occupancy || 0) - (data.occupancy || 0))
+          if (diff > 10) {
+            return {
+              passed: false,
+              message: `出租率差异过大：${diff.toFixed(2)}%`,
+              severity: 'error'
+            }
+          } else if (diff > 5) {
+            return {
+              passed: false,
+              message: `出租率差异：${diff.toFixed(2)}%`,
+              severity: 'warning'
+            }
+          }
+          return { passed: true, message: '出租率一致', severity: 'info' }
+        }
+      },
+      {
+        id: 'debt-ratio-consistency',
+        name: '债务比率一致性',
+        description: '财务表和风险表的债务比率应该一致',
+        tables: ['reit_financial_metrics', 'reit_risk_metrics'],
+        fields: ['debt_ratio'],
+        check: (data: any) => {
+          const diff = Math.abs((data.financial_debt || 0) - (data.risk_debt || 0))
+          if (diff > 5) {
+            return {
+              passed: false,
+              message: `债务比率差异过大：${diff.toFixed(2)}%`,
+              severity: 'error'
+            }
+          } else if (diff > 2) {
+            return {
+              passed: false,
+              message: `债务比率差异：${diff.toFixed(2)}%`,
+              severity: 'warning'
+            }
+          }
+          return { passed: true, message: '债务比率一致', severity: 'info' }
+        }
+      },
+      {
+        id: 'nav-consistency',
+        name: 'NAV一致性',
+        description: '运营表和市场表的NAV应该一致',
+        tables: ['reit_operational_data', 'reit_market_performance'],
+        fields: ['nav_per_share'],
+        check: (data: any) => {
+          const diff = Math.abs((data.operational_nav || 0) - (data.market_nav || 0))
+          const percentageDiff = (diff / Math.max(data.operational_nav || 1, data.market_nav || 1)) * 100
+          if (percentageDiff > 3) {
+            return {
+              passed: false,
+              message: `NAV差异过大：${percentageDiff.toFixed(2)}%`,
+              severity: 'error'
+            }
+          } else if (percentageDiff > 1) {
+            return {
+              passed: false,
+              message: `NAV差异：${percentageDiff.toFixed(2)}%`,
+              severity: 'warning'
+            }
+          }
+          return { passed: true, message: 'NAV一致', severity: 'info' }
+        }
+      }
+    ]
+  }
+
+  /**
+   * 检查单个记录
+   */
+  async checkRecord(table: string, recordId: string): Promise<ConsistencyViolation[]> {
+    const violations: ConsistencyViolation[] = []
+
+    // 获取记录
+    const { data: record, error } = await this.supabase
+      .from(table)
+      .select('*')
+      .eq('id', recordId)
+      .single()
+
+    if (error || !record) {
+      console.error(`获取记录失败 [${table}]:`, error)
+      return violations
+    }
+
+    // 获取关联记录
+    const fundCode = record.fund_code
+    if (!fundCode) {
+      return violations
+    }
+
+    // 应用所有规则
+    const rules = this.getRules()
 
     for (const rule of rules) {
-      const passed = rule.check(data);
-      results.push({
-        rule,
-        passed,
-        data,
-        message: passed ? '验证通过' : rule.message,
-      });
+      if (!rule.tables.includes(table)) {
+        continue
+      }
+
+      // 获取关联表数据
+      const otherTable = rule.tables.find(t => t !== table)
+      if (!otherTable) continue
+
+      const { data: relatedRecords } = await this.supabase
+        .from(otherTable)
+        .select('*')
+        .eq('fund_code', fundCode)
+        .limit(1)
+
+      if (!relatedRecords || relatedRecords.length === 0) {
+        continue
+      }
+
+      const relatedRecord = relatedRecords[0]
+
+      // 构建检查数据
+      const checkData = this.buildCheckData(table, otherTable, record, relatedRecord)
+
+      // 执行检查
+      const result = rule.check(checkData)
+
+      if (!result.passed) {
+        violations.push({
+          id: `${rule.id}-${recordId}-${Date.now()}`,
+          ruleId: rule.id,
+          ruleName: rule.name,
+          severity: result.severity,
+          message: result.message,
+          tables: rule.tables,
+          resourceId: recordId,
+          timestamp: new Date().toISOString(),
+          resolved: false
+        })
+      }
     }
 
-    return results;
+    return violations
   }
 
   /**
-   * 检查多条数据
+   * 全量检查
    */
-  public static checkRecords(data: any[], table: string): Map<string, ConsistencyCheckResult[]> {
-    const resultsMap = new Map<string, ConsistencyCheckResult[]>();
+  async fullCheck(tables: string[] = ['reit_product_info']): Promise<ConsistencyViolation[]> {
+    const allViolations: ConsistencyViolation[] = []
 
-    data.forEach((record, index) => {
-      const recordId = record.id || `${table}_${index}`;
-      resultsMap.set(recordId, this.checkRecord(record, table));
-    });
+    for (const table of tables) {
+      // 获取所有记录
+      const { data: records } = await this.supabase
+        .from(table)
+        .select('id, fund_code')
 
-    return resultsMap;
-  }
+      if (!records) continue
 
-  /**
-   * 检查跨表一致性
-   */
-  public static checkCrossTableConsistency(
-    dataMap: Map<string, any[]>
-  ): ConsistencyCheckResult[] {
-    const results: ConsistencyCheckResult[] = [];
-
-    // 检查资产表与产品表的关联
-    const properties = dataMap.get('reit_property_info') || [];
-    const products = dataMap.get('reit_product_info') || [];
-    const productCodes = new Set(products.map(p => p.fund_code));
-
-    properties.forEach((property, index) => {
-      if (!productCodes.has(property.fund_code)) {
-        results.push({
-          rule: {
-            id: 'cross-table-property-product',
-            name: '资产-产品关联',
-            description: '资产表中的fund_code必须在产品表中存在',
-            table: 'reit_property_info',
-            severity: 'error',
-            check: () => false,
-            message: `资产(${property.property_name || `#${index}`})关联的产品代码(${property.fund_code})不存在`,
-          },
-          passed: false,
-          data: property,
-          message: `资产(${property.property_name || `#${index}`})关联的产品代码(${property.fund_code})不存在`,
-        });
+      // 检查每条记录
+      for (const record of records) {
+        const violations = await this.checkRecord(table, record.id)
+        allViolations.push(...violations)
       }
-    });
-
-    // 检查财务数据与风险指标的一致性
-    const financialMetrics = dataMap.get('reit_financial_metrics') || [];
-    const riskMetrics = dataMap.get('reit_risk_metrics') || [];
-
-    // 创建财务数据映射
-    const financialMap = new Map(
-      financialMetrics.map(f => [f.fund_code, f])
-    );
-
-    // 检查风险指标对应的财务数据是否存在
-    riskMetrics.forEach((risk, index) => {
-      const financial = financialMap.get(risk.fund_code);
-      if (!financial) {
-        results.push({
-          rule: {
-            id: 'cross-table-risk-financial',
-            name: '风险-财务关联',
-            description: '风险指标表中必须有对应的财务数据',
-            table: 'reit_risk_metrics',
-            severity: 'error',
-            check: () => false,
-            message: `风险指标(${risk.fund_code})缺少对应的财务数据`,
-          },
-          passed: false,
-          data: risk,
-          message: `风险指标(${risk.fund_code})缺少对应的财务数据`,
-        });
-      }
-    });
-
-    return results;
-  }
-
-  /**
-   * 获取汇总统计
-   */
-  public static getSummary(
-    results: ConsistencyCheckResult[]
-  ): {
-    total: number;
-    passed: number;
-    failed: number;
-    errors: number;
-    warnings: number;
-    infos: number;
-  } {
-    const summary = {
-      total: results.length,
-      passed: 0,
-      failed: 0,
-      errors: 0,
-      warnings: 0,
-      infos: 0,
-    };
-
-    results.forEach((result) => {
-      if (result.passed) {
-        summary.passed++;
-      } else {
-        summary.failed++;
-        if (result.rule.severity === 'error') summary.errors++;
-        else if (result.rule.severity === 'warning') summary.warnings++;
-        else if (result.rule.severity === 'info') summary.infos++;
-      }
-    });
-
-    return summary;
-  }
-
-  /**
-   * 过滤失败的检查结果
-   */
-  public static getFailedResults(
-    results: ConsistencyCheckResult[]
-  ): ConsistencyCheckResult[] {
-    return results.filter((result) => !result.passed);
-  }
-
-  /**
-   * 按严重程度过滤
-   */
-  public static filterBySeverity(
-    results: ConsistencyCheckResult[],
-    severity: 'error' | 'warning' | 'info'
-  ): ConsistencyCheckResult[] {
-    return results.filter((result) => !result.passed && result.rule.severity === severity);
-  }
-
-  /**
-   * 导出检查报告
-   */
-  public static exportReport(
-    results: ConsistencyCheckResult[],
-    table: string
-  ): string {
-    const summary = this.getSummary(results);
-    const failedResults = this.getFailedResults(results);
-
-    let report = `# 数据一致性检查报告\n\n`;
-    report += `## 检查表: ${table}\n\n`;
-    report += `## 检查时间: ${new Date().toLocaleString()}\n\n`;
-    report += `## 检查摘要\n\n`;
-    report += `- 总检查数: ${summary.total}\n`;
-    report += `- 通过: ${summary.passed}\n`;
-    report += `- 失败: ${summary.failed}\n`;
-    report += `- 错误: ${summary.errors}\n`;
-    report += `- 警告: ${summary.warnings}\n`;
-    report += `- 信息: ${summary.infos}\n\n`;
-
-    if (failedResults.length > 0) {
-      report += `## 失败项详情\n\n`;
-      failedResults.forEach((result, index) => {
-        report += `### ${index + 1}. ${result.rule.name}\n`;
-        report += `- 严重程度: ${result.rule.severity}\n`;
-        report += `- 描述: ${result.rule.description}\n`;
-        report += `- 消息: ${result.message}\n`;
-        report += `- 数据: ${JSON.stringify(result.data, null, 2)}\n\n`;
-      });
-    } else {
-      report += `## ✅ 所有检查通过\n\n`;
     }
 
-    return report;
+    // 记录检查结果
+    if (allViolations.length > 0) {
+      await this.auditService.log({
+        userId: 'system',
+        username: 'system',
+        action: 'consistency_check',
+        resourceType: 'full_check',
+        newValue: { violationCount: allViolations.length },
+        result: 'success'
+      })
+    }
+
+    return allViolations
+  }
+
+  /**
+   * 构建检查数据
+   */
+  private buildCheckData(
+    table1: string,
+    table2: string,
+    record1: any,
+    record2: any
+  ): any {
+    const data: any = {}
+
+    // 根据表名映射字段
+    if (table1 === 'reit_product_info' && table2 === 'reit_operational_data') {
+      data.product_occupancy = record1.avg_occupancy
+      data.occupancy = record2.occupancy_rate
+    }
+
+    if (table1 === 'reit_financial_metrics' && table2 === 'reit_risk_metrics') {
+      data.financial_debt = (record1.total_debt / record1.total_assets) * 100
+      data.risk_debt = record2.debt_ratio
+    }
+
+    if (table1 === 'reit_operational_data' && table2 === 'reit_market_performance') {
+      data.operational_nav = record1.nav_per_share
+      data.market_nav = record2.nav_per_share
+    }
+
+    return data
+  }
+
+  /**
+   * 获取所有违规记录
+   */
+  async getViolations(resolved: boolean = false): Promise<ConsistencyViolation[]> {
+    // 从数据库获取（需要创建consistency_violations表）
+    // 这里暂时返回空数组
+    return []
+  }
+
+  /**
+   * 标记违规为已解决
+   */
+  async markResolved(violationId: string): Promise<void> {
+    // 更新数据库
   }
 }

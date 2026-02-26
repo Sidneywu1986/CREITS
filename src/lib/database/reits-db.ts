@@ -50,14 +50,18 @@ export class REITsDatabaseService {
         dbQuery = dbQuery.range(query.offset, query.offset + (query.limit || 10) - 1);
       }
 
-    const { data, error } = await dbQuery.order('listing_date', { ascending: false });
+      const { data, error } = await dbQuery.order('listing_date', { ascending: false });
 
-    if (error) {
+      if (error) {
+        console.error('获取产品列表失败:', error);
+        throw new Error(`获取产品列表失败: ${error.message}`);
+      }
+
+      return data || [];
+    } catch (error: any) {
       console.error('获取产品列表失败:', error);
       throw new Error(`获取产品列表失败: ${error.message}`);
     }
-
-    return data || [];
   }
 
   /**

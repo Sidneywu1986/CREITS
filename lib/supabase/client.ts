@@ -1,6 +1,6 @@
 'use client';
 
-import { createBrowserClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -10,11 +10,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const createClient = () => {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey);
 };
 
 // 单例模式导出
-let browserClient: ReturnType<typeof createBrowserClient> | null = null;
+let browserClient: ReturnType<typeof createSupabaseClient> | null = null;
 
 export const getSupabaseClient = () => {
   if (!browserClient) {
