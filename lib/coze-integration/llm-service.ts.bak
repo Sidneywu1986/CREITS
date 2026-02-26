@@ -327,7 +327,7 @@ ${announcementText}
     {"word": "关键词2", "relevance": 0.85, "category": "分类"}
   ],
   "summary": "关键词总结（50字以内）"
-}`;
+}';
 
     try {
       const response = await this.client.invoke([
@@ -354,7 +354,7 @@ ${announcementText}
   }
 
   /**
-   * Batch analyzing
+   * 批量分析
    */
   async batchAnalyze(
     items: Array<{ text: string; title?: string; type: AnalysisType }>
@@ -388,7 +388,7 @@ ${announcementText}
    */
   private parseJSONResponse(content: string): any {
     try {
-      // Try to extract JSON (may be in markdown code block)
+      // 尝试提取JSON（可能在markdown代码块中）
       const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) ||
                         content.match(/\{[\s\S]*\}/);
 

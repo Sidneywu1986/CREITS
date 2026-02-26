@@ -6,8 +6,12 @@
  */
 
 import cron from 'node-cron';
-import { cozeWebSearchService } from './web-search-service';
-import { cozeLLMService } from './llm-service';
+import { CozeWebSearchService } from '../coze-integration/web-search-service';
+import { cozeLLMService } from '../coze-integration/llm-service';
+import { intelligentEvolutionService, EvolutionTaskType } from '../intelligent-evolution/evolution-service';
+
+// 获取单例实例
+const webSearchService = CozeWebSearchService.getInstance();
 
 /**
  * 任务类型
@@ -70,7 +74,7 @@ export interface TaskExecutionResult {
 export class CronSchedulerService {
   private static instance: CronSchedulerService;
   private tasks: Map<string, TaskConfig>;
-  private scheduledTasks: Map<string, cron.ScheduledTask>;
+  private scheduledTasks: Map<string, any>;
 
   private constructor() {
     this.tasks = new Map();
@@ -224,7 +228,6 @@ export class CronSchedulerService {
       const scheduledTask = cron.schedule(task.cronExpression, async () => {
         await this.executeTask(taskId);
       }, {
-        scheduled: true,
         timezone: 'Asia/Shanghai'
       });
 
@@ -358,16 +361,17 @@ export class CronSchedulerService {
   private async executePolicyCollection(): Promise<any> {
     console.log('[CronScheduler] 执行政策数据采集...');
 
-    const policies = await cozeWebSearchService.searchPolicies({
-      timeRange: '1d',
-      count: 10
+    const policies = await webSearchService.searchPolicies({
+      keywords: ['REITs', '政策'],
+      count: 10,
+      timeRange: '1d'
     });
 
     // 对每个政策进行分析
     for (const policy of policies.results) {
-      if (policy.content) {
+      if (policy.snippet) {
         const impact = await cozeLLMService.analyzePolicyImpact(
-          policy.content,
+          policy.snippet,
           policy.title
         );
 
@@ -376,8 +380,8 @@ export class CronSchedulerService {
     }
 
     return {
-      total: policies.total,
-      summary: policies.summary
+      total: policies.results.length,
+      summary: '政策数据采集完成'
     };
   }
 
@@ -387,16 +391,17 @@ export class CronSchedulerService {
   private async executeNewsCollection(): Promise<any> {
     console.log('[CronScheduler] 执行新闻数据采集...');
 
-    const news = await cozeWebSearchService.searchNews({
-      timeRange: '1d',
-      count: 10
+    const news = await webSearchService.searchNews({
+      keywords: ['REITs', '市场'],
+      count: 10,
+      timeRange: '1d'
     });
 
     // 对每条新闻进行情感分析
     for (const item of news.results) {
-      if (item.content) {
+      if (item.snippet) {
         const sentiment = await cozeLLMService.analyzeNewsSentiment(
-          item.content,
+          item.snippet,
           item.title
         );
 
@@ -405,8 +410,8 @@ export class CronSchedulerService {
     }
 
     return {
-      total: news.total,
-      summary: news.summary
+      total: news.results.length,
+      summary: '新闻数据采集完成'
     };
   }
 
@@ -433,8 +438,42 @@ export class CronSchedulerService {
    */
   private async executeAgentEvolution(): Promise<any> {
     console.log('[CronScheduler] 执行Agent自我进化...');
-    // TODO: 集成自我进化服务
-    return { status: 'completed', message: 'Agent进化待实现' };
+
+    const results = [];
+
+    // 执行估值模型进化
+    console.log('[CronScheduler] 进化估值模型...');
+    const valuationResult = await intelligentEvolutionService.evolveValuationModel();
+    results.push({ type: 'valuation', ...valuationResult });
+
+    // 执行政策影响模型进化
+    console.log('[CronScheduler] 进化政策影响模型...');
+    const policyImpactResult = await intelligentEvolutionService.evolvePolicyImpactModel();
+    results.push({ type: 'policy_impact', ...policyImpactResult });
+
+    // 执行新闻情感模型进化
+    console.log('[CronScheduler] 进化新闻情感模型...');
+    const newsSentimentResult = await intelligentEvolutionService.evolveNewsSentimentModel();
+    results.push({ type: 'news_sentiment', ...newsSentimentResult });
+
+    // 执行风险评估模型进化
+    console.log('[CronScheduler] 进化风险评估模型...');
+    const riskAssessmentResult = await intelligentEvolutionService.evolveRiskAssessmentModel();
+    results.push({ type: 'risk_assessment', ...riskAssessmentResult });
+
+    // 汇总结果
+    const successCount = results.filter(r => r.success).length;
+    const totalCount = results.length;
+
+    console.log(`[CronScheduler] Agent自我进化完成: ${successCount}/${totalCount} 成功`);
+
+    return {
+      status: 'completed',
+      summary: 'Agent自我进化完成',
+      results,
+      successCount,
+      totalCount
+    };
   }
 
   /**
