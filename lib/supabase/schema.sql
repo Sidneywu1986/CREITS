@@ -69,6 +69,20 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 安全告警表
+CREATE TABLE IF NOT EXISTS security_alerts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  type VARCHAR(50) NOT NULL,  -- 'bruteforce', 'unusual_time', 'multiple_ips', 'permission_escalation'
+  severity VARCHAR(20) NOT NULL CHECK (severity IN ('critical', 'high', 'medium', 'low')),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  ip_address VARCHAR(50),
+  details JSONB,  -- 存储告警详情，如失败次数、IP数量等
+  status VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'acknowledged', 'resolved')),
+  resolved_at TIMESTAMP WITH TIME ZONE,
+  resolved_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 创建索引
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -79,6 +93,11 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DE
 CREATE INDEX IF NOT EXISTS idx_audit_logs_resource_type ON audit_logs(resource_type);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_user_id ON login_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_created_at ON login_attempts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_security_alerts_user_id ON security_alerts(user_id);
+CREATE INDEX IF NOT EXISTS idx_security_alerts_created_at ON security_alerts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_security_alerts_type ON security_alerts(type);
+CREATE INDEX IF NOT EXISTS idx_security_alerts_severity ON security_alerts(severity);
+CREATE INDEX IF NOT EXISTS idx_security_alerts_status ON security_alerts(status);
 
 -- 创建更新时间触发器函数
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -133,7 +152,10 @@ BEGIN
       (super_admin_id, 'system:logs', 'read'),
       (super_admin_id, 'system:logs', 'export'),
       (super_admin_id, 'system:settings', 'read'),
-      (super_admin_id, 'system:settings', 'update')
+      (super_admin_id, 'system:settings', 'update'),
+      (super_admin_id, 'system:security', 'read'),
+      (super_admin_id, 'system:security', 'update'),
+      (super_admin_id, 'system:security', 'analyze')
     ON CONFLICT (role_id, resource, action) DO NOTHING;
   END IF;
 END $$;

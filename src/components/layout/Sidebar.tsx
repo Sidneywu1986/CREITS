@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Dot,
   User,
+  Shield,
 } from 'lucide-react';
 
 interface NavGroup {
@@ -89,6 +90,7 @@ const navigation: NavGroup[] = [
     items: [
       { name: '权限管理', href: '/admin/permissions', icon: User },
       { name: '审计日志', href: '/admin/audit-logs', icon: FileText },
+      { name: '安全分析', href: '/admin/security', icon: Shield, badge: '新' },
     ],
   },
 ];
