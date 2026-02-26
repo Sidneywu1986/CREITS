@@ -1,0 +1,458 @@
+/**
+ * CozeLLMService - 基于Coze LLM的内容解析服务
+ *
+ * 功能：
+ * 1. 政策内容解析和影响评估
+ * 2. 新闻情感分析
+ * 3. 公告文本解析
+ * 4. 自动生成摘要
+ */
+
+import { LLMClient, Config, APIError } from "coze-coding-dev-sdk";
+
+/**
+ * 分析类型
+ */
+export enum AnalysisType {
+  POLICY_IMPACT = 'policy_impact',      // 政策影响评估
+  NEWS_SENTIMENT = 'news_sentiment',    // 新闻情感分析
+  ANNOUNCEMENT_PARSE = 'announcement_parse', // 公告解析
+  SUMMARY = 'summary',                   // 摘要生成
+  KEYWORD_EXTRACTION = 'keyword_extraction' // 关键词提取
+}
+
+/**
+ * 情感分析结果
+ */
+export interface SentimentResult {
+  sentiment: 'positive' | 'negative' | 'neutral';
+  score: number;  // -1 到 1
+  confidence: number;  // 0 到 1
+  keywords: string[];
+  summary: string;
+}
+
+/**
+ * 政策影响评估结果
+ */
+export interface PolicyImpactResult {
+  title: string;
+  summary: string;
+  impactScore: number;  // -1 到 1
+  impactDirection: 'positive' | 'negative' | 'neutral';
+  affectedReits: string[];
+  keyPoints: string[];
+  impactLevel: 'high' | 'medium' | 'low';
+}
+
+/**
+ * 公告解析结果
+ */
+export interface AnnouncementParseResult {
+  announcementType: string;
+  summary: string;
+  keyPoints: string[];
+  affectedItems: string[];
+  importance: 'high' | 'medium' | 'low';
+}
+
+/**
+ * 摘要结果
+ */
+export interface SummaryResult {
+  originalText: string;
+  summary: string;
+  keyPoints: string[];
+  wordCount: number;
+}
+
+/**
+ * 关键词提取结果
+ */
+export interface KeywordExtractionResult {
+  keywords: Array<{
+    word: string;
+    relevance: number;
+    category: string;
+  }>;
+  summary: string;
+}
+
+/**
+ * CozeLLMService类
+ */
+export class CozeLLMService {
+  private static instance: CozeLLMService;
+  private client: LLMClient;
+
+  private constructor() {
+    const config = new Config();
+    this.client = new LLMClient(config);
+  }
+
+  static getInstance(): CozeLLMService {
+    if (!CozeLLMService.instance) {
+      CozeLLMService.instance = new CozeLLMService();
+    }
+    return CozeLLMService.instance;
+  }
+
+  /**
+   * 分析政策影响
+   */
+  async analyzePolicyImpact(policyText: string, policyTitle?: string): Promise<PolicyImpactResult> {
+    console.log('[CozeLLM] 分析政策影响...');
+
+    const systemPrompt = `你是一个专业的政策分析师，专门分析政策对REITs市场的影响。
+
+请根据提供的政策文本，进行以下分析：
+1. 提取政策核心内容
+2. 评估政策对REITs市场的影响分数（-1到1，-1表示极度负面，1表示极度正面）
+3. 识别可能受影响的REITs产品类型
+4. 提取关键要点
+5. 评估影响级别（high/medium/low）
+
+请以JSON格式返回结果，格式如下：
+{
+  "title": "政策标题",
+  "summary": "政策摘要（100字以内）",
+  "impactScore": -1到1之间的数字,
+  "impactDirection": "positive"或"negative"或"neutral",
+  "affectedReits": ["受影响的REITs类型列表"],
+  "keyPoints": ["关键要点1", "关键要点2"],
+  "impactLevel": "high"或"medium"或"low"
+}`;
+
+    const userPrompt = `政策标题：${policyTitle || '未提供'}
+
+政策文本：
+${policyText}
+
+请分析该政策对REITs市场的影响。`;
+
+    try {
+      const response = await this.client.invoke([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ], {
+        model: 'doubao-seed-2-0-pro-260215',
+        temperature: 0.3,
+        thinking: 'enabled'
+      });
+
+      const result = this.parseJSONResponse(response.content);
+
+      return {
+        title: result.title || policyTitle || '未知政策',
+        summary: result.summary || '',
+        impactScore: this.normalizeScore(result.impactScore),
+        impactDirection: result.impactDirection || 'neutral',
+        affectedReits: Array.isArray(result.affectedReits) ? result.affectedReits : [],
+        keyPoints: Array.isArray(result.keyPoints) ? result.keyPoints : [],
+        impactLevel: result.impactLevel || 'medium'
+      };
+    } catch (error) {
+      console.error('[CozeLLM] 政策影响分析失败:', error);
+      return this.getDefaultPolicyImpact(policyTitle);
+    }
+  }
+
+  /**
+   * 分析新闻情感
+   */
+  async analyzeNewsSentiment(newsText: string, newsTitle?: string): Promise<SentimentResult> {
+    console.log('[CozeLLM] 分析新闻情感...');
+
+    const systemPrompt = `你是一个专业的金融新闻情感分析师，专门分析新闻对REITs市场的影响。
+
+请根据提供的新闻文本，进行以下分析：
+1. 判断新闻情感倾向（positive/negative/neutral）
+2. 计算情感分数（-1到1，-1表示极度负面，1表示极度正面）
+3. 提取关键词
+4. 生成摘要（50字以内）
+
+请以JSON格式返回结果，格式如下：
+{
+  "sentiment": "positive"或"negative"或"neutral",
+  "score": -1到1之间的数字,
+  "confidence": 0到1之间的数字,
+  "keywords": ["关键词1", "关键词2", "关键词3"],
+  "summary": "新闻摘要（50字以内）"
+}`;
+
+    const userPrompt = `新闻标题：${newsTitle || '未提供'}
+
+新闻文本：
+${newsText}
+
+请分析该新闻对REITs市场的影响和情感倾向。`;
+
+    try {
+      const response = await this.client.invoke([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ], {
+        model: 'doubao-seed-2-0-pro-260215',
+        temperature: 0.3
+      });
+
+      const result = this.parseJSONResponse(response.content);
+
+      return {
+        sentiment: result.sentiment || 'neutral',
+        score: this.normalizeScore(result.score),
+        confidence: this.normalizeScore(result.confidence),
+        keywords: Array.isArray(result.keywords) ? result.keywords : [],
+        summary: result.summary || ''
+      };
+    } catch (error) {
+      console.error('[CozeLLM] 新闻情感分析失败:', error);
+      return this.getDefaultSentimentResult();
+    }
+  }
+
+  /**
+   * 解析公告
+   */
+  async parseAnnouncement(announcementText: string, announcementTitle?: string): Promise<AnnouncementParseResult> {
+    console.log('[CozeLLM] 解析公告...');
+
+    const systemPrompt = `你是一个专业的公告解析专家，专门解析REITs相关公告。
+
+请根据提供的公告文本，进行以下分析：
+1. 识别公告类型（如：年报、分红公告、持仓变动等）
+2. 提取关键要点
+3. 识别受影响的项目或产品
+4. 评估重要性级别
+
+请以JSON格式返回结果，格式如下：
+{
+  "announcementType": "公告类型",
+  "summary": "公告摘要（100字以内）",
+  "keyPoints": ["关键要点1", "关键要点2"],
+  "affectedItems": ["受影响的项目或产品列表"],
+  "importance": "high"或"medium"或"low"
+}`;
+
+    const userPrompt = `公告标题：${announcementTitle || '未提供'}
+
+公告文本：
+${announcementText}
+
+请解析该公告的内容。`;
+
+    try {
+      const response = await this.client.invoke([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ], {
+        model: 'doubao-seed-2-0-pro-260215',
+        temperature: 0.3,
+        thinking: 'enabled'
+      });
+
+      const result = this.parseJSONResponse(response.content);
+
+      return {
+        announcementType: result.announcementType || '未分类',
+        summary: result.summary || '',
+        keyPoints: Array.isArray(result.keyPoints) ? result.keyPoints : [],
+        affectedItems: Array.isArray(result.affectedItems) ? result.affectedItems : [],
+        importance: result.importance || 'medium'
+      };
+    } catch (error) {
+      console.error('[CozeLLM] 公告解析失败:', error);
+      return this.getDefaultAnnouncementParseResult();
+    }
+  }
+
+  /**
+   * 生成摘要
+   */
+  async generateSummary(text: string, maxLength: number = 200): Promise<SummaryResult> {
+    console.log('[CozeLLM] 生成摘要...');
+
+    const systemPrompt = `你是一个专业的文本摘要生成专家。
+
+请根据提供的文本，生成简洁的摘要（${maxLength}字以内）。
+
+请以JSON格式返回结果，格式如下：
+{
+  "summary": "摘要文本",
+  "keyPoints": ["关键要点1", "关键要点2", "关键要点3"]
+}`;
+
+    try {
+      const response = await this.client.invoke([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text }
+      ], {
+        model: 'doubao-seed-2-0-lite-260215',
+        temperature: 0.3
+      });
+
+      const result = this.parseJSONResponse(response.content);
+
+      return {
+        originalText: text,
+        summary: result.summary || text.substring(0, maxLength),
+        keyPoints: Array.isArray(result.keyPoints) ? result.keyPoints : [],
+        wordCount: text.length
+      };
+    } catch (error) {
+      console.error('[CozeLLM] 摘要生成失败:', error);
+      return {
+        originalText: text,
+        summary: text.substring(0, maxLength),
+        keyPoints: [],
+        wordCount: text.length
+      };
+    }
+  }
+
+  /**
+   * 提取关键词
+   */
+  async extractKeywords(text: string, category?: string): Promise<KeywordExtractionResult> {
+    console.log('[CozeLLM] 提取关键词...');
+
+    const systemPrompt = `你是一个专业的关键词提取专家。
+
+请根据提供的文本，提取最重要的关键词，并给出每个关键词的相关性评分和分类。
+
+请以JSON格式返回结果，格式如下：
+{
+  "keywords": [
+    {"word": "关键词1", "relevance": 0.95, "category": "分类"},
+    {"word": "关键词2", "relevance": 0.85, "category": "分类"}
+  ],
+  "summary": "关键词总结（50字以内）"
+}';
+
+    try {
+      const response = await this.client.invoke([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text }
+      ], {
+        model: 'doubao-seed-2-0-lite-260215',
+        temperature: 0.3
+      });
+
+      const result = this.parseJSONResponse(response.content);
+
+      return {
+        keywords: Array.isArray(result.keywords) ? result.keywords : [],
+        summary: result.summary || ''
+      };
+    } catch (error) {
+      console.error('[CozeLLM] 关键词提取失败:', error);
+      return {
+        keywords: [],
+        summary: ''
+      };
+    }
+  }
+
+  /**
+   * 批量分析
+   */
+  async batchAnalyze(
+    items: Array<{ text: string; title?: string; type: AnalysisType }>
+  ): Promise<any[]> {
+    console.log(`[CozeLLM] 批量分析 ${items.length} 条数据...`);
+
+    const results = await Promise.all(
+      items.map(async (item) => {
+        switch (item.type) {
+          case AnalysisType.POLICY_IMPACT:
+            return await this.analyzePolicyImpact(item.text, item.title);
+          case AnalysisType.NEWS_SENTIMENT:
+            return await this.analyzeNewsSentiment(item.text, item.title);
+          case AnalysisType.ANNOUNCEMENT_PARSE:
+            return await this.parseAnnouncement(item.text, item.title);
+          case AnalysisType.SUMMARY:
+            return await this.generateSummary(item.text);
+          case AnalysisType.KEYWORD_EXTRACTION:
+            return await this.extractKeywords(item.text);
+          default:
+            return null;
+        }
+      })
+    );
+
+    return results.filter(r => r !== null);
+  }
+
+  /**
+   * 解析JSON响应
+   */
+  private parseJSONResponse(content: string): any {
+    try {
+      // 尝试提取JSON（可能在markdown代码块中）
+      const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) ||
+                        content.match(/\{[\s\S]*\}/);
+
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[1] || jsonMatch[0]);
+      }
+
+      // 直接解析
+      return JSON.parse(content);
+    } catch (error) {
+      console.error('[CozeLLM] JSON解析失败:', error);
+      return {};
+    }
+  }
+
+  /**
+   * 归一化分数
+   */
+  private normalizeScore(score: any): number {
+    if (typeof score !== 'number') return 0;
+    return Math.max(-1, Math.min(1, score));
+  }
+
+  /**
+   * 获取默认政策影响结果
+   */
+  private getDefaultPolicyImpact(title?: string): PolicyImpactResult {
+    return {
+      title: title || '未知政策',
+      summary: '无法分析政策内容',
+      impactScore: 0,
+      impactDirection: 'neutral',
+      affectedReits: [],
+      keyPoints: [],
+      impactLevel: 'low'
+    };
+  }
+
+  /**
+   * 获取默认情感分析结果
+   */
+  private getDefaultSentimentResult(): SentimentResult {
+    return {
+      sentiment: 'neutral',
+      score: 0,
+      confidence: 0.5,
+      keywords: [],
+      summary: '无法分析情感'
+    };
+  }
+
+  /**
+   * 获取默认公告解析结果
+   */
+  private getDefaultAnnouncementParseResult(): AnnouncementParseResult {
+    return {
+      announcementType: '未分类',
+      summary: '无法解析公告内容',
+      keyPoints: [],
+      affectedItems: [],
+      importance: 'low'
+    };
+  }
+}
+
+// 导出单例
+export const cozeLLMService = CozeLLMService.getInstance();

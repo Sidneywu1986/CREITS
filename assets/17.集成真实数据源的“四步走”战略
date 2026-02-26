@@ -1,0 +1,350 @@
+## 集成真实数据源的“四步走”战略
+
+【任务：集成真实数据源】
+【第一步：修改 self-evolution.ts】
+
+1. 添加 extractRealFeatures() 方法，从 collected_* 表提取特征
+2. 实现政策影响、新闻情感、公告事件、REITs指标四个特征提取
+3. 添加 optimizeWeightsWithRealData() 使用真实数据优化权重
+   【第二步：修改 knowledge-feedback-loop.ts】
+4. 添加 getActualPerformance() 从真实数据获取实际值
+5. 实现 batchUpdateActualValues() 批量更新预测准确度
+6. 连接预测记录和真实结果
+   【第三步：创建集成脚本】
+7. 创建 scripts/integrate-real-data.ts
+8. 实现完整的数据集成流水线
+9. 配置定时任务
+   【第四步：验证测试】
+10. 运行集成脚本，确认能从真实表读取数据
+11. 验证权重优化是否基于真实特征
+12. 检查预测准确度是否真实计算
+    【第五步：监控与报告】
+13. 创建集成日志表
+14. 添加监控看板
+15. 每周生成进化报告
+
+
+
+text
+
+┌─────────────────────────────────────────────────────────────┐
+│                   真实数据源集成路径                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  第一步：连接存量数据（已完成采集的表）                        │
+│  ├─ collected_reits：58只REITs产品信息                       │
+│  ├─ collected_policies：200+份政策文件                       │
+│  ├─ collected_news：新闻数据                                 │
+│  └─ collected_announcements：交易所公告                      │
+│         ↓                                                    │
+│  第二步：抽取特征（让数据变成模型能吃的“营养”）                  │
+│  ├─ 政策→REITs影响特征                                       │
+│  ├─ 新闻→REITs情感特征                                       │
+│  └─ 公告→REITs事件特征                                       │
+│         ↓                                                    │
+│  第三步：对接进化服务（用真实数据驱动进化）                      │
+│  ├─ 特征重要性计算 → 权重优化                                │
+│  ├─ 预测记录 → 实际值对比 → 自动重训练                        │
+│  └─ 模型版本管理                                              │
+│         ↓                                                    │
+│  第四步：建立自动化流水线（让系统自己跑起来）                    │
+│  ├─ 每日：采集新数据                                         │
+│  ├─ 每周：自动进化                                           │
+│  └─ 每次预测：记录并对比                                      │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+
+---
+
+## 二、代码实现：让 self-evolution.ts 吃真实数据
+
+### 2.1 修改特征提取函数
+
+typescript
+
+// lib/intelligent-evolution/self-evolution.ts
+// 添加从真实数据表提取特征的方法
+import { createClient } from '@/lib/supabase/client';
+export class SelfEvolutionService {
+  private supabase = createClient();
+  // 从真实数据表提取特征
+  async extractRealFeatures() {
+    const features = {
+      policyImpact: await this.extractPolicyImpact(),
+      newsSentiment: await this.extractNewsSentiment(),
+      announcementEvents: await this.extractAnnouncementEvents(),
+      reitMetrics: await this.extractREITMetrics()
+    };
+
+    return features;
+
+  }
+  // 1. 政策影响特征（从 collected_policies 和 graph_edges）
+  private async extractPolicyImpact() {
+    const { data: policies } = await this.supabase
+      .from('collected_policies')
+      .select('id, title, publish_date, level')
+      .gte('publish_date', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()); // 最近90天
+    // 从知识图谱获取政策对REITs的影响关系
+    const { data: impacts } = await this.supabase
+      .from('graph_edges')
+      .select('*')
+      .eq('relationship', 'affects');
+    return {
+      count: policies?.length || 0,
+      recentPolicies: policies,
+      impactMatrix: this.buildImpactMatrix(impacts)
+    };
+  }
+  // 2. 新闻情感特征（从 collected_news 和 node_events）
+  private async extractNewsSentiment() {
+    const { data: news } = await this.supabase
+      .from('collected_news')
+      .select('id, title, publish_date, sentiment')
+      .gte('publish_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+    // 从知识图谱获取新闻对REITs的情感关系
+    const { data: sentiments } = await this.supabase
+      .from('graph_edges')
+      .select('*')
+      .eq('relationship', 'related_to');
+    return {
+      count: news?.length || 0,
+      avgSentiment: this.calculateAvgSentiment(news),
+      sentimentDistribution: this.calculateSentimentDistribution(sentiments)
+    };
+  }
+  // 3. 公告事件特征（从 collected_announcements）
+  private async extractAnnouncementEvents() {
+    const { data: announcements } = await this.supabase
+      .from('collected_announcements')
+      .select('id, title, publish_date, type')
+      .gte('publish_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+    return {
+      count: announcements?.length || 0,
+      typeDistribution: this.groupByType(announcements)
+    };
+  }
+  // 4. REITs基础指标（从 collected_reits）
+  private async extractREITMetrics() {
+    const { data: reits } = await this.supabase
+      .from('collected_reits')
+      .select('*');
+    return {
+      count: reits?.length || 0,
+      assetTypeDistribution: this.groupByAssetType(reits),
+      avgIssueAmount: this.calculateAvg(reits, 'issue_amount')
+    };
+  }
+  // 辅助计算函数
+  private buildImpactMatrix(impacts: any[]) {
+    // 构建政策影响矩阵
+    return impacts.reduce((acc, cur) => {
+      if (!acc[cur.from_node]) acc[cur.from_node] = {};
+      acc[cur.from_node][cur.to_node] = cur.strength;
+      return acc;
+    }, {});
+  }
+  private calculateAvgSentiment(news: any[]) {
+    if (!news?.length) return 0;
+    const sum = news.reduce((acc, cur) => acc + (cur.sentiment || 0), 0);
+    return sum / news.length;
+  }
+  private calculateSentimentDistribution(sentiments: any[]) {
+    // 计算情感分布（积极/中性/消极）
+    return {
+      positive: sentiments?.filter(s => s.strength > 0.6).length || 0,
+      neutral: sentiments?.filter(s => s.strength >= 0.4 && s.strength <= 0.6).length || 0,
+      negative: sentiments?.filter(s => s.strength < 0.4).length || 0
+    };
+  }
+  private groupByType(items: any[]) {
+    return items?.reduce((acc, cur) => {
+      acc[cur.type] = (acc[cur.type] || 0) + 1;
+      return acc;
+    }, {});
+  }
+  private groupByAssetType(reits: any[]) {
+    return reits?.reduce((acc, cur) => {
+      acc[cur.asset_type] = (acc[cur.asset_type] || 0) + 1;
+      return acc;
+    }, {});
+  }
+  private calculateAvg(items: any[], field: string) {
+    if (!items?.length) return 0;
+    const sum = items.reduce((acc, cur) => acc + (Number(cur[field]) || 0), 0);
+    return sum / items.length;
+  }
+  // 覆盖原有的 optimizeWeights 方法，使用真实特征
+  async optimizeWeightsWithRealData(agentId: string) {
+    const features = await this.extractRealFeatures();
+
+    // 特征重要性计算逻辑（基于真实数据）
+    const importance = this.calculateFeatureImportance(features);
+    
+    // 更新权重
+    await this.updateWeights(agentId, importance);
+    
+    return { features, importance };
+
+  }
+  // 批量进化所有 Agent（使用真实数据）
+  async evolveAllWithRealData() {
+    const features = await this.extractRealFeatures();
+
+    const results = {};
+    const agents = await this.getActiveAgents();
+    
+    for (const agent of agents) {
+      results[agent.id] = await this.optimizeWeightsWithRealData(agent.id);
+    }
+    
+    return results;
+
+  }
+}
+
+### 2.2 修改知识反馈闭环，接入真实预测
+
+typescript
+
+// lib/intelligent-evolution/knowledge-feedback-loop.ts
+// 添加从真实数据获取实际值的方法
+export class KnowledgeFeedbackLoop {
+  private supabase = createClient();
+  // 获取REITs的实际表现（用于对比预测）
+  async getActualPerformance(reitCode: string, metric: string, date: Date) {
+    // 从 collected_reits 或其他真实数据表获取
+    const { data } = await this.supabase
+      .from('collected_reits')
+      .select('*')
+      .eq('fund_code', reitCode)
+      .single();
+    return {
+      nav: data?.nav_per_share,
+      price: data?.closing_price,
+      dividend: data?.annual_dividend
+    }[metric];
+  }
+  // 获取政策实际影响（用于验证预测）
+  async getActualPolicyImpact(policyId: string) {
+    // 从知识图谱获取政策影响的实际表现
+    const { data: edges } = await this.supabase
+      .from('graph_edges')
+      .select('*')
+      .eq('from_node', `policy:${policyId}`);
+    return edges;
+  }
+  // 批量更新预测的实际值
+  async batchUpdateActualValues() {
+    // 找出所有需要更新实际值的预测（7天前的）
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const { data: predictions } = await this.supabase
+      .from('agent_predictions')
+      .select('*')
+      .eq('actual_value', null)
+      .lt('prediction_date', oneWeekAgo.toISOString());
+    for (const pred of predictions) {
+      const actual = await this.getActualPerformance(
+        pred.target_id,
+        pred.metric,
+        new Date(pred.prediction_date)
+      );
+      if (actual !== undefined) {
+        await this.updateActualValue(pred.id, actual);
+      }
+    }
+  }
+}
+
+---
+
+## 三、自动化流水线配置
+
+### 3.1 创建数据集成定时任务
+
+typescript
+
+// scripts/integrate-real-data.ts
+import { SelfEvolutionService } from '@/lib/intelligent-evolution/self-evolution';
+import { KnowledgeFeedbackLoop } from '@/lib/intelligent-evolution/knowledge-feedback-loop';
+import { createClient } from '@/lib/supabase/client';
+async function integrateRealData() {
+  console.log('开始集成真实数据源...');
+
+  const evolution = new SelfEvolutionService();
+  const feedback = new KnowledgeFeedbackLoop();
+
+  // 1. 提取真实特征
+  console.log('1. 提取真实特征...');
+  const features = await evolution.extractRealFeatures();
+
+  // 2. 优化权重
+  console.log('2. 优化Agent权重...');
+  const weights = await evolution.evolveAllWithRealData();
+
+  // 3. 批量更新实际值
+  console.log('3. 更新预测实际值...');
+  await feedback.batchUpdateActualValues();
+
+  // 4. 记录集成日志
+  await logIntegrationResult({ features, weights });
+
+  console.log('真实数据集成完成！');
+}
+async function logIntegrationResult(result: any) {
+  const supabase = createClient();
+  await supabase.from('integration_logs').insert({
+    type: 'real_data_integration',
+    result: result,
+    created_at: new Date()
+  });
+}
+// 如果直接运行脚本
+if (require.main === module) {
+  integrateRealData().catch(console.error);
+}
+
+### 3.2 配置定时任务（Cron）
+
+bash
+
+# 每天凌晨1点运行数据集成
+
+0 1 * * * /usr/bin/node /path/to/scripts/integrate-real-data.js >> /var/log/reits-integration.log 2>&1
+
+# 每周一凌晨2点运行批量进化
+
+0 2 * * 1 /usr/bin/curl -X POST http://localhost:5000/api/v1/intelligent-evolution/evolve-all -H "Content-Type: application/json" -d '{"useRealData":true}'
+
+### 3.3 创建监控看板
+
+sql
+
+-- 查看真实数据集成状态
+SELECT 
+  '政策' as source, COUNT(*) as count, MAX(created_at) as latest
+FROM collected_policies
+UNION ALL
+SELECT '新闻', COUNT(*), MAX(created_at) FROM collected_news
+UNION ALL
+SELECT '公告', COUNT(*), MAX(created_at) FROM collected_announcements
+UNION ALL
+SELECT 'REITs', COUNT(*), MAX(created_at) FROM collected_reits;
+-- 查看预测准确度趋势
+SELECT 
+  DATE(prediction_date) as date,
+  AVG(CASE WHEN actual_value IS NOT NULL THEN 
+    ABS(actual_value - prediction_value) / actual_value 
+    ELSE NULL END) as avg_error
+FROM agent_predictions
+GROUP BY DATE(prediction_date)
+ORDER BY date DESC;
+
+---
+
+## 
+
+text
+
+
