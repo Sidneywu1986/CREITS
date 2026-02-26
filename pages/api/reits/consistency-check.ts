@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { ConsistencyChecker } from '@/lib/consistency/checker';
+import { AuditLogService, AuditActions } from '@/lib/supabase/audit-log';
 
 export default async function handler(
   req: NextApiRequest,
@@ -7,6 +8,22 @@ export default async function handler(
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // 获取用户信息（从localStorage或session中获取）
+  // 这里简化处理，实际应用中应该从session中获取
+  const userStr = req.headers['x-user-info'] as string;
+  let userId = 'system';
+  let username = 'system';
+
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      userId = user.id || 'system';
+      username = user.username || 'system';
+    } catch (e) {
+      // 忽略解析错误
+    }
   }
 
   try {
@@ -57,6 +74,20 @@ export default async function handler(
     // 获取汇总统计
     const summary = ConsistencyChecker.getSummary(results);
 
+    // 记录审计日志
+    await AuditLogService.log({
+      userId,
+      username,
+      action: 'consistency.check',
+      resourceType: table,
+      newValue: {
+        table,
+        recordCount: data.length,
+        summary,
+      },
+      result: 'success',
+    });
+
     res.status(200).json({
       success: true,
       results,
@@ -64,6 +95,17 @@ export default async function handler(
     });
   } catch (error) {
     console.error('Consistency check error:', error);
+
+    // 记录审计日志（失败）
+    await AuditLogService.log({
+      userId,
+      username,
+      action: 'consistency.check',
+      resourceType: req.body.table || 'unknown',
+      result: 'failure',
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+    });
+
     res.status(500).json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error',

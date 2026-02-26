@@ -53,6 +53,7 @@ const navigation: NavGroup[] = [
       { name: '已发行 REITs', href: '/issued-reits', icon: Building },
       { name: 'ABS数据中心', href: '/abs-dashboard', icon: Briefcase },
       { name: 'REITs 八张表', href: '/reits-data-tables', icon: Table2 },
+      { name: 'REITs 八张表 (增强版)', href: '/reits-data-tables-enhanced', icon: Table2, badge: '新' },
     ],
   },
   {
@@ -79,6 +80,15 @@ const navigation: NavGroup[] = [
     items: [
       { name: '休闲小游戏', href: '/games', icon: Gamepad2 },
       { name: '匿名 BBS', href: '/bbs', icon: MessageSquare, badge: '热门' },
+    ],
+  },
+  {
+    title: '系统管理',
+    icon: Settings,
+    color: 'text-slate-400',
+    items: [
+      { name: '权限管理', href: '/admin/permissions', icon: User },
+      { name: '审计日志', href: '/admin/audit-logs', icon: FileText },
     ],
   },
 ];
