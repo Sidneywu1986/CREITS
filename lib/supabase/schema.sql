@@ -296,3 +296,75 @@ BEGIN
     ON CONFLICT (role_id, resource, action) DO NOTHING;
   END IF;
 END $$;
+
+-- =====================================================
+-- 第四阶段：智能进化新增表
+-- =====================================================
+
+-- 备份表
+CREATE TABLE IF NOT EXISTS backups (
+  id TEXT PRIMARY KEY,
+  timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+  type VARCHAR(20) NOT NULL,  -- 'full' | 'incremental'
+  size BIGINT NOT NULL,
+  tables JSONB NOT NULL,       -- 表名列表
+  checksum TEXT NOT NULL,
+  status VARCHAR(20) NOT NULL, -- 'completed' | 'failed' | 'verifying'
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Agent反馈表
+CREATE TABLE IF NOT EXISTS agent_feedback (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  decision_id TEXT NOT NULL,
+  human_decision VARCHAR(20) NOT NULL,  -- 'approve' | 'reject' | 'review'
+  reason TEXT,
+  corrected BOOLEAN NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Agent模型表
+CREATE TABLE IF NOT EXISTS agent_models (
+  id TEXT PRIMARY KEY,
+  version TEXT NOT NULL,
+  accuracy DECIMAL(5,2),
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 工作流定义表
+CREATE TABLE IF NOT EXISTS workflow_definitions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  version TEXT NOT NULL,
+  description TEXT,
+  nodes JSONB NOT NULL,
+  edges JSONB NOT NULL,
+  status VARCHAR(20) NOT NULL,  -- 'draft' | 'active' | 'archived'
+  created_by TEXT NOT NULL,
+  updated_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 工作流实例表
+CREATE TABLE IF NOT EXISTS workflow_instances (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  workflow_id UUID REFERENCES workflow_definitions(id) ON DELETE CASCADE,
+  workflow_version TEXT NOT NULL,
+  status VARCHAR(20) NOT NULL,  -- 'running' | 'completed' | 'failed' | 'cancelled'
+  current_node_id TEXT,
+  variables JSONB NOT NULL,
+  history JSONB NOT NULL,
+  started_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  started_by TEXT NOT NULL
+);
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_backups_timestamp ON backups(timestamp);
+CREATE INDEX IF NOT EXISTS idx_agent_feedback_created ON agent_feedback(created_at);
+CREATE INDEX IF NOT EXISTS idx_workflow_definitions_status ON workflow_definitions(status);
+CREATE INDEX IF NOT EXISTS idx_workflow_instances_workflow ON workflow_instances(workflow_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_instances_status ON workflow_instances(status);
