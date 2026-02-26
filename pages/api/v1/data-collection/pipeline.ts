@@ -13,6 +13,17 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { externalDataCollector, DataType, CollectionType } from '@/lib/data-collection/external-collector';
 import { knowledgeGraph } from '@/lib/knowledge-graph/graph-builder';
 import { dataNormalizer } from '@/lib/data-collection/data-normalizer';
+// 导入模拟版本
+import { externalDataCollectorMock } from '@/lib/data-collection/external-collector-mock';
+import { knowledgeGraphMock } from '@/lib/knowledge-graph/graph-builder-mock';
+
+// 检测是否使用模拟模式
+const USE_MOCK = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('example') || 
+                 process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('raplkhuxnrmshilrkjwi');
+
+// 选择合适的实现
+const collector = USE_MOCK ? externalDataCollectorMock : externalDataCollector;
+const graphBuilder = USE_MOCK ? knowledgeGraphMock : knowledgeGraph;
 
 export default async function handler(
   req: NextApiRequest,
@@ -26,11 +37,14 @@ export default async function handler(
   try {
     const { action, dataType, collectionType } = req.body;
 
-    // 验证API密钥
+    // 验证API密钥（开发环境可跳过）
     const apiKey = req.headers['x-api-key'] as string;
-    if (!apiKey) {
+    if (!apiKey && process.env.NODE_ENV === 'production') {
       return res.status(401).json({ error: 'API key required' });
     }
+
+    // 开发环境使用默认API key
+    const effectiveApiKey = apiKey || 'dev-test-key';
 
     // 这里应该验证API密钥是否有效
     // 简化示例，实际应用中需要查询数据库验证
@@ -83,7 +97,7 @@ async function handleCollection(
   const type = collectionType || CollectionType.INCREMENTAL;
 
   // 异步启动采集（不等待完成）
-  externalDataCollector.startCollection(dataType as DataType, type as CollectionType)
+  collector.startCollection(dataType as DataType, type as CollectionType)
     .then(result => {
       console.log(`采集完成: ${dataType}`, result);
     })
@@ -106,7 +120,7 @@ async function handleCollection(
  */
 async function handleGraphBuild(res: NextApiResponse) {
   try {
-    const result = await knowledgeGraph.buildGraph();
+    const result = await graphBuilder.buildGraph();
 
     res.status(200).json({
       success: true,
@@ -175,7 +189,7 @@ async function handleFullPipeline(res: NextApiResponse) {
 
     // 1. 数据采集
     console.log('启动数据采集...');
-    const collectionResults = await externalDataCollector.collectAll(CollectionType.INCREMENTAL);
+    const collectionResults = await collector.collectAll(CollectionType.INCREMENTAL);
     results.collection = collectionResults;
 
     // 2. 数据规范化
