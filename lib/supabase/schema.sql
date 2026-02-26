@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
   login_attempts INTEGER DEFAULT 0,
   locked_until TIMESTAMP WITH TIME ZONE,
   is_active BOOLEAN DEFAULT true,
+  two_factor_enabled BOOLEAN DEFAULT false,
+  two_factor_secret TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -83,6 +85,31 @@ CREATE TABLE IF NOT EXISTS security_alerts (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 用户IP白名单表
+CREATE TABLE IF NOT EXISTS user_ip_whitelist (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  ip_address VARCHAR(50) NOT NULL,
+  description VARCHAR(200),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  UNIQUE(user_id, ip_address)
+);
+
+-- 备份元数据表
+CREATE TABLE IF NOT EXISTS backup_metadata (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  filename VARCHAR(255) NOT NULL,
+  tables TEXT[] NOT NULL,
+  size BIGINT NOT NULL,
+  encrypted_data TEXT NOT NULL,
+  iv VARCHAR(32) NOT NULL,
+  auth_tag VARCHAR(32) NOT NULL,
+  status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed')),
+  error TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 创建索引
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -98,6 +125,10 @@ CREATE INDEX IF NOT EXISTS idx_security_alerts_created_at ON security_alerts(cre
 CREATE INDEX IF NOT EXISTS idx_security_alerts_type ON security_alerts(type);
 CREATE INDEX IF NOT EXISTS idx_security_alerts_severity ON security_alerts(severity);
 CREATE INDEX IF NOT EXISTS idx_security_alerts_status ON security_alerts(status);
+CREATE INDEX IF NOT EXISTS idx_user_ip_whitelist_user_id ON user_ip_whitelist(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_ip_whitelist_ip_address ON user_ip_whitelist(ip_address);
+CREATE INDEX IF NOT EXISTS idx_backup_metadata_created_at ON backup_metadata(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_backup_metadata_status ON backup_metadata(status);
 
 -- 创建更新时间触发器函数
 CREATE OR REPLACE FUNCTION update_updated_at_column()
