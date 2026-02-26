@@ -368,3 +368,159 @@ CREATE INDEX IF NOT EXISTS idx_agent_feedback_created ON agent_feedback(created_
 CREATE INDEX IF NOT EXISTS idx_workflow_definitions_status ON workflow_definitions(status);
 CREATE INDEX IF NOT EXISTS idx_workflow_instances_workflow ON workflow_instances(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_workflow_instances_status ON workflow_instances(status);
+
+-- =====================================================
+-- 第五阶段：生态进化新增表
+-- =====================================================
+
+-- API密钥表
+CREATE TABLE IF NOT EXISTS api_keys (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  key TEXT NOT NULL,
+  prefix TEXT NOT NULL,
+  scopes JSONB NOT NULL,
+  rate_limit INTEGER NOT NULL DEFAULT 1000,
+  user_id TEXT NOT NULL,
+  organization_id TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  expires_at TIMESTAMP WITH TIME ZONE,
+  last_used_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- API使用记录表
+CREATE TABLE IF NOT EXISTS api_usage (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  api_key_id TEXT NOT NULL REFERENCES api_keys(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL,
+  method TEXT NOT NULL,
+  status_code INTEGER NOT NULL,
+  response_time INTEGER NOT NULL,
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 机构表
+CREATE TABLE IF NOT EXISTS organizations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  code TEXT UNIQUE NOT NULL,
+  logo TEXT,
+  theme JSONB,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  plan VARCHAR(20) NOT NULL DEFAULT 'free',
+  max_users INTEGER NOT NULL DEFAULT 10,
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 用户机构关联表
+CREATE TABLE IF NOT EXISTS user_organizations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  role VARCHAR(50) NOT NULL,
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, organization_id)
+);
+
+-- 机构角色表
+CREATE TABLE IF NOT EXISTS org_roles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  code VARCHAR(50) NOT NULL,
+  name VARCHAR(50) NOT NULL,
+  description TEXT,
+  permissions JSONB NOT NULL,
+  UNIQUE(organization_id, code)
+);
+
+-- 报表表
+CREATE TABLE IF NOT EXISTS reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT,
+  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+  components JSONB NOT NULL,
+  created_by TEXT NOT NULL,
+  updated_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 报表实例表
+CREATE TABLE IF NOT EXISTS report_instances (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  format VARCHAR(10) NOT NULL,
+  data JSONB NOT NULL,
+  generated_by TEXT NOT NULL,
+  generated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  expires_at TIMESTAMP WITH TIME ZONE
+);
+
+-- 报表计划表
+CREATE TABLE IF NOT EXISTS report_schedules (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  cron TEXT NOT NULL,
+  recipients JSONB NOT NULL,
+  format VARCHAR(10) NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  last_run_at TIMESTAMP WITH TIME ZONE,
+  next_run_at TIMESTAMP WITH TIME ZONE,
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Agent模板表
+CREATE TABLE IF NOT EXISTS agent_templates (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT,
+  category VARCHAR(50) NOT NULL,
+  version TEXT NOT NULL,
+  icon TEXT,
+  author TEXT NOT NULL,
+  downloads INTEGER NOT NULL DEFAULT 0,
+  rating DECIMAL(3,2) NOT NULL DEFAULT 0,
+  review_count INTEGER NOT NULL DEFAULT 0,
+  price DECIMAL(10,2) NOT NULL DEFAULT 0,
+  config JSONB NOT NULL,
+  is_official BOOLEAN NOT NULL DEFAULT false,
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Agent评论表
+CREATE TABLE IF NOT EXISTS agent_reviews (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  template_id UUID NOT NULL REFERENCES agent_templates(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Agent安装记录表
+CREATE TABLE IF NOT EXISTS agent_installs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  template_id UUID NOT NULL REFERENCES agent_templates(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  installed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(template_id, user_id)
+);
+
+-- 创建第五阶段索引
+CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_org ON api_keys(organization_id);
+CREATE INDEX IF NOT EXISTS idx_api_usage_key ON api_usage(api_key_id);
+CREATE INDEX IF NOT EXISTS idx_api_usage_timestamp ON api_usage(timestamp);
+CREATE INDEX IF NOT EXISTS idx_user_organizations_user ON user_organizations(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_organizations_org ON user_organizations(organization_id);
+CREATE INDEX IF NOT EXISTS idx_reports_org ON reports(organization_id);
+CREATE INDEX IF NOT EXISTS idx_report_instances_report ON report_instances(report_id);
+CREATE INDEX IF NOT EXISTS idx_agent_templates_category ON agent_templates(category);
+CREATE INDEX IF NOT EXISTS idx_agent_reviews_template ON agent_reviews(template_id);
