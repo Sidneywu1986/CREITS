@@ -27,19 +27,26 @@ export default async function handler(
     // 获取用户的2FA密钥
     const { data: userData } = await supabase
       .from('users')
-      .select('two_factor_secret, two_factor_enabled')
+      .select('two_factor_secret_encrypted, two_factor_secret_iv, two_factor_secret_auth_tag, two_factor_enabled')
       .eq('id', user.id)
       .single()
 
-    if (!userData || !userData.two_factor_enabled || !userData.two_factor_secret) {
+    if (!userData || !userData.two_factor_enabled || !userData.two_factor_secret_encrypted) {
       return res.status(400).json({ error: '2FA未启用' })
     }
 
-    // 验证OTP
+    // 解密2FA密钥
     const { TwoFactorService } = await import('@/lib/security/two-factor')
     const twoFactorService = new TwoFactorService()
 
-    if (!twoFactorService.verifyToken(userData.two_factor_secret, token)) {
+    const decryptedSecret = twoFactorService.decryptSecret({
+      encrypted_data: userData.two_factor_secret_encrypted,
+      iv: userData.two_factor_secret_iv,
+      auth_tag: userData.two_factor_secret_auth_tag
+    })
+
+    // 验证OTP
+    if (!twoFactorService.verifyToken(decryptedSecret, token)) {
       return res.status(400).json({
         success: false,
         error: '验证码无效'
@@ -51,7 +58,9 @@ export default async function handler(
       .from('users')
       .update({
         two_factor_enabled: false,
-        two_factor_secret: null,
+        two_factor_secret_encrypted: null,
+        two_factor_secret_iv: null,
+        two_factor_secret_auth_tag: null,
         updated_at: new Date().toISOString()
       })
       .eq('id', user.id)

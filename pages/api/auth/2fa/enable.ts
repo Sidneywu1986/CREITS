@@ -33,13 +33,17 @@ export default async function handler(
       isValid = twoFactorService.verifyToken(secret, token)
     }
 
-    // 启用2FA
+    // 启用2FA（加密存储密钥）
     if (isValid) {
+      const encryptedData = twoFactorService.encryptSecret(secret)
+
       await supabase
         .from('users')
         .update({
           two_factor_enabled: true,
-          two_factor_secret: secret,
+          two_factor_secret_encrypted: encryptedData.encrypted_data,
+          two_factor_secret_iv: encryptedData.iv,
+          two_factor_secret_auth_tag: encryptedData.auth_tag,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)

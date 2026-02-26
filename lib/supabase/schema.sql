@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS users (
   locked_until TIMESTAMP WITH TIME ZONE,
   is_active BOOLEAN DEFAULT true,
   two_factor_enabled BOOLEAN DEFAULT false,
-  two_factor_secret TEXT,
+  two_factor_secret_encrypted TEXT, -- 2FA密钥加密存储
+  two_factor_secret_iv VARCHAR(32), -- 初始化向量
+  two_factor_secret_auth_tag VARCHAR(32), -- 认证标签
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

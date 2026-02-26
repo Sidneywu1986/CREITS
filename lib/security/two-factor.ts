@@ -1,5 +1,6 @@
 import speakeasy from 'speakeasy'
 import QRCode from 'qrcode'
+import { getEncryptionService } from './encryption'
 
 export interface TwoFactorSetup {
   secret: string
@@ -83,5 +84,25 @@ export class TwoFactorService {
   // 移除已使用的备份码
   removeBackupCode(usedCode: string, storedCodes: string[]): string[] {
     return storedCodes.filter(code => code !== usedCode)
+  }
+
+  // 加密2FA密钥用于存储
+  encryptSecret(secret: string): {
+    encrypted_data: string
+    iv: string
+    auth_tag: string
+  } {
+    const encryptionService = getEncryptionService()
+    return encryptionService.createEncryptedData(secret)
+  }
+
+  // 解密2FA密钥
+  decryptSecret(encryptedData: {
+    encrypted_data: string
+    iv: string
+    auth_tag: string
+  }): string {
+    const encryptionService = getEncryptionService()
+    return encryptionService.decryptFromData(encryptedData)
   }
 }
