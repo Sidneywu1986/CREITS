@@ -4,6 +4,132 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /**
+ * 彩蛋变体配置
+ */
+const eggVariants = {
+  first: {
+    phase1: {
+      icon: '👀',
+      text: '你发现了我',
+      signature: '—— 探索者'
+    },
+    phase2: {
+      icon: '🌟',
+      text: '继续探索',
+      signature: '—— 冒险家'
+    }
+  },
+  second: {
+    phase1: {
+      icon: '🤝',
+      text: '又见面了',
+      signature: '—— 老朋友'
+    },
+    phase2: {
+      icon: '🎯',
+      text: '保持热爱',
+      signature: '—— 同行者'
+    }
+  },
+  third: {
+    phase1: {
+      icon: '❤️',
+      text: '真爱粉',
+      signature: '—— 忠实用户'
+    },
+    phase2: {
+      icon: '💖',
+      text: '感谢支持',
+      signature: '—— 开发团队'
+    }
+  },
+  tenth: {
+    phase1: {
+      icon: '😅',
+      text: '...你到底点了多少次',
+      signature: '—— 吃惊的彩蛋'
+    },
+    phase2: {
+      icon: '🎉',
+      text: '你是传奇',
+      signature: '—— 敬佩的彩蛋'
+    }
+  }
+};
+
+/**
+ * 原始彩蛋内容
+ */
+const originalEgg = {
+  phase1: {
+    icon: '🔮',
+    text: '静悄悄干大事',
+    signature: '—— DeepSeek'
+  },
+  phase2: {
+    icon: '💎',
+    text: '低调 低调',
+    signature: '—— 扣子编程'
+  }
+};
+
+/**
+ * 根据触发次数获取彩蛋内容
+ */
+const getEggContent = (triggerCount: number) => {
+  // 首次触发显示原始内容
+  if (triggerCount === 1) {
+    return originalEgg;
+  }
+
+  // 第二次触发
+  if (triggerCount === 2) {
+    return eggVariants.second;
+  }
+
+  // 第三次触发
+  if (triggerCount === 3) {
+    return eggVariants.third;
+  }
+
+  // 第十次或更多次触发
+  if (triggerCount >= 10) {
+    return eggVariants.tenth;
+  }
+
+  // 其他次数显示 first 变体
+  return eggVariants.first;
+};
+
+/**
+ * 获取触发次数
+ */
+const getTriggerCount = (): number => {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const count = localStorage.getItem('easter_egg_triggers');
+    return count ? parseInt(count, 10) : 0;
+  } catch {
+    return 0;
+  }
+};
+
+/**
+ * 增加触发次数
+ */
+const incrementTriggerCount = (): number => {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const current = getTriggerCount();
+    const next = current + 1;
+    localStorage.setItem('easter_egg_triggers', next.toString());
+    return next;
+  } catch {
+    return 0;
+  }
+};
+
+/**
  * 彩蛋组件
  * 连续点击6次触发彩蛋
  */
@@ -11,6 +137,12 @@ export function ReitEgg() {
   const [clickCount, setClickCount] = useState(0);
   const [showEasterEgg, setShowEasterEgg] = useState(false);
   const [currentPhase, setCurrentPhase] = useState(1);
+  const [triggerCount, setTriggerCountState] = useState(0);
+
+  // 初始化触发次数
+  useEffect(() => {
+    setTriggerCountState(getTriggerCount());
+  }, []);
 
   // 重置点击计数（3秒无点击则重置）
   useEffect(() => {
@@ -29,6 +161,10 @@ export function ReitEgg() {
     setClickCount(newCount);
 
     if (newCount >= 6) {
+      // 增加触发次数并更新状态
+      const newTriggerCount = incrementTriggerCount();
+      setTriggerCountState(newTriggerCount);
+
       setShowEasterEgg(true);
       setCurrentPhase(1);
 
@@ -44,6 +180,8 @@ export function ReitEgg() {
       }, 8000);
     }
   };
+
+  const content = getEggContent(triggerCount);
 
   // 进度指示器（仅调试时显示，生产环境可隐藏）
   const showProgress = process.env.NODE_ENV === 'development';
@@ -130,12 +268,12 @@ export function ReitEgg() {
                             }}
                             className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-2xl shadow-blue-500/30"
                           >
-                            <span className="text-4xl">🔮</span>
+                            <span className="text-4xl">{content.phase1.icon}</span>
                           </motion.div>
 
                           {/* 第一句文本 */}
                           <h2 className="text-2xl md:text-3xl font-bold text-white leading-relaxed">
-                            静悄悄干大事
+                            {content.phase1.text}
                           </h2>
 
                           {/* 签名 */}
@@ -146,7 +284,7 @@ export function ReitEgg() {
                             className="pt-4"
                           >
                             <p className="text-blue-300/80 text-sm md:text-base font-medium">
-                              —— DeepSeek
+                              {content.phase1.signature}
                             </p>
                           </motion.div>
                         </div>
@@ -172,12 +310,12 @@ export function ReitEgg() {
                             }}
                             className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-2xl shadow-purple-500/30"
                           >
-                            <span className="text-4xl">💎</span>
+                            <span className="text-4xl">{content.phase2.icon}</span>
                           </motion.div>
 
                           {/* 第二句文本 */}
                           <h2 className="text-2xl md:text-3xl font-bold text-white leading-relaxed">
-                            低调 低调
+                            {content.phase2.text}
                           </h2>
 
                           {/* 签名 */}
@@ -188,7 +326,7 @@ export function ReitEgg() {
                             className="pt-4"
                           >
                             <p className="text-purple-300/80 text-sm md:text-base font-medium">
-                              —— 扣子编程
+                              {content.phase2.signature}
                             </p>
                           </motion.div>
 
@@ -225,6 +363,12 @@ export function LogoEggTrigger({ children }: { children: React.ReactNode }) {
   const [clickCount, setClickCount] = useState(0);
   const [showEasterEgg, setShowEasterEgg] = useState(false);
   const [currentPhase, setCurrentPhase] = useState(1);
+  const [triggerCount, setTriggerCountState] = useState(0);
+
+  // 初始化触发次数
+  useEffect(() => {
+    setTriggerCountState(getTriggerCount());
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -242,6 +386,10 @@ export function LogoEggTrigger({ children }: { children: React.ReactNode }) {
     setClickCount(newCount);
 
     if (newCount >= 6) {
+      // 增加触发次数并更新状态
+      const newTriggerCount = incrementTriggerCount();
+      setTriggerCountState(newTriggerCount);
+
       setShowEasterEgg(true);
       setCurrentPhase(1);
 
@@ -255,6 +403,9 @@ export function LogoEggTrigger({ children }: { children: React.ReactNode }) {
       }, 8000);
     }
   };
+
+  // 获取彩蛋内容
+  const content = getEggContent(triggerCount);
 
   return (
     <>
@@ -314,13 +465,13 @@ export function LogoEggTrigger({ children }: { children: React.ReactNode }) {
                             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                             className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-2xl shadow-blue-500/30"
                           >
-                            <span className="text-4xl">🔮</span>
+                            <span className="text-4xl">{content.phase1.icon}</span>
                           </motion.div>
                           <h2 className="text-2xl md:text-3xl font-bold text-white leading-relaxed">
-                            静悄悄干大事
+                            {content.phase1.text}
                           </h2>
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="pt-4">
-                            <p className="text-blue-300/80 text-sm md:text-base font-medium">—— DeepSeek</p>
+                            <p className="text-blue-300/80 text-sm md:text-base font-medium">{content.phase1.signature}</p>
                           </motion.div>
                         </div>
                       </motion.div>
@@ -340,13 +491,13 @@ export function LogoEggTrigger({ children }: { children: React.ReactNode }) {
                             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                             className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-2xl shadow-purple-500/30"
                           >
-                            <span className="text-4xl">💎</span>
+                            <span className="text-4xl">{content.phase2.icon}</span>
                           </motion.div>
                           <h2 className="text-2xl md:text-3xl font-bold text-white leading-relaxed">
-                            低调 低调
+                            {content.phase2.text}
                           </h2>
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="pt-4">
-                            <p className="text-purple-300/80 text-sm md:text-base font-medium">—— 扣子编程</p>
+                            <p className="text-purple-300/80 text-sm md:text-base font-medium">{content.phase2.signature}</p>
                           </motion.div>
                           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-xs text-white/40 mt-4">
                             再次点击任意处关闭
