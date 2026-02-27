@@ -34,13 +34,12 @@ check_environment() {
 start_service() {
     cd "${COZE_WORKSPACE_PATH}"
     log "Starting HTTP service on port ${DEPLOY_RUN_PORT} for deploy..."
-    
-    # 检查环境变量
+
+    # 检查环境变量（仅警告，不阻止启动）
     if ! check_environment; then
-        log "❌ Environment check failed"
-        exit 1
+        log "⚠️  Environment check failed, but continuing anyway (Supabase features will be disabled)"
     fi
-    
+
     # 启动服务（前台运行，以便 Coze 平台监控）
     exec npx next start --port ${DEPLOY_RUN_PORT} --hostname 0.0.0.0
 }
