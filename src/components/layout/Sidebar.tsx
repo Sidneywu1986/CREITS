@@ -73,6 +73,7 @@ const navigation: NavGroup[] = [
     color: 'text-orange-600',
     items: [
       { name: 'REITs 估值计算器', href: '/calculator', icon: Calculator },
+      { name: '数据采集中心', href: '/data-collection', icon: Database, badge: '新' },
     ],
   },
   {
