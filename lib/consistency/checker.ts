@@ -274,4 +274,72 @@ export class ConsistencyChecker {
   async markResolved(violationId: string): Promise<void> {
     // 更新数据库
   }
+
+  /**
+   * 获取检查结果摘要（静态方法）
+   */
+  static getSummary(results: any[]): {
+    total: number;
+    errors: number;
+    warnings: number;
+    info: number;
+    infos: number;
+    passed: number;
+    failed: number;
+  } {
+    const errors = results.filter(r => r.severity === 'error' || (!r.passed && r.severity === 'error')).length;
+    const warnings = results.filter(r => r.severity === 'warning').length;
+    const info = results.filter(r => r.severity === 'info').length;
+    
+    return {
+      total: results.length,
+      errors,
+      warnings,
+      info,
+      infos: info, // 别名
+      passed: results.filter(r => r.passed).length,
+      failed: results.length - results.filter(r => r.passed).length,
+    };
+  }
+
+  /**
+   * 获取失败的结果（静态方法）
+   */
+  static getFailedResults(results: any[]): any[] {
+    return results.filter(r => !r.passed || r.severity === 'error' || r.severity === 'warning');
+  }
+
+  /**
+   * 导出报告（静态方法）
+   */
+  static exportReport(results: any[], table: string): string {
+    const summary = ConsistencyChecker.getSummary(results);
+    const timestamp = new Date().toISOString();
+    
+    let report = `# 数据一致性检查报告\n\n`;
+    report += `**生成时间**: ${timestamp}\n`;
+    report += `**检查表**: ${table}\n\n`;
+    report += `## 摘要\n\n`;
+    report += `- 总检查项: ${summary.total}\n`;
+    report += `- 错误: ${summary.errors}\n`;
+    report += `- 警告: ${summary.warnings}\n`;
+    report += `- 信息: ${summary.info}\n`;
+    report += `- 通过: ${summary.passed}\n`;
+    report += `- 失败: ${summary.failed}\n\n`;
+    
+    if (summary.failed > 0) {
+      const failedResults = ConsistencyChecker.getFailedResults(results);
+      report += `## 失败项\n\n`;
+      failedResults.forEach((r, i) => {
+        report += `${i + 1}. **${r.rule?.name || '未知规则'}**\n`;
+        report += `   - 消息: ${r.message}\n`;
+        if (r.resourceId) report += `   - 资源ID: ${r.resourceId}\n`;
+        if (r.rule?.description) report += `   - 描述: ${r.rule.description}\n`;
+        report += `   - 严重性: ${r.severity || 'unknown'}\n`;
+        report += `\n`;
+      });
+    }
+    
+    return report;
+  }
 }
