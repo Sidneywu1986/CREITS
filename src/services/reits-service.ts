@@ -1,6 +1,6 @@
 /**
- * 简化的数据库服务 - 用于API路由
- * 避免路径别名问题
+ * REITs 数据库服务
+ * 提供REITs相关的数据库操作
  */
 
 import { supabase } from '@/storage/database/supabase-client';
