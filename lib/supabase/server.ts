@@ -1,58 +1,20 @@
-import { createServerClient, type CookieOptions } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-export const createClient = async () => {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    supabaseUrl,
-    supabaseServiceRoleKey,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // 在 Server Components 中可能无法设置 cookie
-            console.warn('Failed to set cookie:', error);
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options });
-          } catch (error) {
-            // 在 Server Components 中可能无法删除 cookie
-            console.warn('Failed to remove cookie:', error);
-          }
-        },
-      },
-    }
-  );
+// 创建 Supabase 客户端（Pages Router 兼容）
+export const createSupabaseClientFn = () => {
+  return createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
 };
 
 // 获取管理员权限的客户端
-export const createAdminClient = async () => {
-  return createServerClient(
-    supabaseUrl,
-    supabaseServiceRoleKey,
-    {
-      cookies: {
-        get(name: string) {
-          return null;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          // 不设置 cookie
-        },
-        remove(name: string, options: CookieOptions) {
-          // 不删除 cookie
-        },
-      },
-    }
-  );
+export const createAdminClient = () => {
+  return createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
 };
+
+// 导出默认客户端（用于直接导入）
+export const supabase = createSupabaseClientFn();
+
+// 导出 createClient 别名（兼容现有导入）
+export const createClient = createSupabaseClientFn;
