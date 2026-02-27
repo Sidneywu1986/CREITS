@@ -135,4 +135,7 @@ function getSupabaseClient(token?: string): SupabaseClient {
   });
 }
 
+// 默认导出 supabase 客户端实例
+export const supabase = getSupabaseClient();
+
 export { loadEnv, getSupabaseCredentials, getSupabaseClient };
