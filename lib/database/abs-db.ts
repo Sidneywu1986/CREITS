@@ -7,7 +7,10 @@ export interface ABSProduct {
   id: string;
   // 产品基本信息
   product_name: string;
+  product_full_name?: string;  // 产品全称
+  product_short_name?: string; // 产品简称
   product_code: string;
+  product_id?: string;         // 产品ID（用于API）
   issuer_name: string;
   issue_date: string;
   
@@ -15,11 +18,16 @@ export interface ABSProduct {
   asset_type_main: string;  // 基础资产大类：债权类、未来经营收入类、不动产抵押贷款类
   asset_type_sub: string;   // 基础资产细分类型
   underlying_asset: string;  // 基础资产描述
+  scale_range?: string;     // 规模范围
   
   // 发行信息
   issuing_market: string;   // 发行场所：交易所、银行间、其他
   total_scale: number;      // 发行规模（亿元）
   rating: string;           // 评级
+  rating_agency?: string;   // 评级机构
+  term_years?: number;      // 期限（年）
+  expected_maturity_date?: string; // 预计到期日
+  management_fee?: number;  // 管理费率
   
   // 存续信息
   status: string;           // 存续状态：存续、到期
