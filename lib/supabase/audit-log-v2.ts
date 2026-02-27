@@ -287,7 +287,7 @@ export class AuditLogService {
       }
 
       // 脱敏处理返回数据
-      const maskedData = (data || []).map(log =>
+      const maskedData = (data || []).map((log: any) =>
         DataMaskingService.maskAuditLog(log as AuditLog)
       )
 
@@ -359,7 +359,7 @@ export class AuditLogService {
         byAction: {} as Record<string, number>
       }
 
-      data?.forEach((log) => {
+      data?.forEach((log: any) => {
         if (log.result === 'success') {
           stats.success++
         } else {

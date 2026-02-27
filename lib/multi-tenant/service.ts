@@ -30,10 +30,22 @@ export interface ThemeConfig {
  * 多租户服务
  */
 export class MultiTenantService {
-  private supabase
+  private _supabase: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
 
   constructor() {
-    this.supabase = createClient()
+    // 延迟初始化
   }
 
   /**
@@ -45,7 +57,12 @@ export class MultiTenantService {
     plan: 'free' | 'professional' | 'enterprise' = 'free',
     userId: string
   ): Promise<Organization> {
-    const { data, error } = await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data, error } = await supabase
       .from('organizations')
       .insert({
         name,
@@ -63,7 +80,7 @@ export class MultiTenantService {
     }
 
     // 将用户添加到机构
-    await this.supabase.from('user_organizations').insert({
+    await supabase.from('user_organizations').insert({
       user_id: userId,
       organization_id: data.id,
       role: 'owner',
@@ -90,6 +107,11 @@ export class MultiTenantService {
    * 创建默认角色
    */
   private async createDefaultRoles(organizationId: string): Promise<void> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     const defaultRoles = [
       {
         organization_id: organizationId,
@@ -114,14 +136,19 @@ export class MultiTenantService {
       }
     ]
 
-    await this.supabase.from('org_roles').insert(defaultRoles)
+    await supabase.from('org_roles').insert(defaultRoles)
   }
 
   /**
    * 获取用户所属机构
    */
   async getUserOrganizations(userId: string): Promise<Organization[]> {
-    const { data, error } = await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data, error } = await supabase
       .from('user_organizations')
       .select(`
         role,
@@ -154,13 +181,18 @@ export class MultiTenantService {
     theme: Partial<ThemeConfig>,
     userId: string
   ): Promise<void> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     // 检查权限
     const hasPermission = await this.checkPermission(organizationId, userId, 'org:admin')
     if (!hasPermission) {
       throw new Error('权限不足')
     }
 
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('organizations')
       .update({
         theme: theme,
@@ -181,8 +213,13 @@ export class MultiTenantService {
     userId: string,
     role: string
   ): Promise<void> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     // 检查用户是否已在机构中
-    const { data: existing } = await this.supabase
+    const { data: existing } = await supabase
       .from('user_organizations')
       .select('*')
       .eq('organization_id', organizationId)
@@ -193,7 +230,7 @@ export class MultiTenantService {
       throw new Error('用户已在机构中')
     }
 
-    await this.supabase.from('user_organizations').insert({
+    await supabase.from('user_organizations').insert({
       user_id: userId,
       organization_id: organizationId,
       role,
@@ -209,13 +246,18 @@ export class MultiTenantService {
     userId: string,
     requesterId: string
   ): Promise<void> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     // 检查权限
     const hasPermission = await this.checkPermission(organizationId, requesterId, 'org:admin')
     if (!hasPermission) {
       throw new Error('权限不足')
     }
 
-    await this.supabase
+    await supabase
       .from('user_organizations')
       .delete()
       .eq('organization_id', organizationId)
@@ -232,7 +274,12 @@ export class MultiTenantService {
     description: string,
     permissions: string[]
   ): Promise<void> {
-    await this.supabase.from('org_roles').insert({
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    await supabase.from('org_roles').insert({
       organization_id: organizationId,
       code,
       name,
@@ -249,7 +296,12 @@ export class MultiTenantService {
     userId: string,
     roleCode: string
   ): Promise<void> {
-    await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    await supabase
       .from('user_organizations')
       .update({ role: roleCode })
       .eq('organization_id', organizationId)
@@ -264,8 +316,13 @@ export class MultiTenantService {
     userId: string,
     requiredPermission: string
   ): Promise<boolean> {
+    const supabase = this.supabase
+    if (!supabase) {
+      return false
+    }
+
     // 获取用户在机构中的角色
-    const { data, error } = await this.supabase
+    const { data, error } = await supabase
       .from('user_organizations')
       .select('role')
       .eq('organization_id', organizationId)
@@ -277,7 +334,7 @@ export class MultiTenantService {
     }
 
     // 获取角色权限
-    const { data: roleData } = await this.supabase
+    const { data: roleData } = await supabase
       .from('org_roles')
       .select('permissions')
       .eq('organization_id', organizationId)
@@ -312,7 +369,12 @@ export class MultiTenantService {
    * 获取机构用户列表
    */
   async getOrganizationUsers(organizationId: string): Promise<any[]> {
-    const { data, error } = await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data, error } = await supabase
       .from('user_organizations')
       .select(`
         role,

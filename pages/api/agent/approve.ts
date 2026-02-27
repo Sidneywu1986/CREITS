@@ -37,6 +37,10 @@ export default async function handler(
 
       // 获取用户信息
       const supabase = createClient()
+      if (!supabase) {
+        return res.status(500).json({ error: '数据库连接失败' })
+      }
+
       const { data: userData } = await supabase
         .from('users')
         .select('username, role, department')

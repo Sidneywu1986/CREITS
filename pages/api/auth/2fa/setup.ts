@@ -13,6 +13,10 @@ export default async function handler(
   try {
     // 获取用户信息
     const supabase = createClient()
+    if (!supabase) {
+      return res.status(500).json({ error: '数据库连接失败' })
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {

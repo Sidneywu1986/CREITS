@@ -18,19 +18,36 @@ export interface SecurityAlert {
 }
 
 export class SecurityAgent {
-  private supabase
+  private _supabase: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
 
   constructor() {
-    this.supabase = createClient()
+    // 延迟初始化
   }
 
   // 1. 分析登录模式异常
   async analyzeLoginPatterns(): Promise<SecurityAlert[]> {
+    const supabase = this.supabase
+    if (!supabase) {
+      return []
+    }
+
     const alerts: SecurityAlert[] = []
 
     // 获取最近24小时的登录尝试记录
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-    const { data: attempts } = await this.supabase
+    const { data: attempts } = await supabase
       .from('login_attempts')
       .select('*')
       .gte('created_at', oneDayAgo.toISOString())
@@ -39,7 +56,7 @@ export class SecurityAgent {
 
     // 检测：暴力破解（同一IP 5次以上失败登录）
     const ipFailures = new Map<string, number>()
-    attempts.forEach(a => {
+    attempts.forEach((a: any) => {
       if (!a.success) {
         ipFailures.set(a.ip_address, (ipFailures.get(a.ip_address) || 0) + 1)
       }
@@ -62,7 +79,7 @@ export class SecurityAgent {
 
     // 检测：非常规时间登录（凌晨 0-6 点）
     const unusualLogins = new Map<string, number>()
-    attempts.forEach(a => {
+    attempts.forEach((a: any) => {
       if (a.success) {
         const hour = new Date(a.created_at).getHours()
         if (hour >= 0 && hour < 6) {
@@ -88,7 +105,7 @@ export class SecurityAgent {
 
     // 检测：多IP登录（同一用户从3个以上不同IP登录）
     const userIPs = new Map<string, Set<string>>()
-    attempts.forEach(a => {
+    attempts.forEach((a: any) => {
       if (a.success) {
         if (!userIPs.has(a.user_id)) {
           userIPs.set(a.user_id, new Set())
@@ -131,7 +148,7 @@ export class SecurityAgent {
 
     // 检测：频繁权限拒绝
     const userDenials = new Map<string, number>()
-    logs.forEach(log => {
+    logs.forEach((log: any) => {
       if (log.action.includes('update') || log.action.includes('delete')) {
         userDenials.set(log.user_id, (userDenials.get(log.user_id) || 0) + 1)
       }

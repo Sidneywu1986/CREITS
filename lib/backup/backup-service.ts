@@ -63,7 +63,12 @@ export class BackupService {
 
   // 备份单个表
   private async backupTable(tableName: string): Promise<string> {
-    const { data, error } = await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data, error } = await supabase
       .from(tableName)
       .select('*')
 
@@ -80,6 +85,11 @@ export class BackupService {
 
   // 创建完整备份
   async createBackup(): Promise<BackupMetadata> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     const tables = [
       'users',
       'roles',
@@ -111,7 +121,7 @@ export class BackupService {
       const { encrypted, iv, authTag } = this.encrypt(jsonData)
 
       // 创建备份记录
-      const { error: insertError } = await this.supabase
+      const { error: insertError } = await supabase
         .from('backup_metadata')
         .insert({
           id: backupId,
@@ -141,7 +151,7 @@ export class BackupService {
       console.error('创建备份失败:', error)
 
       // 记录失败状态
-      await this.supabase
+      await supabase
         .from('backup_metadata')
         .insert({
           id: backupId,
@@ -159,7 +169,12 @@ export class BackupService {
 
   // 恢复备份
   async restoreBackup(backupId: string): Promise<void> {
-    const { data: backupData, error } = await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data: backupData, error } = await supabase
       .from('backup_metadata')
       .select('*')
       .eq('id', backupId)
@@ -195,9 +210,14 @@ export class BackupService {
 
   // 删除过期备份（保留90天）
   async cleanupOldBackups(): Promise<number> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
 
-    const { data, error } = await this.supabase
+    const { data, error } = await supabase
       .from('backup_metadata')
       .select('id, encrypted_data')
       .lt('created_at', ninetyDaysAgo.toISOString())
@@ -208,7 +228,7 @@ export class BackupService {
 
     if (data && data.length > 0) {
       const ids = data.map(item => item.id)
-      const { error: deleteError } = await this.supabase
+      const { error: deleteError } = await supabase
         .from('backup_metadata')
         .delete()
         .in('id', ids)
@@ -225,7 +245,12 @@ export class BackupService {
 
   // 获取备份列表
   async getBackupList(): Promise<BackupMetadata[]> {
-    const { data, error } = await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data, error } = await supabase
       .from('backup_metadata')
       .select('id, filename, tables, size, created_at, status, error')
       .order('created_at', { ascending: false })
@@ -246,7 +271,12 @@ export class BackupService {
     failed: number
     latestBackup: BackupMetadata | null
   }> {
-    const { data, error } = await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data, error } = await supabase
       .from('backup_metadata')
       .select('*')
       .order('created_at', { ascending: false })

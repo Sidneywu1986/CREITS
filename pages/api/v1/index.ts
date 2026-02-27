@@ -116,6 +116,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const { createClient } = await import('@/lib/supabase/server')
       const supabase = createClient()
+      if (!supabase) {
+        res.status(500).json({ success: false, error: 'Database connection failed' })
+        return
+      }
 
       const { data, error } = await supabase
         .from('reit_product_info')
@@ -151,6 +155,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const code = path.split('/').pop()
       const { createClient } = await import('@/lib/supabase/server')
       const supabase = createClient()
+      if (!supabase) {
+        res.status(500).json({ success: false, error: 'Database connection failed' })
+        await recordUsage(auth.apiKeyId!, path, 'GET', 500, Date.now() - startTime)
+        return
+      }
 
       const { data, error } = await supabase
         .from('reit_product_info')
@@ -185,6 +194,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const { createClient } = await import('@/lib/supabase/server')
       const supabase = createClient()
+      if (!supabase) {
+        res.status(500).json({ success: false, error: 'Database connection failed' })
+        await recordUsage(auth.apiKeyId!, path, 'GET', 500, Date.now() - startTime)
+        return
+      }
 
       const { data, error } = await supabase
         .from('reit_property_base')

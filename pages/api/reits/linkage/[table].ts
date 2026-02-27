@@ -19,6 +19,9 @@ export default async function handler(
     }
 
     const supabase = createClient()
+    if (!supabase) {
+      return res.status(500).json({ error: '数据库连接失败' })
+    }
 
     // 获取联动配置
     const linkages = getLinkages(table)

@@ -238,7 +238,7 @@ export class APIPlatformService {
       throw new Error(`获取API密钥失败: ${error.message}`)
     }
 
-    return (data || []).map(record => ({
+    return (data || []).map((record: any) => ({
       id: record.id,
       name: record.name,
       key: record.key,

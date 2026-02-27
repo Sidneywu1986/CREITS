@@ -88,12 +88,35 @@ export interface WorkflowStepHistory {
  * 工作流引擎
  */
 export class WorkflowEngine {
-  private supabase
-  private auditService
+  private _supabase: any = null
+  private _auditService: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
+
+  private get auditService() {
+    if (!this._auditService) {
+      try {
+        this._auditService = new AuditLogService()
+      } catch (error) {
+        console.warn('Failed to create audit service:', error)
+        this._auditService = null
+      }
+    }
+    return this._auditService
+  }
 
   constructor() {
-    this.supabase = createClient()
-    this.auditService = new AuditLogService()
+    // 延迟初始化
   }
 
   /**
@@ -504,7 +527,7 @@ export class WorkflowEngine {
       throw new Error(`获取工作流列表失败: ${error.message}`)
     }
 
-    return (data || []).map(record => ({
+    return (data || []).map((record: any) => ({
       id: record.id,
       name: record.name,
       version: record.version,
@@ -537,7 +560,7 @@ export class WorkflowEngine {
       throw new Error(`获取工作流实例失败: ${error.message}`)
     }
 
-    return (data || []).map(record => ({
+    return (data || []).map((record: any) => ({
       id: record.id,
       workflowId: record.workflow_id,
       workflowVersion: record.workflow_version,

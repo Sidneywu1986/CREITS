@@ -50,16 +50,52 @@ export interface BackupVerificationResult {
 }
 
 /**
+ * 数据库中的备份记录
+ */
+interface BackupRecord {
+  id: string
+  timestamp: string
+  type: 'full' | 'incremental'
+  size: number
+  tables: string[]
+  checksum: string
+  status: 'completed' | 'failed' | 'verifying'
+  created_by: string
+}
+
+/**
  * 自动化备份恢复服务
  */
 export class BackupRestoreService {
-  private supabase
-  private auditService
+  private _supabase: any = null
+  private _auditService: any = null
   private backupStoragePath: string
 
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
+
+  private get auditService() {
+    if (!this._auditService) {
+      try {
+        this._auditService = new AuditLogService()
+      } catch (error) {
+        console.warn('Failed to create audit service:', error)
+        this._auditService = null
+      }
+    }
+    return this._auditService
+  }
+
   constructor() {
-    this.supabase = createClient()
-    this.auditService = new AuditLogService()
     this.backupStoragePath = process.env.BACKUP_STORAGE_PATH || '/tmp/backups'
   }
 
@@ -487,7 +523,7 @@ export class BackupRestoreService {
       throw new Error(`获取备份列表失败: ${error.message}`)
     }
 
-    return (data || []).map(record => ({
+    return (data || []).map((record: BackupRecord) => ({
       id: record.id,
       timestamp: record.timestamp,
       type: record.type,

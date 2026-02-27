@@ -7,13 +7,36 @@ import { getEncryptionService } from '@/lib/security/encryption'
  * 用于存储和管理Agent模型权重、规则参数等敏感配置
  */
 export class EncryptedConfigCenter {
-  private supabase
-  private encryptionService
+  private _supabase: any = null
+  private _encryptionService: any = null
   private configTable = 'encrypted_config'
 
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
+
+  private get encryptionService() {
+    if (!this._encryptionService) {
+      try {
+        this._encryptionService = getEncryptionService()
+      } catch (error) {
+        console.warn('Failed to create encryption service:', error)
+        this._encryptionService = null
+      }
+    }
+    return this._encryptionService
+  }
+
   constructor() {
-    this.supabase = createClient()
-    this.encryptionService = getEncryptionService()
+    // 延迟初始化
   }
 
   /**
@@ -28,14 +51,23 @@ export class EncryptedConfigCenter {
       description?: string
     }
   ): Promise<void> {
+    const supabase = this.supabase
+    const encryptionService = this.encryptionService
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+    if (!encryptionService) {
+      throw new Error('Encryption service is not initialized')
+    }
+
     try {
       // 加密配置数据
-      const encrypted = this.encryptionService.createEncryptedData(
+      const encrypted = encryptionService.createEncryptedData(
         JSON.stringify(config)
       )
 
       // 检查是否已存在
-      const { data: existing } = await this.supabase
+      const { data: existing } = await supabase
         .from(this.configTable)
         .select('id')
         .eq('config_key', key)
@@ -43,7 +75,7 @@ export class EncryptedConfigCenter {
 
       if (existing) {
         // 更新
-        await this.supabase
+        await supabase
           .from(this.configTable)
           .update({
             encrypted_data: encrypted.encrypted_data,
@@ -57,7 +89,7 @@ export class EncryptedConfigCenter {
           .eq('config_key', key)
       } else {
         // 插入
-        await this.supabase
+        await supabase
           .from(this.configTable)
           .insert({
             config_key: key,
@@ -81,8 +113,14 @@ export class EncryptedConfigCenter {
    * 读取配置（解密）
    */
   async loadConfig<T = any>(key: string): Promise<T | null> {
+    const supabase = this.supabase
+    const encryptionService = this.encryptionService
+    if (!supabase || !encryptionService) {
+      return null
+    }
+
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from(this.configTable)
         .select('encrypted_data, iv, auth_tag')
         .eq('config_key', key)
@@ -93,7 +131,7 @@ export class EncryptedConfigCenter {
       }
 
       // 解密配置
-      const decrypted = this.encryptionService.decryptFromData({
+      const decrypted = encryptionService.decryptFromData({
         encrypted_data: data.encrypted_data,
         iv: data.iv,
         auth_tag: data.auth_tag
@@ -110,8 +148,13 @@ export class EncryptedConfigCenter {
    * 删除配置
    */
   async deleteConfig(key: string): Promise<void> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     try {
-      await this.supabase
+      await supabase
         .from(this.configTable)
         .delete()
         .eq('config_key', key)
@@ -131,8 +174,13 @@ export class EncryptedConfigCenter {
     description: string | null
     updated_at: string
   }>> {
+    const supabase = this.supabase
+    if (!supabase) {
+      return []
+    }
+
     try {
-      let query = this.supabase
+      let query = supabase
         .from(this.configTable)
         .select('config_key, type, version, description, updated_at')
         .order('updated_at', { ascending: false })
@@ -147,7 +195,15 @@ export class EncryptedConfigCenter {
         return []
       }
 
-      return data.map(item => ({
+      interface ConfigItem {
+        config_key: string
+        type: string
+        version: string
+        description: string | null
+        updated_at: string
+      }
+
+      return data.map((item: ConfigItem) => ({
         key: item.config_key,
         type: item.type,
         version: item.version,

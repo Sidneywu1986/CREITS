@@ -10,22 +10,39 @@ export interface IPWhitelistItem {
 }
 
 export class IPWhitelistService {
-  private supabase
+  private _supabase: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
 
   constructor() {
-    this.supabase = createClient()
+    // 延迟初始化
   }
 
   // 添加IP到白名单
   async addToWhitelist(ipAddress: string, description?: string, userId?: string): Promise<IPWhitelistItem> {
-    const { data: { user } } = await this.supabase.auth.getUser()
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
     const currentUserId = userId || user?.id
 
     if (!currentUserId) {
       throw new Error('用户未登录')
     }
 
-    const { data, error } = await this.supabase
+    const { data, error } = await supabase
       .from('user_ip_whitelist')
       .insert({
         user_id: currentUserId,
@@ -45,13 +62,18 @@ export class IPWhitelistService {
 
   // 从白名单移除IP
   async removeFromWhitelist(whitelistId: string): Promise<void> {
-    const { data: { user } } = await this.supabase.auth.getUser()
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       throw new Error('用户未登录')
     }
 
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('user_ip_whitelist')
       .delete()
       .eq('id', whitelistId)
@@ -64,14 +86,19 @@ export class IPWhitelistService {
 
   // 获取用户白名单
   async getUserWhitelist(userId?: string): Promise<IPWhitelistItem[]> {
-    const { data: { user } } = await this.supabase.auth.getUser()
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
     const currentUserId = userId || user?.id
 
     if (!currentUserId) {
       throw new Error('用户未登录')
     }
 
-    const { data, error } = await this.supabase
+    const { data, error } = await supabase
       .from('user_ip_whitelist')
       .select('*')
       .eq('user_id', currentUserId)
@@ -86,14 +113,19 @@ export class IPWhitelistService {
 
   // 检查IP是否在白名单中
   async isIPAllowed(ipAddress: string, userId?: string): Promise<boolean> {
-    const { data: { user } } = await this.supabase.auth.getUser()
+    const supabase = this.supabase
+    if (!supabase) {
+      return false
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
     const currentUserId = userId || user?.id
 
     if (!currentUserId) {
       return false
     }
 
-    const { data, error } = await this.supabase
+    const { data, error } = await supabase
       .from('user_ip_whitelist')
       .select('id')
       .eq('user_id', currentUserId)
@@ -109,14 +141,19 @@ export class IPWhitelistService {
 
   // 检查IP是否在白名单中（批量检查）
   async areIPsAllowed(ipAddresses: string[], userId?: string): Promise<Record<string, boolean>> {
-    const { data: { user } } = await this.supabase.auth.getUser()
+    const supabase = this.supabase
+    if (!supabase) {
+      return {}
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
     const currentUserId = userId || user?.id
 
     if (!currentUserId) {
       return {}
     }
 
-    const { data, error } = await this.supabase
+    const { data, error } = await supabase
       .from('user_ip_whitelist')
       .select('ip_address')
       .eq('user_id', currentUserId)
@@ -125,7 +162,7 @@ export class IPWhitelistService {
       return {}
     }
 
-    const allowedIPs = new Set(data.map(item => item.ip_address))
+    const allowedIPs = new Set(data.map((item: any) => item.ip_address))
     const result: Record<string, boolean> = {}
 
     ipAddresses.forEach(ip => {

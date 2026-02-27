@@ -52,10 +52,16 @@ export default function ExpertDetailPage({ params }: { params: { id: string } })
   const [tipAmount, setTipAmount] = useState('');
   const [tipMessage, setTipMessage] = useState('');
 
+  // 检查 params.id 是否存在
+  const expertId = params?.id;
+  if (!expertId) {
+    return <div>Invalid expert ID</div>;
+  }
+
   // 获取专家详情
   const { data: expertData, isLoading: expertLoading } = useQuery({
-    queryKey: QUERY_KEYS.expert(params.id),
-    queryFn: () => getExpert(params.id),
+    queryKey: QUERY_KEYS.expert(expertId),
+    queryFn: () => getExpert(expertId),
   });
 
   // 获取专家留言

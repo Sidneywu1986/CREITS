@@ -73,10 +73,22 @@ export interface ReportSchedule {
  * 智能报表服务
  */
 export class ReportService {
-  private supabase
+  private _supabase: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
 
   constructor() {
-    this.supabase = createClient()
+    // 延迟初始化
   }
 
   /**
@@ -89,9 +101,14 @@ export class ReportService {
     userId: string,
     organizationId?: string
   ): Promise<ReportDefinition> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     const reportId = crypto.randomUUID()
 
-    const { data, error } = await this.supabase
+    const { data, error } = await supabase
       .from('reports')
       .insert({
         id: reportId,
@@ -132,7 +149,12 @@ export class ReportService {
     updates: Partial<ReportDefinition>,
     userId: string
   ): Promise<void> {
-    await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    await supabase
       .from('reports')
       .update({
         ...updates,
@@ -146,7 +168,12 @@ export class ReportService {
    * 获取报表列表
    */
   async getReports(organizationId?: string): Promise<ReportDefinition[]> {
-    let query = this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
+    let query = supabase
       .from('reports')
       .select('*')
       .order('updated_at', { ascending: false })
@@ -161,7 +188,7 @@ export class ReportService {
       throw new Error(`获取报表列表失败: ${error.message}`)
     }
 
-    return (data || []).map(record => ({
+    return (data || []).map((record: any) => ({
       id: record.id,
       name: record.name,
       description: record.description,
@@ -182,6 +209,11 @@ export class ReportService {
     format: 'pdf' | 'excel' | 'json',
     userId: string
   ): Promise<ReportInstance> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     // 获取报表定义
     const report = await this.getReportById(reportId)
     if (!report) {
@@ -211,7 +243,7 @@ export class ReportService {
     // 保存实例
     const instanceId = crypto.randomUUID()
 
-    await this.supabase.from('report_instances').insert({
+    await supabase.from('report_instances').insert({
       id: instanceId,
       report_id: reportId,
       name: `${report.name}_${new Date().toISOString().slice(0, 10)}`,
@@ -257,16 +289,21 @@ export class ReportService {
    * 查询数据源
    */
   private async queryDataSource(dataSource: string): Promise<any[]> {
+    const supabase = this.supabase
+    if (!supabase) {
+      return []
+    }
+
     // 根据数据源类型查询
     switch (dataSource) {
       case 'reit_products':
-        const { data: products } = await this.supabase
+        const { data: products } = await supabase
           .from('reit_product_info')
           .select('*')
           .limit(100)
         return products || []
       case 'reit_properties':
-        const { data: properties } = await this.supabase
+        const { data: properties } = await supabase
           .from('reit_property_base')
           .select('*')
           .limit(100)
@@ -303,7 +340,12 @@ export class ReportService {
    * 获取报表实例
    */
   async getReportInstance(instanceId: string): Promise<ReportInstance | null> {
-    const { data, error } = await this.supabase
+    const supabase = this.supabase
+    if (!supabase) {
+      return null
+    }
+
+    const { data, error } = await supabase
       .from('report_instances')
       .select('*')
       .eq('id', instanceId)
@@ -336,9 +378,14 @@ export class ReportService {
     format: 'pdf' | 'excel' | 'json',
     userId: string
   ): Promise<ReportSchedule> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     const scheduleId = crypto.randomUUID()
 
-    const { data, error } = await this.supabase
+    const { data, error } = await supabase
       .from('report_schedules')
       .insert({
         id: scheduleId,
@@ -375,8 +422,13 @@ export class ReportService {
    * 执行报表计划
    */
   async executeSchedule(scheduleId: string): Promise<void> {
+    const supabase = this.supabase
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+
     // 获取计划
-    const { data: schedule } = await this.supabase
+    const { data: schedule } = await supabase
       .from('report_schedules')
       .select('*')
       .eq('id', scheduleId)
@@ -397,7 +449,7 @@ export class ReportService {
     await this.sendReport(instance, schedule.recipients)
 
     // 更新计划
-    await this.supabase
+    await supabase
       .from('report_schedules')
       .update({
         last_run_at: new Date().toISOString(),
