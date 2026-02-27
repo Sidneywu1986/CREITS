@@ -20,19 +20,19 @@ interface BBSWasmModule {
 }
 
 // 模拟密钥对
-interface BBSKeypair {
+export interface BBSKeypair {
   publicKey: string;
   secretKey: string;
 }
 
 // 模拟签名
-interface BBSSignature {
+export interface BBSSignature {
   signature: string;
   proof?: string;
 }
 
 // 模拟证明
-interface BBSProof {
+export interface BBSProof {
   proof: string;
   disclosedMessages: string[];
 }
@@ -168,7 +168,7 @@ export class BBSSignatureManager {
 
     return {
       generateKeypair: () => {
-        const keypair: BBSShapair = {
+        const keypair: BBSKeypair = {
           publicKey: `pk_${Date.now()}_${Math.random().toString(36).substring(2)}`,
           secretKey: `sk_${Date.now()}_${Math.random().toString(36).substring(2)}`,
         };
@@ -236,10 +236,4 @@ export async function getBBSManager(): Promise<BBSSignatureManager> {
  */
 export function resetBBSInstance(): void {
   bbsInstance = null;
-}
-
-// 修复类型错误
-interface BBSKeypair {
-  publicKey: string;
-  secretKey: string;
 }

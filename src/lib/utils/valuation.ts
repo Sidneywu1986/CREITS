@@ -166,7 +166,12 @@ export function generateValuationReportData(
     results: {
       comprehensive: result.comprehensive,
       dcf: result.dcf,
-      relative: result.relative,
+      relative: {
+        peValue: result.relative.pe,
+        pbValue: result.relative.pb,
+        yieldValue: result.relative.yield,
+        average: result.relative.average,
+      },
       financials: result.financials,
     },
     timestamp: new Date().toISOString(),

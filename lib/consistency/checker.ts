@@ -32,12 +32,35 @@ export interface ConsistencyViolation {
  * 数据一致性检查服务
  */
 export class ConsistencyChecker {
-  private supabase
-  private auditService
+  private _supabase: any = null
+  private _auditService: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
+
+  private get auditService() {
+    if (!this._auditService) {
+      try {
+        this._auditService = new AuditLogService()
+      } catch (error) {
+        console.warn('Failed to create audit service:', error)
+        this._auditService = null
+      }
+    }
+    return this._auditService
+  }
 
   constructor() {
-    this.supabase = createClient()
-    this.auditService = new AuditLogService()
+    // 延迟初始化，不在这里创建客户端
   }
 
   /**
@@ -273,6 +296,153 @@ export class ConsistencyChecker {
    */
   async markResolved(violationId: string): Promise<void> {
     // 更新数据库
+  }
+
+  /**
+   * 检查一组记录（静态方法）
+   */
+  static checkRecords(data: any[], table: string): Map<string, any[]> {
+    const resultsMap = new Map<string, any[]>()
+    
+    data.forEach((record) => {
+      const recordResults: any[] = []
+      const recordId = record.id || record.fund_code || 'unknown'
+      
+      // 根据表名应用不同的检查逻辑
+      if (table === 'reit_product_info') {
+        // 检查必填字段
+        if (!record.fund_code) {
+          recordResults.push({
+            passed: false,
+            severity: 'error',
+            message: '基金代码不能为空',
+            rule: { name: '必填字段检查' },
+            resourceId: recordId
+          })
+        }
+        if (!record.product_name) {
+          recordResults.push({
+            passed: false,
+            severity: 'error',
+            message: '产品名称不能为空',
+            rule: { name: '必填字段检查' },
+            resourceId: recordId
+          })
+        }
+        // 检查数值范围
+        if (record.total_assets && record.total_assets < 0) {
+          recordResults.push({
+            passed: false,
+            severity: 'error',
+            message: '总资产不能为负数',
+            rule: { name: '数值范围检查' },
+            resourceId: recordId
+          })
+        }
+      } else if (table === 'reit_operational_data') {
+        // 检查出租率范围
+        if (record.occupancy_rate !== undefined && (record.occupancy_rate < 0 || record.occupancy_rate > 100)) {
+          recordResults.push({
+            passed: false,
+            severity: 'error',
+            message: '出租率必须在 0-100% 之间',
+            rule: { name: '数值范围检查' },
+            resourceId: recordId
+          })
+        }
+      } else if (table === 'reit_financial_metrics') {
+        // 检查财务数据
+        if (record.total_debt !== undefined && record.total_debt < 0) {
+          recordResults.push({
+            passed: false,
+            severity: 'error',
+            message: '总债务不能为负数',
+            rule: { name: '数值范围检查' },
+            resourceId: recordId
+          })
+        }
+      }
+      
+      resultsMap.set(recordId, recordResults)
+    })
+    
+    return resultsMap
+  }
+
+  /**
+   * 检查跨表一致性（静态方法）
+   */
+  static checkCrossTableConsistency(dataMap: Map<string, any[]>): any[] {
+    const results: any[] = []
+    
+    // 检查出租率一致性（产品表 vs 运营表）
+    const productData = dataMap.get('reit_product_info')
+    const operationalData = dataMap.get('reit_operational_data')
+    
+    if (productData && operationalData) {
+      productData.forEach((product) => {
+        const operational = operationalData.find(o => o.fund_code === product.fund_code)
+        
+        if (operational) {
+          const diff = Math.abs((product.avg_occupancy || 0) - (operational.occupancy_rate || 0))
+          
+          if (diff > 10) {
+            results.push({
+              passed: false,
+              severity: 'error',
+              message: `出租率差异过大：${diff.toFixed(2)}%`,
+              rule: { name: '出租率一致性' },
+              resourceId: product.fund_code
+            })
+          } else if (diff > 5) {
+            results.push({
+              passed: false,
+              severity: 'warning',
+              message: `出租率差异：${diff.toFixed(2)}%`,
+              rule: { name: '出租率一致性' },
+              resourceId: product.fund_code
+            })
+          }
+        }
+      })
+    }
+    
+    // 检查债务比率一致性（财务表 vs 风险表）
+    const financialData = dataMap.get('reit_financial_metrics')
+    const riskData = dataMap.get('reit_risk_metrics')
+    
+    if (financialData && riskData) {
+      financialData.forEach((financial) => {
+        const risk = riskData.find(r => r.fund_code === financial.fund_code)
+        
+        if (risk) {
+          const financialDebtRatio = financial.total_debt && financial.total_assets 
+            ? (financial.total_debt / financial.total_assets) * 100 
+            : 0
+          const diff = Math.abs(financialDebtRatio - (risk.debt_ratio || 0))
+          
+          if (diff > 5) {
+            results.push({
+              passed: false,
+              severity: 'error',
+              message: `债务比率差异过大：${diff.toFixed(2)}%`,
+              rule: { name: '债务比率一致性' },
+              resourceId: financial.fund_code
+            })
+          } else if (diff > 2) {
+            results.push({
+              passed: false,
+              severity: 'warning',
+              message: `债务比率差异：${diff.toFixed(2)}%`,
+              rule: { name: '债务比率一致性' },
+              resourceId: financial.fund_code
+            })
+          }
+        }
+      })
+    }
+    
+    return results
   }
 
   /**

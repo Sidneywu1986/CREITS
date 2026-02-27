@@ -18,7 +18,7 @@ interface Message {
 export default function ChatPage() {
   const params = useParams();
   const router = useRouter();
-  const agentId = params.id as string;
+  const agentId = params?.id as string;
 
   const agent = AGENTS.find((a) => a.id === agentId);
 

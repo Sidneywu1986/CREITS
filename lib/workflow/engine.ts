@@ -237,7 +237,7 @@ export class WorkflowEngine {
     }
 
     // 查找开始节点
-    const startNode = definition.nodes.find(n => n.type === 'start')
+    const startNode = definition.nodes.find((n: any) => n.type === 'start')
     if (!startNode) {
       throw new Error('工作流缺少开始节点')
     }

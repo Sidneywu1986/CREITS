@@ -37,7 +37,6 @@ const resourceLabels: Record<Resource, string> = {
   'reits:all': 'REITs全部数据',
   'abs:data': 'ABS数据中心',
   'system:users': '系统用户管理',
-  'system:roles': '系统角色管理',
   'system:logs': '系统日志',
   'system:settings': '系统设置',
 };
@@ -100,6 +99,12 @@ export function usePermission() {
     try {
       const supabase = getSupabaseClient();
 
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        clearCurrentUser();
+        return null;
+      }
+
       // 检查Supabase session
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -120,16 +125,19 @@ export function usePermission() {
         return null;
       }
 
+      // 类型断言
+      const user = userData as any;
+
       // 加载权限
-      const permissions = await loadUserPermissions(userData.role_id);
+      const permissions = await loadUserPermissions(user.role_id);
 
       const userObj: User = {
-        id: userData.id,
-        username: userData.username,
-        email: userData.email,
-        roleId: userData.role_id,
-        roleName: userData.roles?.name || '',
-        roleCode: userData.roles?.code || 'guest',
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        roleId: user.role_id,
+        roleName: user.roles?.name || '',
+        roleCode: user.roles?.code || 'guest',
         permissions,
       };
 
@@ -242,6 +250,11 @@ export function usePermission() {
   useEffect(() => {
     const supabase = getSupabaseClient();
 
+    if (!supabase) {
+      console.warn('Supabase client not initialized, skipping auth state change listener');
+      return;
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -282,3 +295,6 @@ export function usePermission() {
     actionLabels,
   };
 }
+
+// 重新导出类型
+export type { Resource, Action } from '@/config/rbac';

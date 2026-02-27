@@ -91,6 +91,9 @@ async function testConnection() {
 testConnection()
   .then(result => {
     console.log('[Supabase验证] 最终结果:', JSON.stringify(result, null, 2));
+    if (result === false) {
+      process.exit(1);
+    }
     process.exit(result.success ? 0 : 1);
   })
   .catch(error => {

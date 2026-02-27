@@ -219,6 +219,7 @@ export async function getABSServices(): Promise<ABSWithQuote[]> {
       high: 100.00,
       low: 100.00,
       volume: 0,
+      turnoverRate: 0,
       updateTime: new Date().toISOString().split('T')[0],
     },
   }));
@@ -243,6 +244,7 @@ export async function getABSDetail(code: string): Promise<ABSWithQuote | null> {
       high: 100.00,
       low: 100.00,
       volume: 0,
+      turnoverRate: 0,
       updateTime: new Date().toISOString().split('T')[0],
     },
   };

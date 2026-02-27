@@ -37,17 +37,34 @@ export interface AgentReview {
  * AI市场服务
  */
 export class AIMarketplaceService {
-  private supabase
+  private _supabase: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
 
   constructor() {
-    this.supabase = createClient()
+    // 延迟初始化，不在这里创建客户端
   }
 
   /**
    * 获取Agent模板列表
    */
   async getAgentTemplates(category?: string): Promise<AgentTemplate[]> {
-    let query = this.supabase
+    const supabaseClient = this.supabase;
+    if (!supabaseClient) {
+      return [];
+    }
+
+    let query = supabaseClient
       .from('agent_templates')
       .select('*')
       .order('downloads', { ascending: false })
@@ -62,7 +79,7 @@ export class AIMarketplaceService {
       throw new Error(`获取Agent模板失败: ${error.message}`)
     }
 
-    return (data || []).map(record => ({
+    return (data || []).map((record: any) => ({
       id: record.id,
       name: record.name,
       description: record.description,
@@ -198,7 +215,7 @@ export class AIMarketplaceService {
 
     const reviews = data || []
     const avgRating = reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
       : 0
 
     await this.supabase
@@ -227,7 +244,7 @@ export class AIMarketplaceService {
       throw new Error(`获取评论失败: ${error.message}`)
     }
 
-    return (data || []).map(record => ({
+    return (data || []).map((record: any) => ({
       id: record.id,
       templateId: record.template_id,
       userId: record.user_id,
@@ -284,7 +301,7 @@ export class AIMarketplaceService {
       throw new Error(`搜索Agent失败: ${error.message}`)
     }
 
-    return (data || []).map(record => ({
+    return (data || []).map((record: any) => ({
       id: record.id,
       name: record.name,
       description: record.description,
@@ -293,12 +310,12 @@ export class AIMarketplaceService {
       icon: record.icon,
       author: record.author,
       downloads: record.downloads || 0,
-      rating: data.rating || 0,
-      reviewCount: data.review_count || 0,
-      price: data.price || 0,
+      rating: record.rating || 0,
+      reviewCount: record.review_count || 0,
+      price: record.price || 0,
       config: record.config,
       createdAt: record.created_at,
-      isOfficial: data.is_official || false
+      isOfficial: record.is_official || false
     }))
   }
 }

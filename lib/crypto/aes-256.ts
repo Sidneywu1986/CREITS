@@ -1,5 +1,8 @@
 import CryptoJS from 'crypto-js';
 
+// 类型断言，因为 @types/crypto-js 的类型定义不完整
+const CJS = CryptoJS as any;
+
 export interface EncryptedData {
   ciphertext: string;
   iv: string;
@@ -22,8 +25,8 @@ export class AES256 {
   private static deriveKey(
     password: string,
     salt: string
-  ): CryptoJS.WordArray {
-    return CryptoJS.PBKDF2(password, salt, {
+  ): any {
+    return CJS.PBKDF2(password, salt, {
       keySize: AES256.KEY_SIZE / 32,
       iterations: AES256.ITERATIONS,
     });
@@ -34,19 +37,19 @@ export class AES256 {
    */
   public static encrypt(plaintext: string, password: string): EncryptedData {
     // 生成随机盐值
-    const salt = CryptoJS.lib.WordArray.random(AES256.SALT_SIZE / 8).toString();
+    const salt = CJS.lib.WordArray.random(AES256.SALT_SIZE / 8).toString();
 
     // 派生密钥
     const key = this.deriveKey(password, salt);
 
     // 生成随机IV
-    const iv = CryptoJS.lib.WordArray.random(AES256.IV_SIZE / 8).toString();
+    const iv = CJS.lib.WordArray.random(AES256.IV_SIZE / 8).toString();
 
     // 加密
-    const encrypted = CryptoJS.AES.encrypt(plaintext, key, {
-      iv: CryptoJS.enc.Hex.parse(iv),
-      mode: CryptoJS.mode.GCM,
-      padding: CryptoJS.pad.Pkcs7,
+    const encrypted = CJS.AES.encrypt(plaintext, key, {
+      iv: CJS.enc.Hex.parse(iv),
+      mode: CJS.mode.GCM,
+      padding: CJS.pad.Pkcs7,
     });
 
     return {
@@ -67,18 +70,18 @@ export class AES256 {
     const key = this.deriveKey(password, encryptedData.salt);
 
     // 解密
-    const decrypted = CryptoJS.AES.decrypt(
+    const decrypted = CJS.AES.decrypt(
       encryptedData.ciphertext,
       key,
       {
-        iv: CryptoJS.enc.Hex.parse(encryptedData.iv),
-        mode: CryptoJS.mode.GCM,
-        padding: CryptoJS.pad.Pkcs7,
+        iv: CJS.enc.Hex.parse(encryptedData.iv),
+        mode: CJS.mode.GCM,
+        padding: CJS.pad.Pkcs7,
       }
     );
 
     // 返回解密后的明文
-    return decrypted.toString(CryptoJS.enc.Utf8);
+    return decrypted.toString(CJS.enc.Utf8);
   }
 
   /**
@@ -122,8 +125,8 @@ export class AES256 {
    * 生成加密哈希（用于密码验证）
    */
   public static hashPassword(password: string, salt?: string): string {
-    const actualSalt = salt || CryptoJS.lib.WordArray.random(128 / 8).toString();
-    const hash = CryptoJS.PBKDF2(password, actualSalt, {
+    const actualSalt = salt || CJS.lib.WordArray.random(128 / 8).toString();
+    const hash = CJS.PBKDF2(password, actualSalt, {
       keySize: 256 / 32,
       iterations: 10000,
     }).toString();
@@ -138,7 +141,7 @@ export class AES256 {
     storedHash: string
   ): boolean {
     const [salt, hash] = storedHash.split(':');
-    const computedHash = CryptoJS.PBKDF2(password, salt, {
+    const computedHash = CJS.PBKDF2(password, salt, {
       keySize: 256 / 32,
       iterations: 10000,
     }).toString();

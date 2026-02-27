@@ -21,7 +21,7 @@ export class DataEncryptionService {
    */
   encrypt(data: string): { encrypted: string; iv: string; authTag: string } {
     const iv = crypto.randomBytes(16)
-    const cipher = crypto.createCipheriv(this.algorithm, this.encryptionKey, iv)
+    const cipher = crypto.createCipheriv(this.algorithm, this.encryptionKey, iv) as any
 
     let encrypted = cipher.update(data, 'utf8', 'hex')
     encrypted += cipher.final('hex')
@@ -47,7 +47,7 @@ export class DataEncryptionService {
       this.algorithm,
       this.encryptionKey,
       Buffer.from(iv, 'hex')
-    )
+    ) as any
 
     decipher.setAuthTag(Buffer.from(authTag, 'hex'))
 

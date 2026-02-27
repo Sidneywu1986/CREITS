@@ -58,6 +58,11 @@ export class AuditLogService {
         encryptedData = params.sensitiveData;
       }
 
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return;
+      }
+
       await supabase.from('audit_logs').insert({
         user_id: params.userId,
         username: params.username,
@@ -71,7 +76,7 @@ export class AuditLogService {
         user_agent: userAgent,
         result: params.result || 'success',
         error_message: params.errorMessage || null,
-      });
+      } as any);
     } catch (error) {
       console.error('记录审计日志失败:', error);
       // 审计日志记录失败不应该影响主流程
@@ -87,6 +92,11 @@ export class AuditLogService {
   }> {
     try {
       const supabase = getSupabaseClient();
+
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return { data: [], total: 0 };
+      }
 
       let query = supabase
         .from('audit_logs')
@@ -141,6 +151,11 @@ export class AuditLogService {
     try {
       const supabase = getSupabaseClient();
 
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
@@ -171,6 +186,11 @@ export class AuditLogService {
     try {
       const supabase = getSupabaseClient();
 
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return { total: 0, success: 0, failure: 0, byAction: {} };
+      }
+
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
@@ -192,7 +212,7 @@ export class AuditLogService {
         byAction: {} as Record<string, number>,
       };
 
-      data?.forEach((log) => {
+      (data as any)?.forEach((log: any) => {
         if (log.result === 'success') {
           stats.success++;
         } else {
@@ -224,6 +244,11 @@ export class AuditLogService {
   }> {
     try {
       const supabase = getSupabaseClient();
+
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return { data: [], total: 0 };
+      }
 
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -297,6 +322,11 @@ export class AuditLogService {
   static async cleanup(daysToKeep = 90): Promise<number> {
     try {
       const supabase = getSupabaseClient();
+
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return 0;
+      }
 
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);

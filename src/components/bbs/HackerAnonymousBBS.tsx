@@ -138,7 +138,7 @@ export default function HackerAnonymousBBS({ className }: HackerAnonymousBBSProp
       setCurrentUser({
         id: userId,
         nickname: userNickname,
-        avatar: userAvatar,
+        avatar: userAvatar || generateAvatarColor(),
         joinTime: new Date(userJoinTime || Date.now()),
       });
     } else {

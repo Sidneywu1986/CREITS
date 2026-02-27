@@ -51,12 +51,35 @@ export interface UsageSummary {
  * API平台服务
  */
 export class APIPlatformService {
-  private supabase
-  private auditService
+  private _supabase: any = null
+  private _auditService: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
+
+  private get auditService() {
+    if (!this._auditService) {
+      try {
+        this._auditService = new AuditLogService()
+      } catch (error) {
+        console.warn('Failed to create audit service:', error)
+        this._auditService = null
+      }
+    }
+    return this._auditService
+  }
 
   constructor() {
-    this.supabase = createClient()
-    this.auditService = new AuditLogService()
+    // 延迟初始化，不在这里创建客户端
   }
 
   /**

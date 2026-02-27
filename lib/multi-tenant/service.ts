@@ -133,16 +133,16 @@ export class MultiTenantService {
       throw new Error(`获取机构列表失败: ${error.message}`)
     }
 
-    return (data || []).map(item => ({
-      id: item.organizations.id,
-      name: item.organizations.name,
-      code: item.organizations.code,
-      logo: item.organizations.logo,
-      theme: item.organizations.theme,
-      isActive: item.organizations.is_active,
-      plan: item.organizations.plan,
-      maxUsers: item.organizations.max_users,
-      createdAt: item.organizations.created_at
+    return (data || []).map((item: any) => ({
+      id: item.organizations?.id,
+      name: item.organizations?.name,
+      code: item.organizations?.code,
+      logo: item.organizations?.logo,
+      theme: item.organizations?.theme,
+      isActive: item.organizations?.is_active,
+      plan: item.organizations?.plan,
+      maxUsers: item.organizations?.max_users,
+      createdAt: item.organizations?.created_at
     }))
   }
 
@@ -325,10 +325,10 @@ export class MultiTenantService {
       throw new Error(`获取机构用户列表失败: ${error.message}`)
     }
 
-    return (data || []).map(item => ({
-      userId: item.users.id,
-      username: item.users.username,
-      email: item.users.email,
+    return (data || []).map((item: any) => ({
+      userId: item.users?.id,
+      username: item.users?.username,
+      email: item.users?.email,
       role: item.role,
       joinedAt: item.joined_at
     }))

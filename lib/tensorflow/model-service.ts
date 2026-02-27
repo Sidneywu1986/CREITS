@@ -55,6 +55,7 @@ export interface LayerConfig {
   kernelSize?: number[];
   poolSize?: number[];
   rate?: number;
+  returnSequences?: boolean;  // 用于 LSTM/GRU 层
 }
 
 /**
@@ -278,20 +279,20 @@ export class TensorFlowModelService {
       case 'dense':
         return tf.layers.dense({
           units: config.units || 32,
-          activation: config.activation || 'relu'
+          activation: (config.activation || 'relu') as 'relu'
         });
 
       case 'lstm':
         return tf.layers.lstm({
           units: config.units || 64,
-          activation: config.activation || 'tanh',
+          activation: (config.activation || 'tanh') as 'tanh',
           returnSequences: false
         });
 
       case 'gru':
         return tf.layers.gru({
           units: config.units || 64,
-          activation: config.activation || 'tanh',
+          activation: (config.activation || 'tanh') as 'tanh',
           returnSequences: false
         });
 
@@ -299,12 +300,12 @@ export class TensorFlowModelService {
         return tf.layers.conv2d({
           filters: config.filters || 32,
           kernelSize: config.kernelSize || [3, 3],
-          activation: config.activation || 'relu'
+          activation: (config.activation || 'relu') as 'relu'
         });
 
       case 'maxPooling2d':
         return tf.layers.maxPooling2d({
-          poolSize: config.poolSize || [2, 2]
+          poolSize: (config.poolSize || [2, 2]) as [number, number]
         });
 
       case 'dropout':
@@ -334,7 +335,10 @@ export class TensorFlowModelService {
         );
 
       case 'sgd':
-        return tf.train.sgd(config.learningRate || 0.01, config.momentum || 0.9);
+        if (config.momentum) {
+          return tf.train.momentum(config.learningRate || 0.01, config.momentum);
+        }
+        return tf.train.sgd(config.learningRate || 0.01);
 
       case 'rmsprop':
         return tf.train.rmsprop(config.learningRate || 0.001);
@@ -412,7 +416,7 @@ export class TensorFlowModelService {
     }
 
     // 如果输入是数组，转换为tensor
-    if (!tf.isTensor(input)) {
+    if (!(input instanceof tf.Tensor)) {
       input = tf.tensor2d(input);
     }
 

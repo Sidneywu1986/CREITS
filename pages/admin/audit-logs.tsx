@@ -39,8 +39,13 @@ export default function AuditLogsPage() {
     try {
       setLoading(true);
 
+      const typedFilters: any = {
+        ...filters,
+        result: filters.result ? filters.result as 'success' | 'failure' : undefined
+      };
+
       const { data, total } = await AuditLogService.query(
-        filters,
+        typedFilters,
         page,
         pageSize
       );
@@ -57,7 +62,12 @@ export default function AuditLogsPage() {
   // 导出审计日志
   const exportLogs = async () => {
     try {
-      const csv = await AuditLogService.export(filters);
+      const typedFilters: any = {
+        ...filters,
+        result: filters.result ? filters.result as 'success' | 'failure' : undefined
+      };
+
+      const csv = await AuditLogService.export(typedFilters);
 
       if (!csv) {
         alert('导出失败');

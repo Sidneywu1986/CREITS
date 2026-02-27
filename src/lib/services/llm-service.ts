@@ -2,25 +2,24 @@
  * LLM服务 - 使用coze-coding-dev-sdk实现流式对话
  */
 
-import LLM from 'coze-coding-dev-sdk';
-import { LLMConfig } from 'coze-coding-dev-sdk/types';
+import { LLMClient, LLMConfig, Config, Message } from 'coze-coding-dev-sdk';
+import { AIMessageChunk } from '@langchain/core/messages';
 
 // LLM配置
-const llmConfig: LLMConfig = {
+const config = new Config({
   apiKey: process.env.COZE_API_KEY || '',
-  baseURL: process.env.COZE_API_BASE_URL || '',
-  model: process.env.COZE_MODEL || 'gpt-4o'
-};
+  baseUrl: process.env.COZE_API_BASE_URL || ''
+});
 
 // 初始化LLM实例
-let llmInstance: LLM | null = null;
+let llmInstance: LLMClient | null = null;
 
 /**
  * 获取LLM实例
  */
-function getLLMInstance(): LLM {
+function getLLMInstance(): LLMClient {
   if (!llmInstance) {
-    llmInstance = new LLM(llmConfig);
+    llmInstance = new LLMClient(config);
   }
   return llmInstance;
 }
@@ -29,10 +28,8 @@ function getLLMInstance(): LLM {
  * 流式对话接口
  */
 export interface StreamChatOptions {
-  systemPrompt?: string;
   temperature?: number;
-  maxTokens?: number;
-  topP?: number;
+  model?: string;
 }
 
 export interface StreamChatResponse {
@@ -49,17 +46,27 @@ export async function streamChat(
 ): Promise<AsyncIterable<StreamChatResponse>> {
   const llm = getLLMInstance();
 
-  try {
-    const stream = await llm.chat({
-      messages,
-      systemPrompt: options?.systemPrompt,
-      temperature: options?.temperature ?? 0.7,
-      maxTokens: options?.maxTokens ?? 2000,
-      topP: options?.topP ?? 0.9,
-      stream: true
-    });
+  const llmConfig: LLMConfig = {
+    temperature: options?.temperature ?? 0.7,
+    model: options?.model ?? process.env.COZE_MODEL ?? 'gpt-4o',
+    streaming: true
+  };
 
-    return stream as AsyncIterable<StreamChatResponse>;
+  try {
+    const stream = llm.stream(messages as Message[], llmConfig);
+
+    // 转换 AsyncGenerator<AIMessageChunk> 到 AsyncIterable<StreamChatResponse>
+    async function* transformStream() {
+      for await (const chunk of stream) {
+        yield {
+          content: chunk.content as string || '',
+          done: false
+        };
+      }
+      yield { content: '', done: true };
+    }
+
+    return transformStream();
   } catch (error) {
     console.error('LLM streaming error:', error);
     throw new Error(`LLM streaming failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -75,19 +82,18 @@ export async function chat(
 ): Promise<{ content: string; usage?: any }> {
   const llm = getLLMInstance();
 
+  const llmConfig: LLMConfig = {
+    temperature: options?.temperature ?? 0.7,
+    model: options?.model ?? process.env.COZE_MODEL ?? 'gpt-4o',
+    streaming: false
+  };
+
   try {
-    const response = await llm.chat({
-      messages,
-      systemPrompt: options?.systemPrompt,
-      temperature: options?.temperature ?? 0.7,
-      maxTokens: options?.maxTokens ?? 2000,
-      topP: options?.topP ?? 0.9,
-      stream: false
-    });
+    const response = await llm.invoke(messages as Message[], llmConfig);
 
     return {
       content: response.content || '',
-      usage: response.usage
+      usage: undefined
     };
   } catch (error) {
     console.error('LLM chat error:', error);
@@ -100,8 +106,7 @@ export async function chat(
  */
 export async function simpleChat(
   userMessage: string,
-  systemPrompt?: string,
-  options?: Omit<StreamChatOptions, 'systemPrompt'>
+  options?: StreamChatOptions
 ): Promise<{ content: string; usage?: any }> {
   return chat(
     [
@@ -110,10 +115,7 @@ export async function simpleChat(
         content: userMessage
       }
     ],
-    {
-      systemPrompt,
-      ...options
-    }
+    options
   );
 }
 
@@ -122,8 +124,7 @@ export async function simpleChat(
  */
 export async function simpleStreamChat(
   userMessage: string,
-  systemPrompt?: string,
-  options?: Omit<StreamChatOptions, 'systemPrompt'>
+  options?: StreamChatOptions
 ): Promise<AsyncIterable<StreamChatResponse>> {
   return streamChat(
     [
@@ -132,9 +133,6 @@ export async function simpleStreamChat(
         content: userMessage
       }
     ],
-    {
-      systemPrompt,
-      ...options
-    }
+    options
   );
 }

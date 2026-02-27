@@ -29,6 +29,10 @@ export async function registerUser(
   try {
     const supabase = getSupabaseClient();
 
+    if (!supabase) {
+      return { success: false, error: '数据库连接失败' };
+    }
+
     // 检查用户名是否已存在
     const { data: existingUser } = await supabase
       .from('users')
@@ -62,7 +66,7 @@ export async function registerUser(
         email,
         password_hash: passwordHash,
         role_id: roleId,
-      })
+      } as any)
       .select('*, roles(*)')
       .single();
 
@@ -71,17 +75,23 @@ export async function registerUser(
       return { success: false, error: '注册失败，请稍后重试' };
     }
 
+    if (!user) {
+      return { success: false, error: '注册失败，用户创建失败' };
+    }
+
+    const userData = user as any;
+
     // 加载用户权限
-    const permissions = await loadUserPermissions(user.role_id);
+    const permissions = await loadUserPermissions(userData.role_id);
 
     // 创建 AuthUser 对象
     const authUser: AuthUser = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      roleId: user.role_id,
-      roleName: user.roles?.name || '',
-      roleCode: user.roles?.code || '',
+      id: userData.id,
+      username: userData.username,
+      email: userData.email,
+      roleId: userData.role_id,
+      roleName: userData.roles?.name || '',
+      roleCode: userData.roles?.code || '',
       permissions,
     };
 
@@ -102,6 +112,10 @@ export async function loginUser(
   try {
     const supabase = getSupabaseClient();
 
+    if (!supabase) {
+      return { success: false, error: '数据库连接失败' };
+    }
+
     // 获取用户信息
     const { data: user, error } = await supabase
       .from('users')
@@ -115,27 +129,29 @@ export async function loginUser(
       return { success: false, error: '用户名或密码错误' };
     }
 
+    const userData = user as any;
+
     // 检查账户是否锁定
-    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+    if (userData.locked_until && new Date(userData.locked_until) > new Date()) {
       return {
         success: false,
-        error: `账户已锁定，请在 ${new Date(user.locked_until).toLocaleString()} 后重试`,
+        error: `账户已锁定，请在 ${new Date(userData.locked_until).toLocaleString()} 后重试`,
       };
     }
 
     // 检查账户是否激活
-    if (!user.is_active) {
+    if (!userData.is_active) {
       return { success: false, error: '账户已被禁用' };
     }
 
     // 验证密码
-    const isValid = AES256.verifyPassword(password, user.password_hash);
+    const isValid = AES256.verifyPassword(password, userData.password_hash);
 
-    await logLoginAttempt(user.id, username, isValid);
+    await logLoginAttempt(userData.id, username, isValid);
 
     if (!isValid) {
       // 增加失败计数
-      const newAttempts = (user.login_attempts || 0) + 1;
+      const newAttempts = (userData.login_attempts || 0) + 1;
       const updates: any = { login_attempts: newAttempts };
 
       // 如果失败次数达到5次，锁定账户30分钟
@@ -145,8 +161,9 @@ export async function loginUser(
 
       await supabase
         .from('users')
+        // @ts-ignore
         .update(updates)
-        .eq('id', user.id);
+        .eq('id', userData.id);
 
       return { success: false, error: '用户名或密码错误' };
     }
@@ -154,29 +171,30 @@ export async function loginUser(
     // 登录成功，重置失败计数
     await supabase
       .from('users')
+      // @ts-ignore
       .update({
         login_attempts: 0,
         locked_until: null,
         last_login_at: new Date().toISOString(),
       })
-      .eq('id', user.id);
+      .eq('id', userData.id);
 
     // 加载用户权限
-    const permissions = await loadUserPermissions(user.role_id);
+    const permissions = await loadUserPermissions(userData.role_id);
 
     // 创建 AuthUser 对象
     const authUser: AuthUser = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      roleId: user.role_id,
-      roleName: user.roles?.name || '',
-      roleCode: user.roles?.code || '',
+      id: userData.id,
+      username: userData.username,
+      email: userData.email,
+      roleId: userData.role_id,
+      roleName: userData.roles?.name || '',
+      roleCode: userData.roles?.code || '',
       permissions,
     };
 
     // 记录登录成功审计日志
-    await logAuditAction(user.id, user.username, 'login', 'user', user.id, null, {
+    await logAuditAction(userData.id, userData.username, 'login', 'user', userData.id, null, {
       login_time: new Date().toISOString(),
     });
 
@@ -194,6 +212,10 @@ export async function loadUserPermissions(roleId: string): Promise<string[]> {
   try {
     const supabase = getSupabaseClient();
 
+    if (!supabase) {
+      return [];
+    }
+
     const { data: permissions } = await supabase
       .from('permissions')
       .select('resource, action')
@@ -204,7 +226,7 @@ export async function loadUserPermissions(roleId: string): Promise<string[]> {
     }
 
     // 将权限转换为 "resource:action" 格式
-    return permissions.map((p) => `${p.resource}:${p.action}`);
+    return (permissions as any).map((p: any) => `${p.resource}:${p.action}`);
   } catch (error) {
     console.error('加载权限失败:', error);
     return [];
@@ -222,6 +244,10 @@ async function logLoginAttempt(
   try {
     const supabase = getSupabaseClient();
 
+    if (!supabase) {
+      return;
+    }
+
     const clientIp = await getClientIp();
     const userAgent = navigator.userAgent;
 
@@ -231,7 +257,7 @@ async function logLoginAttempt(
       success,
       ip_address: clientIp,
       user_agent: userAgent,
-    });
+    } as any);
   } catch (error) {
     console.error('记录登录尝试失败:', error);
   }
@@ -254,6 +280,10 @@ export async function logAuditAction(
   try {
     const supabase = getSupabaseClient();
 
+    if (!supabase) {
+      return;
+    }
+
     const clientIp = await getClientIp();
     const userAgent = navigator.userAgent;
 
@@ -269,7 +299,7 @@ export async function logAuditAction(
       user_agent: userAgent,
       result,
       error_message: errorMessage,
-    });
+    } as any);
   } catch (error) {
     console.error('记录审计日志失败:', error);
   }
@@ -295,6 +325,10 @@ export async function checkUserPermission(
   try {
     const supabase = getSupabaseClient();
 
+    if (!supabase) {
+      return false;
+    }
+
     // 获取用户的角色ID
     const { data: user } = await supabase
       .from('users')
@@ -306,11 +340,13 @@ export async function checkUserPermission(
       return false;
     }
 
+    const userData = user as any;
+
     // 检查是否有对应权限
     const { data: permission } = await supabase
       .from('permissions')
       .select('id')
-      .eq('role_id', user.role_id)
+      .eq('role_id', userData.role_id)
       .eq('resource', resource)
       .eq('action', action)
       .single();

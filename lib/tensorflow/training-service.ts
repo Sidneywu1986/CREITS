@@ -58,22 +58,24 @@ export interface TrainingResult {
 /**
  * EarlyStopping回调
  */
-class EarlyStoppingCallback implements tf.Callback {
+class EarlyStoppingCallback extends tf.Callback {
   private patience: number;
   private minDelta: number;
   private bestLoss: number;
+  private bestEpoch: number = 0;
   private bestWeights: tf.NamedTensorMap | null = null;
   private wait: number = 0;
   private stoppedEpoch: number = 0;
   private stopped: boolean = false;
 
   constructor(patience: number = 10, minDelta: number = 0.001) {
+    super();
     this.patience = patience;
     this.minDelta = minDelta;
     this.bestLoss = Infinity;
   }
 
-  onEpochEnd(epoch: number, logs: tf.Logs): void {
+  async onEpochEnd(epoch: number, logs: tf.Logs): Promise<void> {
     const currentLoss = logs.loss;
 
     if (currentLoss === undefined) {
@@ -95,7 +97,7 @@ class EarlyStoppingCallback implements tf.Callback {
     }
   }
 
-  onTrainEnd(logs?: tf.Logs): void {
+  async onTrainEnd(logs?: tf.Logs): Promise<void> {
     if (this.stopped) {
       console.log(`[EarlyStopping] 训练提前停止，最佳轮次: ${this.bestEpoch}`);
     }
@@ -248,7 +250,7 @@ export class TensorFlowTrainingService {
     }
 
     // 准备回调
-    const callbacks: tf.Callback[] = [...config.callbacks];
+    const callbacks: tf.Callback[] = config.callbacks ? [...config.callbacks] : [];
 
     // 添加早停回调
     if (config.earlyStoppingPatience && config.earlyStoppingPatience > 0) {
@@ -260,16 +262,16 @@ export class TensorFlowTrainingService {
     }
 
     // 训练历史
-    const history: {
-      loss: number[] = [];
-      accuracy: number[] = [];
-      valLoss: number[] = [];
-      valAccuracy: number[] = [];
-    } = {};
+    const history: any = {
+      loss: [],
+      accuracy: [],
+      valLoss: [],
+      valAccuracy: []
+    };
 
     // 自定义回调用于记录历史
-    const historyCallback: tf.CustomCallback = {
-      onEpochEnd: (epoch: number, logs: tf.Logs) => {
+    const historyCallback: any = {
+      onEpochEnd: async (epoch: number, logs: tf.Logs) => {
         if (logs.loss !== undefined) {
           history.loss.push(logs.loss);
         }
@@ -379,7 +381,7 @@ export class TensorFlowTrainingService {
     const inputTensor = tf.tensor2d(inputs);
     const outputTensor = tf.tensor2d(outputs);
 
-    const evaluation = await model.evaluate(inputTensor, outputTensor) as number[];
+    const evaluation = await model.evaluate(inputTensor, outputTensor) as unknown as number[];
 
     const result: any = {};
 

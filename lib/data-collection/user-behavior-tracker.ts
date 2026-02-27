@@ -477,19 +477,19 @@ export class UserBehaviorTracker {
       const dateStr = targetDate.toISOString().split('T')[0];
 
       // 获取页面访问统计
-      const { data: pageViews } = await supabase
+      const { data: pageViews } = await (supabase
         .from('user_page_views')
         .select('page_path, COUNT(*) as count')
         .gte('created_at', `${dateStr}T00:00:00Z`)
-        .lt('created_at', `${dateStr}T23:59:59Z`)
+        .lt('created_at', `${dateStr}T23:59:59Z`) as any)
         .group('page_path');
 
       // 获取搜索统计
-      const { data: searches } = await supabase
+      const { data: searches } = await (supabase
         .from('user_searches')
         .select('search_query, COUNT(*) as count')
         .gte('created_at', `${dateStr}T00:00:00Z`)
-        .lt('created_at', `${dateStr}T23:59:59Z`)
+        .lt('created_at', `${dateStr}T23:59:59Z`) as any)
         .group('search_query');
 
       // 获取导出统计
@@ -508,23 +508,23 @@ export class UserBehaviorTracker {
 
       // 生成聚合数据
       const totalPages = pageViews?.length || 0;
-      const totalExports = exports?.[0]?.count || 0;
-      const totalInteractions = interactions?.[0]?.count || 0;
+      const totalExports = (exports as any)?.[0]?.count || 0;
+      const totalInteractions = (interactions as any)?.[0]?.count || 0;
 
       // TOP 10 页面
       const topPages = pageViews
-        ?.sort((a, b) => (b.count || 0) - (a.count || 0))
+        ?.sort((a: any, b: any) => (b.count || 0) - (a.count || 0))
         .slice(0, 10)
-        .map(item => ({
+        .map((item: any) => ({
           page_path: item.page_path,
           count: item.count
         })) || [];
 
       // TOP 10 搜索
       const topSearches = searches
-        ?.sort((a, b) => (b.count || 0) - (a.count || 0))
+        ?.sort((a: any, b: any) => (b.count || 0) - (a.count || 0))
         .slice(0, 10)
-        .map(item => ({
+        .map((item: any) => ({
           search_query: item.search_query,
           count: item.count
         })) || [];

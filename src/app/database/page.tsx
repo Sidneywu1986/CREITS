@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, CheckCircle, Database, RefreshCw, Table } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export default function DatabaseManagementPage() {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
   const [tableStats, setTableStats] = useState<any[]>([]);
@@ -33,10 +32,8 @@ export default function DatabaseManagementPage() {
       }
     } catch (error) {
       setConnectionStatus('disconnected');
-      toast({
-        title: '连接失败',
+      toast.error('连接失败', {
         description: '无法连接到数据库',
-        variant: 'destructive',
       });
     }
   };
@@ -51,22 +48,17 @@ export default function DatabaseManagementPage() {
 
       if (data.success) {
         setInitResult(data);
-        toast({
-          title: '初始化成功',
+        toast.success('初始化成功', {
           description: 'Schema 已解析，请在 Supabase 控制台执行 SQL 语句',
         });
       } else {
-        toast({
-          title: '初始化失败',
+        toast.error('初始化失败', {
           description: data.error || '未知错误',
-          variant: 'destructive',
         });
       }
     } catch (error) {
-      toast({
-        title: '请求失败',
+      toast.error('请求失败', {
         description: '无法连接到服务器',
-        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);

@@ -46,9 +46,9 @@ export class EncryptedConfigCenter {
         await this.supabase
           .from(this.configTable)
           .update({
-            encrypted_data: encrypted.encrypted,
+            encrypted_data: encrypted.encrypted_data,
             iv: encrypted.iv,
-            auth_tag: encrypted.authTag,
+            auth_tag: encrypted.auth_tag,
             type: metadata?.type || 'unknown',
             version: metadata?.version || '1.0',
             description: metadata?.description,
@@ -61,9 +61,9 @@ export class EncryptedConfigCenter {
           .from(this.configTable)
           .insert({
             config_key: key,
-            encrypted_data: encrypted.encrypted,
+            encrypted_data: encrypted.encrypted_data,
             iv: encrypted.iv,
-            auth_tag: encrypted.authTag,
+            auth_tag: encrypted.auth_tag,
             type: metadata?.type || 'unknown',
             version: metadata?.version || '1.0',
             description: metadata?.description,
@@ -93,7 +93,7 @@ export class EncryptedConfigCenter {
       }
 
       // 解密配置
-      const decrypted = this.encryptionService.decrypt({
+      const decrypted = this.encryptionService.decryptFromData({
         encrypted_data: data.encrypted_data,
         iv: data.iv,
         auth_tag: data.auth_tag

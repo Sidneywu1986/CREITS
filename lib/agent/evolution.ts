@@ -32,14 +32,48 @@ export interface WeightOptimizationResult {
  * Agent进化服务
  */
 export class AgentEvolutionService {
-  private supabase
-  private configCenter
-  private auditService
+  private _supabase: any = null
+  private _configCenter: any = null
+  private _auditService: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
+
+  private get configCenter() {
+    if (!this._configCenter) {
+      try {
+        this._configCenter = new EncryptedConfigCenter()
+      } catch (error) {
+        console.warn('Failed to create config center:', error)
+        this._configCenter = null
+      }
+    }
+    return this._configCenter
+  }
+
+  private get auditService() {
+    if (!this._auditService) {
+      try {
+        this._auditService = new AuditLogService()
+      } catch (error) {
+        console.warn('Failed to create audit service:', error)
+        this._auditService = null
+      }
+    }
+    return this._auditService
+  }
 
   constructor() {
-    this.supabase = createClient()
-    this.configCenter = new EncryptedConfigCenter()
-    this.auditService = new AuditLogService()
+    // 延迟初始化，不在这里创建客户端
   }
 
   /**
@@ -48,7 +82,12 @@ export class AgentEvolutionService {
   async collectTrainingCases(
     limit: number = 100
   ): Promise<TrainingCase[]> {
-    const { data, error } = await this.supabase
+    const supabaseClient = this.supabase;
+    if (!supabaseClient) {
+      return [];
+    }
+
+    const { data, error } = await supabaseClient
       .from('agent_feedback')
       .select(`
         *,
@@ -65,7 +104,7 @@ export class AgentEvolutionService {
       throw new Error(`获取训练案例失败: ${error.message}`)
     }
 
-    return (data || []).map(record => {
+    return (data || []).map((record: any) => {
       const newValue = record.audit_logs?.[0]?.new_value || {}
       return {
         id: record.id,
@@ -89,7 +128,7 @@ export class AgentEvolutionService {
     username: string
   ): Promise<WeightOptimizationResult> {
     // 获取当前权重
-    const currentWeights = await this.configCenter.getConfig('approval_weights') || {
+    const currentWeights = await this.configCenter.loadConfig('approval_weights') || {
       financial_health: 0.30,
       risk_level: 0.25,
       market_performance: 0.20,
@@ -132,7 +171,7 @@ export class AgentEvolutionService {
     for (const [key, value] of Object.entries(currentWeights)) {
       const adjustment = adjustments[key] || 0
       totalAdjustment += adjustment
-      newWeights[key] = Math.max(0.05, Math.min(0.50, value + adjustment))
+      newWeights[key] = Math.max(0.05, Math.min(0.50, (value as number) + adjustment))
     }
 
     // 归一化权重
@@ -158,7 +197,9 @@ export class AgentEvolutionService {
     }
 
     // 保存新权重
-    await this.configCenter.updateConfig('approval_weights', newWeights, 'weight_optimization')
+    await this.configCenter.storeConfig('approval_weights', newWeights, {
+      type: 'weight_optimization'
+    })
 
     // 记录审计日志
     await this.auditService.log({
@@ -309,7 +350,9 @@ export class AgentEvolutionService {
     })
 
     // 更新当前使用的模型
-    await this.configCenter.updateConfig('current_model_id', modelId, 'model_update')
+    await this.configCenter.storeConfig('current_model_id', modelId, {
+      type: 'model_update'
+    })
 
     // 记录审计日志
     await this.auditService.log({

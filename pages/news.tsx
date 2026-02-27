@@ -174,7 +174,7 @@ export default function NewsPage() {
   });
 
   // 获取来源类型配置
-  const getSourceConfig = (sourceType: 'gov' | 'exchange' | 'media') => {
+  const getSourceConfig = (sourceType: 'gov' | 'exchange' | 'media' | 'international') => {
     switch (sourceType) {
       case 'gov':
         return {

@@ -18,7 +18,7 @@ function generateMockData(samples: number = 1000, inputSize: number = 10): {
   outputs: number[][];
 } {
   const inputs: number[][] = [];
-  const outputs: number[] = [];
+  const outputs: number[][] = [];
 
   for (let i = 0; i < samples; i++) {
     const input: number[] = [];

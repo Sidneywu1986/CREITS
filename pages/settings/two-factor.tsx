@@ -42,7 +42,7 @@ export default function TwoFactorSettings() {
           .from('users')
           .select('two_factor_enabled')
           .eq('id', user.id)
-          .single()
+          .single() as any
 
         if (data) {
           setIsEnabled(data.two_factor_enabled)

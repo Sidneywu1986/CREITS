@@ -31,7 +31,7 @@ interface Document {
 export default function KnowledgeManagePage() {
   const params = useParams();
   const router = useRouter();
-  const agentId = params.agentId as string;
+  const agentId = params?.agentId as string;
 
   const [agent, setAgent] = useState(AGENTS.find(a => a.id === agentId));
   const [documents, setDocuments] = useState<Document[]>([]);

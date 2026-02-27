@@ -23,7 +23,7 @@ import {
 export default function ABSDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const code = params.id as string;
+  const code = params?.id as string;
 
   const [activeTab, setActiveTab] = useState('overview');
   const [projectData, setProjectData] = useState<any>(null);

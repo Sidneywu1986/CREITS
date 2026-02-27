@@ -148,12 +148,35 @@ export class DataMaskingService {
  * 审计日志服务
  */
 export class AuditLogService {
-  private supabase
-  private encryptionService
+  private _supabase: any = null
+  private _encryptionService: any = null
+
+  private get supabase() {
+    if (!this._supabase) {
+      try {
+        this._supabase = createClient()
+      } catch (error) {
+        console.warn('Failed to create Supabase client:', error)
+        this._supabase = null
+      }
+    }
+    return this._supabase
+  }
+
+  private get encryptionService() {
+    if (!this._encryptionService) {
+      try {
+        this._encryptionService = getEncryptionService()
+      } catch (error) {
+        console.warn('Failed to create encryption service:', error)
+        this._encryptionService = null
+      }
+    }
+    return this._encryptionService
+  }
 
   constructor() {
-    this.supabase = createClient()
-    this.encryptionService = getEncryptionService()
+    // 延迟初始化，不在这里创建客户端
   }
 
   /**
@@ -189,9 +212,9 @@ export class AuditLogService {
           JSON.stringify(params.sensitiveData)
         )
         encryptedData = {
-          encrypted_data: encrypted.encrypted,
+          encrypted_data: encrypted.encrypted_data,
           iv: encrypted.iv,
-          auth_tag: encrypted.authTag
+          auth_tag: encrypted.auth_tag
         }
       }
 

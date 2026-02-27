@@ -57,6 +57,7 @@ export const QUERY_KEYS = {
   // 专家相关
   experts: ['experts'] as const,
   expert: (id: string) => ['experts', id] as const,
+  expertMessages: (id: string) => ['experts', id, 'messages'] as const,
   expertPosts: (id: string) => ['experts', id, 'posts'] as const,
   expertReviews: (id: string) => ['experts', id, 'reviews'] as const,
 

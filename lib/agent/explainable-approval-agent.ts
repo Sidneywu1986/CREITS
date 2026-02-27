@@ -105,7 +105,7 @@ export class ExplainableApprovalAgent {
    * 加载评分权重
    */
   private async loadWeights(): Promise<Record<string, number>> {
-    const weightsConfig = await this.configCenter.getConfig('approval_weights')
+    const weightsConfig = await this.configCenter.loadConfig('approval_weights')
     return weightsConfig || {
       financial_health: 0.30,
       risk_level: 0.25,
@@ -552,6 +552,10 @@ export class ExplainableApprovalAgent {
    */
   private async saveFeedback(feedback: HumanFeedback): Promise<void> {
     const supabase = createClient()
+    if (!supabase) {
+      console.warn('Supabase client is not available, skipping feedback save')
+      return
+    }
 
     await supabase.from('agent_feedback').insert({
       decision_id: feedback.decisionId,

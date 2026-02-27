@@ -131,7 +131,7 @@ export class ApprovalAgent {
           confidence: 80,
           reason: `出租率${occupancy}%低于最低要求${rules.occupancy.min}%`,
           riskLevel: 'high'
-        }
+        } as ApprovalDecision
       }
 
       return {
@@ -153,7 +153,7 @@ export class ApprovalAgent {
           confidence: 90,
           reason: `债务比率${debtRatio.toFixed(2)}%超过最大限制${rules.debt_ratio.max}%`,
           riskLevel: 'critical'
-        }
+        } as ApprovalDecision
       }
 
       if (debtRatio > rules.debt_ratio.warning) {
@@ -162,7 +162,7 @@ export class ApprovalAgent {
           confidence: 75,
           reason: `债务比率${debtRatio.toFixed(2)}%接近警戒线`,
           riskLevel: 'high'
-        }
+        } as ApprovalDecision
       }
 
       return {
@@ -253,7 +253,7 @@ export class ApprovalAgent {
         reason: ruleDecision.reason,
         riskLevel: 'critical',
         suggestions: ['降低债务比率', '提供额外风险担保']
-      }
+      } as ApprovalDecision
     }
 
     if (totalScore >= 80) {
@@ -262,7 +262,7 @@ export class ApprovalAgent {
         confidence: Math.round(totalScore),
         reason: '符合所有审批规则',
         riskLevel: 'low'
-      }
+      } as ApprovalDecision
     }
 
     if (totalScore >= 60) {
@@ -272,7 +272,7 @@ export class ApprovalAgent {
         reason: '部分指标需要人工核实',
         riskLevel: 'medium',
         suggestions: ['核实关键指标', '检查关联数据']
-      }
+      } as ApprovalDecision
     }
 
     return {
@@ -281,7 +281,7 @@ export class ApprovalAgent {
       reason: '存在潜在风险，建议人工审核',
       riskLevel: 'high',
       suggestions: ['详细审查', '风险评估']
-    }
+    } as ApprovalDecision
   }
 
   /**
@@ -289,7 +289,7 @@ export class ApprovalAgent {
    */
   private sanitizeContext(context: ApprovalContext): any {
     // 移除敏感字段
-    const sanitized = {
+    const sanitized: any = {
       table: context.table,
       userId: context.userId,
       role: context.role,

@@ -128,7 +128,7 @@ export default function ABSCategoryPage() {
       const categoryConfig = ASSET_MAIN_CATEGORIES[category as string];
       if (categoryConfig) {
         const categoryProducts = productsData.filter(p => {
-          return categoryConfig.subTypes.some(sub => (p.asset_type_sub || '').includes(sub));
+          return categoryConfig.subTypes.some((sub: any) => (p.asset_type_sub || '').includes(sub));
         });
         setProducts(categoryProducts);
       }
@@ -158,7 +158,7 @@ export default function ABSCategoryPage() {
   }
 
   const CategoryIcon = categoryConfig.icon;
-  const availableSubTypes = ['全部类型', ...categoryConfig.subTypes.filter(st => 
+  const availableSubTypes = ['全部类型', ...categoryConfig.subTypes.filter((st: any) => 
     products.some(p => (p.asset_type_sub || '').includes(st))
   )];
 

@@ -145,7 +145,7 @@ async function handleNormalization(
 
   try {
     // 获取原始数据
-    const rawData = [];  // 这里应该从数据库获取原始数据
+    const rawData: any[] = [];  // 这里应该从数据库获取原始数据
 
     const result = await dataNormalizer.normalizeData(dataType, rawData);
 
@@ -181,7 +181,7 @@ async function handleReport(res: NextApiResponse) {
  */
 async function handleFullPipeline(res: NextApiResponse) {
   try {
-    const results = {
+    const results: any = {
       collection: {},
       normalization: {},
       graph: null

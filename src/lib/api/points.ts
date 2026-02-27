@@ -3,7 +3,20 @@
  */
 
 import { apiClient, ApiResponse } from './client';
-import { PointsTransaction } from '@/stores/userStore';
+
+/**
+ * 积分变动记录类型
+ */
+export interface PointsTransaction {
+  id: string;
+  type: 'deposit' | 'withdraw' | 'tip' | 'receive_tip' | 'reward' | 'penalty';
+  amount: number;
+  balance: number;
+  description: string;
+  relatedUserId?: string;
+  relatedPostId?: string;
+  createdAt: number;
+}
 
 /**
  * 充值订单类型

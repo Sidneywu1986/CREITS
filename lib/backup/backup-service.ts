@@ -30,7 +30,7 @@ export class BackupService {
   private encrypt(data: string): { encrypted: string; iv: string; authTag: string } {
     const key = this.getEncryptionKey()
     const iv = crypto.randomBytes(16)
-    const cipher = crypto.createCipheriv(this.algorithm, key, iv)
+    const cipher = crypto.createCipheriv(this.algorithm, key, iv) as any
 
     let encrypted = cipher.update(data, 'utf8', 'hex')
     encrypted += cipher.final('hex')
@@ -51,7 +51,7 @@ export class BackupService {
       this.algorithm,
       key,
       Buffer.from(iv, 'hex')
-    )
+    ) as any
 
     decipher.setAuthTag(Buffer.from(authTag, 'hex'))
 
@@ -248,7 +248,7 @@ export class BackupService {
   }> {
     const { data, error } = await this.supabase
       .from('backup_metadata')
-      .select('id, size, status, created_at')
+      .select('*')
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -267,7 +267,7 @@ export class BackupService {
       totalSize,
       successful,
       failed,
-      latestBackup
+      latestBackup: latestBackup as BackupMetadata | null
     }
   }
 }

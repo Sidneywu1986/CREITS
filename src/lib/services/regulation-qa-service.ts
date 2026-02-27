@@ -150,10 +150,13 @@ export async function queryRegulationQa(
     const queryType = identifyQueryType(request.question);
 
     // 构建提示词
-    const prompt = buildRegulationQueryPrompt(request.question, relevantDocs);
+    const systemPrompt = buildRegulationQueryPrompt(request.question, relevantDocs);
 
     // 调用LLM
-    const response = await simpleChat(request.question, prompt);
+    const response = await chat([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: request.question }
+    ]);
 
     // 构建引用
     const references = relevantDocs.map(doc => ({
@@ -210,8 +213,7 @@ export async function streamRegulationQa(
         }
       ],
       {
-        temperature: 0.7,
-        maxTokens: 2000
+        temperature: 0.7
       }
     );
 
@@ -315,7 +317,10 @@ ${docs.map(doc => `
 `;
 
     // 调用LLM
-    const response = await simpleChat('请对比这些法规', prompt);
+    const response = await chat([
+      { role: 'system', content: prompt },
+      { role: 'user', content: '请对比这些法规' }
+    ]);
 
     return response.content;
   } catch (error) {

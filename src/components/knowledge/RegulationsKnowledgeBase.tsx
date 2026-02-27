@@ -64,8 +64,8 @@ export default function RegulationsKnowledgeBase() {
         setFilteredDocs(data.data);
 
         // 提取发布机构和分类
-        const uniqueIssuers = Array.from(new Set(data.data.map((doc: RegulationDocument) => doc.issuer)));
-        const uniqueCategories = Array.from(new Set(data.data.map((doc: RegulationDocument) => doc.category)));
+        const uniqueIssuers: string[] = Array.from(new Set(data.data.map((doc: RegulationDocument) => doc.issuer)));
+        const uniqueCategories: string[] = Array.from(new Set(data.data.map((doc: RegulationDocument) => doc.category)));
 
         setIssuers(uniqueIssuers);
         setCategories(uniqueCategories);

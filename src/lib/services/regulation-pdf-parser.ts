@@ -109,12 +109,13 @@ export async function parseRegulationPdf(
 
     // 获取文档元数据
     const metadata = await pdfDoc.getMetadata();
+    const info = metadata.info as any;
     const documentMetadata = {
       pageCount: totalPages,
-      title: metadata.info?.Title || document.title,
-      author: metadata.info?.Author,
-      subject: metadata.info?.Subject,
-      keywords: metadata.info?.Keywords?.split(/[,\s;]+/).filter(Boolean) || []
+      title: info?.Title || document.title,
+      author: info?.Author,
+      subject: info?.Subject,
+      keywords: info?.Keywords?.split(/[,\s;]+/).filter(Boolean) || []
     };
 
     // 提取所有页面的文本

@@ -58,7 +58,7 @@ export class TwoFactorService {
   generateBackupCodes(): string[] {
     const codes: string[] = []
     for (let i = 0; i < 10; i++) {
-      codes.push(speakeasy.generateSecretLength(10).base32!.substring(0, 8))
+      codes.push(speakeasy.generateSecret({ length: 10 }).base32!.substring(0, 8))
     }
     return codes
   }

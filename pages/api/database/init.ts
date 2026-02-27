@@ -24,8 +24,8 @@ export default async function handler(
     // 分割SQL语句（按分号分割）
     const statements = schemaSQL
       .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith('--'));
+      .map((s: string) => s.trim())
+      .filter((s: string) => s.length > 0 && !s.startsWith('--'));
 
     const results: any[] = [];
 

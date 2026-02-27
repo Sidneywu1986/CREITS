@@ -226,9 +226,9 @@ export function useTableLinkage(options: TableLinkageOptions) {
               )
               return {
                 ...record,
-                sensitive_data_encrypted: encrypted.encrypted,
+                sensitive_data_encrypted: encrypted.encrypted_data,
                 sensitive_data_iv: encrypted.iv,
-                sensitive_data_auth_tag: encrypted.authTag,
+                sensitive_data_auth_tag: encrypted.auth_tag,
                 sensitive_data: undefined // 移除原始敏感数据
               }
             }

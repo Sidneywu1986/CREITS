@@ -393,7 +393,7 @@ function FeatureComparisonTable() {
     let value = config.features;
     
     for (const key of keys) {
-      value = value[key];
+      value = (value as any)[key];
     }
 
     if (item.getValue) {
@@ -409,7 +409,7 @@ function FeatureComparisonTable() {
     let value = config.features;
     
     for (const key of keys) {
-      value = value[key];
+      value = (value as any)[key];
     }
 
     if (item.getValue) {

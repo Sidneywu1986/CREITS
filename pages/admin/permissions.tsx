@@ -41,6 +41,11 @@ export default function PermissionManagementPage() {
     try {
       const supabase = getSupabaseClient();
 
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('roles')
         .select('*')
@@ -55,7 +60,8 @@ export default function PermissionManagementPage() {
 
       // 默认选中第一个角色
       if (data && data.length > 0 && !selectedRole) {
-        setSelectedRole(data[0].id);
+        const roleData = data as any;
+        setSelectedRole(roleData[0].id);
       }
     } catch (error) {
       console.error('加载角色失败:', error);
@@ -69,6 +75,11 @@ export default function PermissionManagementPage() {
     try {
       setLoading(true);
       const supabase = getSupabaseClient();
+
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('permissions')
@@ -96,11 +107,16 @@ export default function PermissionManagementPage() {
     try {
       const supabase = getSupabaseClient();
 
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return;
+      }
+
       const { error } = await supabase.from('permissions').insert({
         role_id: selectedRole,
         resource,
         action,
-      });
+      } as any);
 
       if (error) {
         console.error('添加权限失败:', error);
@@ -118,6 +134,11 @@ export default function PermissionManagementPage() {
   const deletePermission = async (permissionId: string) => {
     try {
       const supabase = getSupabaseClient();
+
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return;
+      }
 
       const { error } = await supabase
         .from('permissions')
@@ -137,7 +158,7 @@ export default function PermissionManagementPage() {
   };
 
   useEffect(() => {
-    if (user && canRead('system:roles')) {
+    if (user && canRead('system:roles' as any)) {
       loadRoles();
     }
   }, [user, canRead]);
@@ -156,7 +177,7 @@ export default function PermissionManagementPage() {
     );
   }
 
-  if (!canRead('system:roles')) {
+  if (!canRead('system:roles' as any)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -237,7 +258,7 @@ export default function PermissionManagementPage() {
                 <CardTitle className="text-lg text-white">
                   {selectedRoleData.name} 的权限
                 </CardTitle>
-                {canUpdate('system:roles') && (
+                {canUpdate('system:roles' as any) && (
                   <Button size="sm" className="bg-[#667eea] hover:bg-[#667eea]/90 text-white">
                     <Plus className="w-4 h-4 mr-2" />
                     添加权限
@@ -278,7 +299,7 @@ export default function PermissionManagementPage() {
                             {permission.conditions || '-'}
                           </TableCell>
                           <TableCell className="text-right">
-                            {canUpdate('system:roles') && (
+                            {canUpdate('system:roles' as any) && (
                               <Button
                                 variant="ghost"
                                 size="sm"

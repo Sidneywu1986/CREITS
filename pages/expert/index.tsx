@@ -38,7 +38,7 @@ export default function ExpertListPage() {
         specialty: selectedSpecialty === 'all' ? undefined : selectedSpecialty,
         sortBy,
       }),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
   const experts = expertsData?.data?.data || [];
