@@ -31,9 +31,15 @@ export default function TwoFactorSettings() {
   const [disableToken, setDisableToken] = useState('')
 
   const supabase = createClient()
+  const hasSupabase = supabase !== null
 
   // 加载用户2FA状态
   const loadTwoFactorStatus = async () => {
+    if (!hasSupabase) {
+      setError('数据库未配置')
+      setIsLoading(false)
+      return
+    }
     try {
       const { data: { user } } = await supabase.auth.getUser()
 

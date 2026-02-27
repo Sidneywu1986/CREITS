@@ -10,7 +10,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase credentials not found in environment variables');
 }
 
-export const createClient = (): SupabaseClient<Database> => {
+export const createClient = (): SupabaseClient<Database> | null => {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Supabase credentials missing, returning null client');
+    return null;
+  }
   return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
 };
 

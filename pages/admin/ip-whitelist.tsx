@@ -37,9 +37,15 @@ export default function IPWhitelistPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const supabase = createClient()
+  const hasSupabase = supabase !== null
 
   // 加载白名单
   const loadWhitelist = async () => {
+    if (!hasSupabase) {
+      setError('数据库未配置')
+      setIsLoading(false)
+      return
+    }
     setIsLoading(true)
     try {
       const response = await fetch('/api/admin/ip-whitelist')
