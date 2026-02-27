@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   // outputFileTracingRoot: path.resolve(__dirname),
   allowedDevOrigins: ['*.dev.coze.site'],
   serverExternalPackages: ['pdfjs-dist'],
+  turbopack: {},
   images: {
     remotePatterns: [
       {

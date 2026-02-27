@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Turbopack 配置
+  turbopack: {},
+  
   // 支持 WASM 模块
   webpack: (config, { isServer }) => {
     config.experiments = {
